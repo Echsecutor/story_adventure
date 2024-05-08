@@ -9,8 +9,14 @@
 <link href="style.css" rel="stylesheet" />
 </head>
 <body>
-<div id="cy"></div>
-<!-- Load application code at the end to ensure DOM is loaded -->
+
+<div class="container" id="text_editor">
+    <label for="text" class="form-label" id="text_label">Story of the Selected Section</label>
+    <textarea class="form-control" id="text" rows="10"></textarea>
+  </div>
+
+  <div id="cy"></div>
+
 <script src="code.js" type="module"></script>
 </body>
 </html>
