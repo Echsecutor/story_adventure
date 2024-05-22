@@ -3,18 +3,10 @@ body {
 }
 
 #cy {
-  height: 90vh;
+  height: 70vh;
   width: 100%;
   position: relative;
   left: 0;
   top: 10;
 }
 
-#eat {
-  position: absolute;
-  left: 1em;
-  top: 1em;
-  font-size: 1em;
-  z-index: -1;
-  color: #c88;
-}

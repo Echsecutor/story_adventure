@@ -82,7 +82,11 @@ var story = {
 
 const text_area = document.getElementById("text");
 const text_label = document.getElementById("text_label");
+const text_container = document.getElementById("text_editor_card");
+const delete_button = document.getElementById("delete_button");
+
 var active_element = null;
+text_editor_hide();
 
 var cy = cytoscape({
   container: document.getElementById("cy"),
@@ -113,6 +117,7 @@ var cy = cytoscape({
 }); // cy init
 
 function display_adventure_graph(adventure, cyto) {
+  console.debug("drawing adventure graph", adventure);
   cyto.remove("node");
 
   for (const section of adventure.sections) {
@@ -169,6 +174,7 @@ function display_adventure_graph(adventure, cyto) {
 }
 
 function text_editor_load(element) {
+  text_container.style.display = "block";
   text_area.value = "";
   active_element = element;
   if (element?.text_lines) {
@@ -177,6 +183,10 @@ function text_editor_load(element) {
   if (element?.text) {
     text_area.value = element.text;
   }
+}
+
+function text_editor_hide() {
+  text_container.style.display = "none";
 }
 
 function handle_text_change() {
@@ -190,6 +200,39 @@ function handle_text_change() {
   }
 }
 
+function handle_delete() {
+  if (!active_element) {
+    return;
+  }
+
+  var deleted_section_id = null;
+  if (story.sections.includes(active_element)) {
+    story.sections.splice(story.sections.indexOf(active_element), 1);
+    console.debug("deleted section", active_element);
+    deleted_section_id = active_element.id;
+  }
+
+  for (const section of story.sections) {
+    if (!section?.next) {
+      continue;
+    }
+    if (section.next.includes(active_element)) {
+      section.next.splice(section.next.indexOf(active_element), 1);
+      console.debug("deleted link", active_element);
+      break;
+    }
+    for (var i = 0; i < section.next.length; i++) {
+      if (section.next[i].next === deleted_section_id) {
+        section.next.splice(i, 1);
+        i--;
+      }
+    }
+  }
+  text_editor_hide();
+  display_adventure_graph(story, cy);
+}
+
 text_area.addEventListener("change", handle_text_change);
+delete_button.addEventListener("click", handle_delete);
 
 display_adventure_graph(story, cy);
