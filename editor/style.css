@@ -3,10 +3,18 @@ body {
 }
 
 #cy {
-  height: 70vh;
+  height: 60vh;
   width: 100%;
   position: relative;
-  left: 0;
-  top: 10;
+}
+#cy-container{
+  text-align: left;
 }
 
+.container{
+  max-width: 90%;
+}
+
+.col{
+  text-align: center;
+}

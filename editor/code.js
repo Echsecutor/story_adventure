@@ -84,6 +84,8 @@ const text_area = document.getElementById("text");
 const text_label = document.getElementById("text_label");
 const text_container = document.getElementById("text_editor_card");
 const delete_button = document.getElementById("delete_button");
+const add_node_button = document.getElementById("add_node_button");
+const add_edge_button = document.getElementById("add_edge_button");
 
 var active_element = null;
 text_editor_hide();
@@ -92,7 +94,7 @@ var cy = cytoscape({
   container: document.getElementById("cy"),
 
   boxSelectionEnabled: false,
-  autounselectify: true,
+  autounselectify: false,
 
   style: cytoscape
     .stylesheet()
@@ -232,7 +234,44 @@ function handle_delete() {
   display_adventure_graph(story, cy);
 }
 
+function handle_add_node() {
+  const next_id = Math.max(...story.sections.map((section) => section.id)) + 1;
+  story.sections.push({
+    id: next_id,
+    text_lines: [""],
+  });
+
+  display_adventure_graph(story, cy);
+}
+
+function handle_add_edge() {
+  if (!active_element || !story.sections.includes(active_element)) {
+    alert("Please select the starting node, than click add edge.");
+    return;
+  }
+
+  let targetId = prompt(
+    "Please enter the target for the edge starting at " + active_element?.id
+  );
+  if (!targetId) {
+    return;
+  }
+
+  if (!active_element?.next) {
+    active_element.next = [];
+  }
+
+  active_element.next.push({
+    text: "",
+    next: targetId,
+  });
+
+  display_adventure_graph(story, cy);
+}
+
 text_area.addEventListener("change", handle_text_change);
 delete_button.addEventListener("click", handle_delete);
+add_node_button.addEventListener("click", handle_add_node);
+add_edge_button.addEventListener("click", handle_add_edge);
 
 display_adventure_graph(story, cy);
