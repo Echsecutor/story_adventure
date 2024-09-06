@@ -86,6 +86,8 @@ const text_container = document.getElementById("text_editor_card");
 const delete_button = document.getElementById("delete_button");
 const add_node_button = document.getElementById("add_node_button");
 const add_edge_button = document.getElementById("add_edge_button");
+const download_button = document.getElementById("download_button");
+const load_button = document.getElementById("load_button");
 
 var active_element = null;
 text_editor_hide();
@@ -269,9 +271,42 @@ function handle_add_edge() {
   display_adventure_graph(story, cy);
 }
 
+function download_graph() {
+  var dataStr =
+    "data:text/json;charset=utf-8," +
+    encodeURIComponent(JSON.stringify(story, null, 2));
+
+  var dlAnchorElem = document.createElement("a");
+  dlAnchorElem.style.display = "none";
+  document.body.appendChild(dlAnchorElem);
+
+  dlAnchorElem.setAttribute("href", dataStr);
+  dlAnchorElem.setAttribute("download", "adventure_graph.json");
+  dlAnchorElem.click();
+}
+
+function load_graph() {
+  var input = document.createElement("input");
+  input.type = "file";
+  input.onchange = (e) => {
+    var file = e.target.files[0];
+    var reader = new FileReader();
+    reader.readAsText(file, "UTF-8");
+    reader.onload = (readerEvent) => {
+      var content = readerEvent.target.result; // this is the content!
+      //console.log(content);
+      story = JSON.parse(content);
+      display_adventure_graph(story, cy);
+    };
+  };
+  input.click();
+}
+
 text_area.addEventListener("change", handle_text_change);
 delete_button.addEventListener("click", handle_delete);
 add_node_button.addEventListener("click", handle_add_node);
 add_edge_button.addEventListener("click", handle_add_edge);
+download_button.addEventListener("click", download_graph);
+load_button.addEventListener("click", load_graph);
 
 display_adventure_graph(story, cy);
