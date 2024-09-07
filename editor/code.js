@@ -1,93 +1,19 @@
 import cytoscape from "./cytoscape.esm.min.js";
 
-var story = {
-  state: {
-    current_section: "1",
-    variables: {
-      hunted_by: "a huge dragon",
-    },
-  },
-  sections: [
-    {
-      id: "1",
-      text_lines: [
-        "# The Beginning",
-        "",
-        "This is the beginning of your Adventure!",
-        "",
-        "You woke up by the side of a path running through a forest.",
-        "The weather is quite nice and pretty warm already, although it is still early morning.",
-        "You can not remember where you are exactly or why you slept by the side of the path with all your clothes on, but judging from your headache this might be related to drinking a little ",
-        "to much yesterday...? Anyway, you probably want to start moving and at least find yourself some water to fight the fire that seems to be roaring in your throat....",
-        "The path is roughly oriented in a east-west direction. Since you have no clue which way you came, do you want to...",
-        "",
-      ],
-      next: [
-        {
-          text: "turn east! Towards the rising sun!",
-          next: "2",
-        },
-        {
-          text: "turn west! Your head was pointing in this direction when you woke up, so you where probably walking in this direction. Maybe.",
-          next: "3",
-        },
-      ],
-    },
-    {
-      id: "2",
-      text_lines: [
-        "Collecting yourself from the ground you start walking east, the pockets of your jacket and trousers for clues where you came from or what happened.",
-        "",
-        "Just as your fingers touch the first thing that might be interesting, you freeze in mid step as the path takes a slight turn and you suddenly find yourself face to face with",
-        "${hunted_by}.",
-        "",
-        "It seems like the beast was hunting you. A memory of running through these woods flashes past you. Right. You where lying by the road because you stumbled when running away from this ",
-        "beast. You try to pick up where you left, turn around an pick that running back up, but way to late. The dragon is much quicker to recover from the surprise of seeing you and catches up to you with a huge jump, just to bite your head off.",
-      ],
-    },
-    {
-      id: "3",
-      text_lines: [
-        "Collecting yourself from the ground you start walking east, the pockets of your jacket and trousers for clues where you came from or what happened.",
-        "As your fingers touch a smooth and cold object, a feeling of unease overcomes you. Maybe you did not just walk this forest drunk...",
-        "it feels more like you where running away from something...",
-        "You touch your aching head to find a huge bump right at your forehead.",
-        "Maybe you stumbled and fell and injured your head in the process...",
-        "Might explain another few bruises and scratches that you start noticing on your body.",
-      ],
-      next: [
-        {
-          text: "Maybe it would be a good idea to hide in the rather thick bushes by the side of the path?",
-          next: "4",
-        },
-        {
-          text: "It feels like you might want to pick up the pace. What ever you where running away from might still be after you!",
-          next: "5",
-        },
-      ],
-    },
-    {
-      id: "4",
-      text_file: {
-        path: "path/to/hiding.md",
-        type: "text/markdown",
-      },
-    },
-    {
-      id: "5",
-      text_lines: ["You win!"],
-    },
-  ],
-};
+var story = {};
 
 const text_area = document.getElementById("text");
 const text_label = document.getElementById("text_label");
-const text_container = document.getElementById("text_editor_card");
+const text_containers = document.getElementsByClassName(
+  "text_editor_container"
+);
+const img_container = document.getElementById("img_container");
 const delete_button = document.getElementById("delete_button");
 const add_node_button = document.getElementById("add_node_button");
 const add_edge_button = document.getElementById("add_edge_button");
 const download_button = document.getElementById("download_button");
 const load_button = document.getElementById("load_button");
+const add_media_button = document.getElementById("add_media_button");
 
 var active_element = null;
 text_editor_hide();
@@ -178,7 +104,9 @@ function display_adventure_graph(adventure, cyto) {
 }
 
 function text_editor_load(element) {
-  text_container.style.display = "block";
+  for (const text_container of text_containers) {
+    text_container.style.display = "flex";
+  }
   text_area.value = "";
   active_element = element;
   if (element?.text_lines) {
@@ -187,10 +115,21 @@ function text_editor_load(element) {
   if (element?.text) {
     text_area.value = element.text;
   }
+  if (element?.media?.type === "image") {
+    img_container.style.display = "block";
+    const img = img_container?.getElementsByTagName("img")?.[0];
+    if (img) {
+      img.src = element?.media?.src;
+    }
+  } else {
+    img_container.style.display = "none";
+  }
 }
 
 function text_editor_hide() {
-  text_container.style.display = "none";
+  for (const text_container of text_containers) {
+    text_container.style.display = "none";
+  }
 }
 
 function handle_text_change() {
@@ -285,21 +224,45 @@ function download_graph() {
   dlAnchorElem.click();
 }
 
-function load_graph() {
+function load_file(content_handler, read_as_data) {
   var input = document.createElement("input");
   input.type = "file";
   input.onchange = (e) => {
     var file = e.target.files[0];
     var reader = new FileReader();
-    reader.readAsText(file, "UTF-8");
+    if (read_as_data) {
+      reader.readAsDataURL(file);
+    } else {
+      reader.readAsText(file, "UTF-8");
+    }
     reader.onload = (readerEvent) => {
-      var content = readerEvent.target.result; // this is the content!
+      const content = readerEvent.target.result;
       //console.log(content);
-      story = JSON.parse(content);
-      display_adventure_graph(story, cy);
+      content_handler(content);
     };
   };
   input.click();
+}
+
+function load_graph() {
+  load_file((content) => {
+    story = JSON.parse(content);
+    display_adventure_graph(story, cy);
+  });
+}
+
+function add_media() {
+  load_file((content) => {
+    if (!active_element || !story.sections.includes(active_element)) {
+      alert("Please section to add media to.");
+      return;
+    }
+    active_element.media = {
+      type: "image",
+      src: content,
+    };
+    text_editor_load(active_element);
+  }, true);
 }
 
 text_area.addEventListener("change", handle_text_change);
@@ -308,5 +271,21 @@ add_node_button.addEventListener("click", handle_add_node);
 add_edge_button.addEventListener("click", handle_add_edge);
 download_button.addEventListener("click", download_graph);
 load_button.addEventListener("click", load_graph);
+add_media_button.addEventListener("click", add_media);
 
-display_adventure_graph(story, cy);
+async function load_example() {
+  const url = "example_story.json";
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Response status: ${response.status}`);
+    }
+    story = await response.json();
+  } catch (error) {
+    console.error(error.message);
+  }
+}
+
+load_example().then(() => {
+  display_adventure_graph(story, cy);
+});

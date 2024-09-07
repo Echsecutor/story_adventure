@@ -16,10 +16,10 @@
     <div class="container" id="graph_card">
       <div class="row">
         <div class="col">
-            <button type="button" id="load_button" class="btn btn-primary">
-              Load Adventure
-            </button>
-          </div>
+          <button type="button" id="load_button" class="btn btn-primary">
+            Load Adventure
+          </button>
+        </div>
         <div class="col">
           <button type="button" id="download_button" class="btn btn-primary">
             Save Adventure
@@ -44,7 +44,7 @@
         </div>
       </div>
 
-      <div class="row" id="text_editor_card">
+      <div class="row text_editor_container">
         <div class="col">
           <strong
             ><label for="text" class="form-label" id="text_label"
@@ -52,6 +52,23 @@
             ></strong
           >
           <textarea class="form-control" id="text" rows="10"></textarea>
+        </div>
+        <div class="col-xl-4" id="img_container">
+          <img
+            src="data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAAUA
+    AAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO
+        9TXL0Y4OHwAAAABJRU5ErkJggg=="
+            alt="Red dot"
+          />
+        </div>
+      </div>
+      <div class="row text_editor_container">
+        <div class="col">
+          <button type="button" id="add_media_button" class="btn btn-primary">
+            Add Media
+          </button>
+        </div>
+        <div class="col">
           <button type="button" id="delete_button" class="btn btn-danger">
             Delete
           </button>
