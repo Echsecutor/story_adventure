@@ -121,8 +121,10 @@ function text_editor_load(element) {
     if (img) {
       img.src = element?.media?.src;
     }
+    add_media_button.innerHTML = "Remove Media";
   } else {
     img_container.style.display = "none";
+    add_media_button.innerHTML = "Add Media";
   }
 }
 
@@ -251,18 +253,24 @@ function load_graph() {
   });
 }
 
-function add_media() {
-  load_file((content) => {
-    if (!active_element || !story.sections.includes(active_element)) {
-      alert("Please section to add media to.");
-      return;
-    }
-    active_element.media = {
-      type: "image",
-      src: content,
-    };
+function add__or_remove_media() {
+  if (active_element?.media?.type) {
+    active_element.media = {};
     text_editor_load(active_element);
-  }, true);
+  } else {
+    load_file((content) => {
+      if (!active_element || !story.sections.includes(active_element)) {
+        alert("Please section to add media to.");
+        return;
+      }
+
+      active_element.media = {
+        type: "image",
+        src: content,
+      };
+      text_editor_load(active_element);
+    }, true);
+  }
 }
 
 text_area.addEventListener("change", handle_text_change);
@@ -271,7 +279,7 @@ add_node_button.addEventListener("click", handle_add_node);
 add_edge_button.addEventListener("click", handle_add_edge);
 download_button.addEventListener("click", download_graph);
 load_button.addEventListener("click", load_graph);
-add_media_button.addEventListener("click", add_media);
+add_media_button.addEventListener("click", add__or_remove_media);
 
 async function load_example() {
   const url = "example_story.json";
