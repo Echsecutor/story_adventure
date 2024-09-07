@@ -1,4 +1,16 @@
 {
+  "meta": {
+    "title": "Example Adventure",
+    "author": {
+      "name": "Sebastian Schmittner",
+      "url": "https://github.com/Echsecutor"
+    },
+    "year": "2024",
+    "license": {
+      "name": "CC BY-SA 4.0",
+      "url": "https://creativecommons.org/licenses/by-sa/4.0/?ref=chooser-v1"
+    }
+  },
   "state": {
     "current_section": "1",
     "variables": {

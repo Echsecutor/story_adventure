@@ -1,13 +1,18 @@
-# Story Adventure
+# Story Adventure Tools
 
 This is a minimalist framework for writing / playing through (non-linear) stories.
 
-## Inductive Introduction
+## Introduction
 
-Let's introduce the basic idea by a few examples.
+Let's introduce the basic idea by example: have a look at the [example story](editor/example_story.json).
 
 A **Story Adventure** is primarily a set of **Sections** together with a **State** representing the current (initially the starting) state.
-The [example story](editor/example_story.json) demonstrates the format.
+**Sections** links to each other via **Choices** in the `.next` array of each section. Sections without choices are terminal.
+
+## Editor
+
+Using [the editor](./editor/) you can write your own story adventures by providing text and media for each section and linking the sections by choices.
+
 
 ## Acknowledgment
 
