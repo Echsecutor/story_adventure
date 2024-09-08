@@ -1,5 +1,5 @@
 import cytoscape from "./cytoscape.esm.min.js";
-import { toast_alert } from "../toast.js";
+import { toast_alert } from "./toast.js";
 
 var story = {};
 
@@ -268,8 +268,8 @@ function add__or_remove_media() {
     text_editor_load(active_element);
   } else {
     load_file((content) => {
-      if (!active_element || !story.sections.includes(active_element)) {
-        alert("Please section to add media to.");
+      if (!active_element || !story?.sections?.[active_element.id]) {
+        alert("Please select section to add media to.");
         return;
       }
 

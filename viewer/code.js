@@ -76,7 +76,19 @@ function start_playing() {
   show_ui_components_according_to_state();
 }
 
+function replace_variables(text, variables) {
+  if (!variables || !text) {
+    return text;
+  }
+  var re = text;
+  for (const key in variables) {
+    re = re.replaceAll("${" + key + "}", variables[key]);
+  }
+  return re;
+}
+
 function load_section(id) {
+  story.state.current_section = id;
   if (!story?.sections?.[id]) {
     toast_alert("Section ${id} is missing from the story");
     return;
@@ -93,12 +105,15 @@ function load_section(id) {
   if (!text) {
     toast_alert("This section has no text");
   }
+
+  text = replace_variables(text, story.state?.variables);
+
   story_text.innerHTML = DOMPurify.sanitize(marked.parse(text));
 
   if (section?.media?.type === "image" && section?.media?.src) {
     background_image.src = section.media.src;
     background_image.style.display = "inline-block";
-  } 
+  }
 
   choices_row.innerHTML = "";
   if (section?.next) {
@@ -108,7 +123,13 @@ function load_section(id) {
       const button = col.appendChild(document.createElement("button"));
       button.className = "btn btn-primary";
       button.type = "button";
-      button.appendChild(document.createTextNode(choice?.text));
+
+      if (choice?.text) {
+        button.appendChild(document.createTextNode(choice.text));
+      } else {
+        button.innerHTML = '<i class="bi bi-arrow-right-circle-fill"></i>';
+      }
+
       button.addEventListener("click", () => {
         load_section(choice.next);
       });
