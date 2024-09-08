@@ -22,7 +22,11 @@ Using [the editor](./editor/) you can write your own story adventures by providi
 We proudly acknowledge using the following open source components in this project:
 
 - [Cytoscape.js](https://github.com/cytoscape/cytoscape.js) for drawing the graph view of the story
-- [Bootstrap 5](https://github.com/twbs/bootstrap) for the editor UI
+- [Bootstrap 5](https://github.com/twbs/bootstrap) for UI components
+- [marked](https://github.com/markedjs/marked) for Markdown rendering
+- [DOMPurify](https://github.com/cure53/DOMPurify) for HTML sanitization
+
+See there for the corresponding licenses.
 
 ## License
 

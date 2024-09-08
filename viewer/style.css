@@ -22,12 +22,12 @@ body {
   z-index: -1;
 }
 
-#menu_container{
+#menu_container {
   position: relative;
   top: 50vh;
 }
 
-#story_container{
+#story_container {
   height: 30vh;
   position: absolute;
   top: 68vh;
@@ -37,14 +37,19 @@ body {
   font-size: x-large;
 }
 
-#story{
+.container {
+  background-color: black;
+  opacity: 0.8;
+}
+
+#story_text {
   text-align: left;
 }
 
-.col{
+.col {
   text-align: center;
 }
 
-.row{
+.row {
   margin-top: 5px;
 }
