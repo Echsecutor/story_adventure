@@ -57,6 +57,8 @@ function start_playing() {
     story.state.current_section = story.sections[0].id;
   }
 
+  
+
   toast_ok("Story Adventure Loaded");
   current_viewer_state = viewer_states.PLAYING;
   show_ui_components_according_to_state();

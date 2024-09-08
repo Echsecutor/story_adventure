@@ -1,4 +1,5 @@
 import cytoscape from "./cytoscape.esm.min.js";
+import { toast_alert } from "../toast.js";
 
 var story = {};
 
@@ -50,7 +51,9 @@ function display_adventure_graph(adventure, cyto) {
   console.debug("drawing adventure graph", adventure);
   cyto.remove("node");
 
-  for (const section of adventure.sections) {
+  for (const id in adventure.sections) {
+    const section = adventure.sections[id];
+    section.id = id;
     cyto.add([{ group: "nodes", data: section }]);
     const new_node = cyto.getElementById(section.id);
 
@@ -62,7 +65,8 @@ function display_adventure_graph(adventure, cyto) {
     console.log("node added", new_node);
   }
 
-  for (const section of adventure.sections) {
+  for (const id in adventure.sections) {
+    const section = adventure.sections[id];
     if (!section.next) {
       continue;
     }
@@ -151,13 +155,14 @@ function handle_delete() {
   }
 
   var deleted_section_id = null;
-  if (story.sections.includes(active_element)) {
-    story.sections.splice(story.sections.indexOf(active_element), 1);
+  if (story.sections?.[active_element.id]) {
+    delete story.sections[active_element.id];
     console.debug("deleted section", active_element);
     deleted_section_id = active_element.id;
   }
 
-  for (const section of story.sections) {
+  for (const id in story.sections) {
+    const section = story.sections[id];
     if (!section?.next) {
       continue;
     }
@@ -178,18 +183,22 @@ function handle_delete() {
 }
 
 function handle_add_node() {
-  const next_id = Math.max(...story.sections.map((section) => section.id)) + 1;
-  story.sections.push({
+  const next_id = Math.max(...Object.keys(story.sections)) + 1;
+  story.sections[next_id] = {
     id: next_id,
     text_lines: [""],
-  });
+  };
 
   display_adventure_graph(story, cy);
 }
 
 function handle_add_edge() {
-  if (!active_element || !story.sections.includes(active_element)) {
-    alert("Please select the starting node, than click add edge.");
+  if (
+    !active_element ||
+    !active_element?.id ||
+    !story.sections?.[active_element.id]
+  ) {
+    toast_alert("Please select the starting node, than click add edge.");
     return;
   }
 
