@@ -1,0 +1,50 @@
+body {
+  font: 14px helvetica neue, helvetica, arial, sans-serif;
+}
+
+#background {
+  width: 100vw;
+  height: 100vh;
+  background-color: black;
+  margin: 0;
+  text-align: center;
+  padding: 2px;
+  z-index: -1;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+#background > img {
+  max-width: 100vw;
+  max-height: 100vh;
+  margin: 0;
+  z-index: -1;
+}
+
+#menu_container{
+  position: relative;
+  top: 50vh;
+}
+
+#story_container{
+  height: 30vh;
+  position: absolute;
+  top: 68vh;
+  left: 0;
+  max-width: 100vw;
+  color: white;
+  font-size: x-large;
+}
+
+#story{
+  text-align: left;
+}
+
+.col{
+  text-align: center;
+}
+
+.row{
+  margin-top: 5px;
+}

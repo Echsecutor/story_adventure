@@ -11,6 +11,9 @@ A **Story Adventure** is primarily a set of **Sections** together with a **State
 
 ## Editor
 
+Try online at: https://echsecutor.github.io/story_adventure/editor
+- Files never leave your computer, the editor is pure JS running in your browser
+
 Using [the editor](./editor/) you can write your own story adventures by providing text and media for each section and linking the sections by choices.
 
 
