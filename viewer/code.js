@@ -37,7 +37,7 @@ function load_file(content_handler, read_as_data) {
   input.click();
 }
 
-function load_graph() {
+function load_graph_from_file() {
   load_file((content) => {
     try {
       story = JSON.parse(content);
@@ -47,6 +47,28 @@ function load_graph() {
     start_playing();
   });
 }
+
+function load_graph_from_url(url) {
+  console.debug("Loading", url)
+
+  fetch(url).then(
+    (response)=>{
+      if(response.ok){
+        return response.json();
+      }
+    }
+  ).then(
+    (json)=>{
+      story = json
+      start_playing();
+    }
+  ).catch((error)=>{
+    toast_alert("Error loading story from " + url)
+    console.error("error loading url:", url, error)
+  })
+
+}
+
 
 function start_playing() {
   if (!story?.sections) {
@@ -158,6 +180,18 @@ function show_ui_components_according_to_state() {
   }
 }
 
-document.getElementById("load_button").addEventListener("click", load_graph);
+function read_query_params() {
+  let params = new URL(document.location.toString())?.searchParams;
+  let load = params?.get("load");
+  if(load){
+    load_graph_from_url(load);
+  }
+}
+
+document
+  .getElementById("load_button")
+  .addEventListener("click", load_graph_from_file);
 
 show_ui_components_according_to_state();
+
+read_query_params();
