@@ -152,8 +152,11 @@
     "10": {
       "id": "10",
       "text_lines": [
-        "It seems like the beast was hunting you. A memory of running through these woods flashes past you. Right. You where lying by the road because you stumbled when running away from this ",
-        "beast. You try to pick up where you left, turn around an pick that running back up, but way to late. The ${hunted_by} is much quicker to recover from the surprise of seeing you and catches up to you with a huge jump, just to bite your head off."
+        "It seems like the beast was hunting you. A memory of running through these woods flashes past you. ",
+        "",
+        "Right. You where lying by the road because you stumbled when running away from this ${hunted_by}.",
+        "",
+        "You try to pick up where you left, turn around an pick that running back up, but way to late. The ${hunted_by} is much quicker to recover from the surprise of seeing you and catches up to you with a huge jump, just to bite your head off."
       ]
     }
   }

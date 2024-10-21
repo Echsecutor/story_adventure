@@ -14,6 +14,7 @@ const add_node_button = document.getElementById("add_node_button");
 const add_edge_button = document.getElementById("add_edge_button");
 const download_button = document.getElementById("download_button");
 const load_button = document.getElementById("load_button");
+const clear_all_button = document.getElementById("clear_all_button");
 const add_media_button = document.getElementById("add_media_button");
 
 var active_element = null;
@@ -58,7 +59,6 @@ function display_adventure_graph(adventure, cyto) {
     const new_node = cyto.getElementById(section.id);
 
     new_node.on("tap", function (evt) {
-      text_label.innerText = "Story for Section " + section.id;
       text_editor_load(section);
     });
 
@@ -86,12 +86,6 @@ function display_adventure_graph(adventure, cyto) {
 
       new_edge.on("tap", function (evt) {
         text_editor_load(next);
-
-        text_label.innerText =
-          "Text to choose going from Section " +
-          section.id +
-          " to Section " +
-          next.next;
       });
 
       console.log("edge added", new_edge);
@@ -108,6 +102,28 @@ function display_adventure_graph(adventure, cyto) {
 }
 
 function text_editor_load(element) {
+  if (!element) {
+    console.error("Can not load empty element into text editor");
+    return;
+  }
+
+  const elements_section = find_elements_section(element);
+
+  if (!elements_section) {
+    console.error("No (parent) section for ", element);
+    return;
+  }
+
+  text_label.innerText = "Story for Section " + elements_section.id;
+
+  if (element.next) {
+    text_label.innerText =
+      "Text to choose going from Section " +
+      elements_section.id +
+      " to Section " +
+      element.next;
+  }
+
   for (const text_container of text_containers) {
     text_container.style.display = "flex";
   }
@@ -149,19 +165,36 @@ function handle_text_change() {
   }
 }
 
+function find_elements_section(element) {
+  if (story?.sections?.[element?.id]) {
+    return story?.sections?.[element?.id];
+  }
+
+  for (const id in story?.sections) {
+    const section = story.sections[id];
+    if (!section?.next) {
+      continue;
+    }
+    if (section.next.includes(element)) {
+      return section;
+    }
+  }
+  return null;
+}
+
 function handle_delete() {
   if (!active_element) {
     return;
   }
 
   var deleted_section_id = null;
-  if (story.sections?.[active_element.id]) {
+  if (story?.sections?.[active_element?.id]) {
     delete story.sections[active_element.id];
     console.debug("deleted section", active_element);
     deleted_section_id = active_element.id;
   }
 
-  for (const id in story.sections) {
+  for (const id in story?.sections) {
     const section = story.sections[id];
     if (!section?.next) {
       continue;
@@ -183,20 +216,29 @@ function handle_delete() {
 }
 
 function handle_add_node() {
-  const next_id = Math.max(...Object.keys(story.sections)) + 1;
+  if (!story) {
+    story = {};
+  }
+  let next_id = 1;
+  if (!story.sections) {
+    story.sections = {};
+  } else {
+    next_id = Math.max(...Object.keys(story.sections)) + 1;
+  }
   story.sections[next_id] = {
     id: next_id,
     text_lines: [""],
   };
 
   display_adventure_graph(story, cy);
+  text_editor_load(story.sections[next_id]);
 }
 
 function handle_add_edge() {
   if (
     !active_element ||
     !active_element?.id ||
-    !story.sections?.[active_element.id]
+    !story?.sections?.[active_element.id]
   ) {
     toast_alert("Please select the starting node, than click add edge.");
     return;
@@ -282,12 +324,51 @@ function add__or_remove_media() {
   }
 }
 
+function clear_all() {
+  if (confirm("Really delete the story?") != true) {
+    return;
+  }
+  story = {};
+  display_adventure_graph(story, cy);
+}
+
+function paste_image(event) {
+  let clipboardData = event.clipboardData || window.clipboardData;
+
+  let item = clipboardData?.items?.[0];
+  if (item?.type?.indexOf("image") === 0) {
+    // Get the blob of the image
+    var blob = item.getAsFile();
+
+    // Create a file reader
+    var reader = new FileReader();
+
+    // Set the onload event handler
+    reader.onload = function (loadEvent) {
+      // Get the data URL of the image
+      let content = loadEvent.target.result;
+
+      active_element.media = {
+        type: "image",
+        src: content,
+      };
+      text_editor_load(active_element);
+    };
+    // Read the blob as a data URL
+    reader.readAsDataURL(blob);
+  }
+}
+
 text_area.addEventListener("change", handle_text_change);
+
+text_area.addEventListener("paste", paste_image);
+
 delete_button.addEventListener("click", handle_delete);
 add_node_button.addEventListener("click", handle_add_node);
 add_edge_button.addEventListener("click", handle_add_edge);
 download_button.addEventListener("click", download_graph);
 load_button.addEventListener("click", load_graph);
+clear_all_button.addEventListener("click", clear_all);
 add_media_button.addEventListener("click", add__or_remove_media);
 
 async function load_example() {
