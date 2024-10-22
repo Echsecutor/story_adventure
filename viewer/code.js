@@ -49,26 +49,23 @@ function load_graph_from_file() {
 }
 
 function load_graph_from_url(url) {
-  console.debug("Loading", url)
+  console.debug("Loading", url);
 
-  fetch(url).then(
-    (response)=>{
-      if(response.ok){
+  fetch(url)
+    .then((response) => {
+      if (response.ok) {
         return response.json();
       }
-    }
-  ).then(
-    (json)=>{
-      story = json
+    })
+    .then((json) => {
+      story = json;
       start_playing();
-    }
-  ).catch((error)=>{
-    toast_alert("Error loading story from " + url)
-    console.error("error loading url:", url, error)
-  })
-
+    })
+    .catch((error) => {
+      toast_alert("Error loading story from " + url);
+      console.error("error loading url:", url, error);
+    });
 }
-
 
 function start_playing() {
   if (!story?.sections) {
@@ -134,6 +131,9 @@ function load_section(id) {
 
   if (section?.media?.type === "image" && section?.media?.src) {
     background_image.src = section.media.src;
+    if (!background_image.style) {
+      background_image.style = {};
+    }
     background_image.style.display = "inline-block";
   }
 
@@ -183,7 +183,7 @@ function show_ui_components_according_to_state() {
 function read_query_params() {
   let params = new URL(document.location.toString())?.searchParams;
   let load = params?.get("load");
-  if(load){
+  if (load) {
     load_graph_from_url(load);
   }
 }

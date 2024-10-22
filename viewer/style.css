@@ -1,18 +1,14 @@
 body {
   font: 14px helvetica neue, helvetica, arial, sans-serif;
+  background-color: black;
 }
 
 #background {
-  width: 100vw;
-  height: 100vh;
   background-color: black;
   margin: 0;
   text-align: center;
   padding: 2px;
   z-index: -1;
-  position: absolute;
-  top: 0;
-  left: 0;
 }
 
 #background > img {
@@ -28,13 +24,24 @@ body {
 }
 
 #story_container {
-  height: 30vh;
-  position: absolute;
-  top: 68vh;
-  left: 0;
   max-width: 100vw;
   color: white;
   font-size: x-large;
+}
+
+@media screen and (min-width: 780px) {
+  #background {
+    width: 100vw;
+    height: 100vh;
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+  #story_container {
+    position: absolute;
+    bottom: 10px;
+    left: 0;
+  }
 }
 
 #story_container button {

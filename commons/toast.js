@@ -9,7 +9,7 @@ export function toast_ok(text) {
 function toast(text, bg_class) {
   const toast = document.createElement("div");
   toast.className =
-    "toast align-items-center text-white border-0 d-flex m-2 " + bg_class;
+    "toast align-items-center text-white border-0 d-flex position-fixed top-0 end-0 p-3 " + bg_class;
   toast.role = "alert";
 
   const toast_body = toast.appendChild(document.createElement("div"));
