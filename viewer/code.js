@@ -49,7 +49,7 @@ function load_graph_from_file() {
 }
 
 function load_graph_from_url(url) {
-  console.debug("Loading", url);
+  toast_ok("Loading story from " + url)
 
   fetch(url)
     .then((response) => {
