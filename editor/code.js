@@ -325,11 +325,12 @@ function add__or_remove_media() {
 }
 
 function clear_all() {
-  if (confirm("Really delete the story?") != true) {
+  if (confirm("Really start a new story? Unsaved state will be lost.") != true) {
     return;
   }
   story = {};
   display_adventure_graph(story, cy);
+  text_editor_hide();
 }
 
 function paste_image(event) {
