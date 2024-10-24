@@ -17,6 +17,8 @@ const load_button = document.getElementById("load_button");
 const clear_all_button = document.getElementById("clear_all_button");
 const add_media_button = document.getElementById("add_media_button");
 
+const variables_menu = document.getElementById("variables_menu");
+
 var active_element = null;
 text_editor_hide();
 
@@ -99,6 +101,46 @@ function display_adventure_graph(adventure, cyto) {
   });
   layout.run();
   cyto.fit();
+
+  load_variables_menu();
+}
+function edit_variable(variable) {
+  let new_value = prompt(
+    `Set variable ${variable} with current value '${story?.state?.variables?.[variable]}'`
+  );
+  if (new_value) {
+    story.state.variables[variable] = new_value;
+  }
+}
+function add_variable() {
+  let new_var = prompt("Name of the new variable:");
+  if (!story.state) {
+    story.state = {};
+  }
+  if (!story.state.variables) {
+    story.state.variables = {};
+  }
+  story.state.variables[new_var] = "";
+  load_variables_menu();
+}
+
+function add_menu_item(menu, text, on_click) {
+  const new_li = menu.appendChild(document.createElement("li"));
+  const new_a = new_li.appendChild(document.createElement("a"));
+  new_a.href = "#";
+  new_a.classList.add("dropdown-item");
+  new_a.innerText = text;
+  new_a.onclick = on_click;
+}
+
+function load_variables_menu() {
+  variables_menu.innerHTML = "";
+  if (story?.state?.variables) {
+    for (const variable of Object.keys(story?.state?.variables)) {
+      add_menu_item(variables_menu, variable, () => edit_variable(variable));
+    }
+  }
+  add_menu_item(variables_menu, "Add Variable", add_variable);
 }
 
 function text_editor_load(element) {
@@ -116,7 +158,7 @@ function text_editor_load(element) {
 
   text_label.innerText = "Story for Section " + elements_section.id;
 
-  if (element.next && typeof element.next === 'string') {
+  if (element.next && typeof element.next === "string") {
     text_label.innerText =
       "Choice going from Section " +
       elements_section.id +
@@ -325,7 +367,9 @@ function add__or_remove_media() {
 }
 
 function clear_all() {
-  if (confirm("Really start a new story? Unsaved state will be lost.") != true) {
+  if (
+    confirm("Really start a new story? Unsaved state will be lost.") != true
+  ) {
     return;
   }
   story = {};
