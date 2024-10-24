@@ -116,9 +116,9 @@ function text_editor_load(element) {
 
   text_label.innerText = "Story for Section " + elements_section.id;
 
-  if (element.next) {
+  if (element.next && typeof element.next === 'string') {
     text_label.innerText =
-      "Text to choose going from Section " +
+      "Choice going from Section " +
       elements_section.id +
       " to Section " +
       element.next;
