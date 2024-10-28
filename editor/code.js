@@ -164,6 +164,9 @@ function text_editor_load(element) {
       elements_section.id +
       " to Section " +
       element.next;
+  } else {
+    cy.$("node").unselect();
+    cy.getElementById(elements_section.id).select();
   }
 
   for (const text_container of text_containers) {
@@ -196,7 +199,7 @@ function text_editor_hide() {
   }
 }
 
-function handle_text_change() {
+function handle_text_change(event) {
   if (!active_element) {
     return;
   }
@@ -404,6 +407,77 @@ function paste_image(event) {
   }
 }
 
+function handle_global_key_down(event) {
+  console.log("keydown", event);
+
+  if (!active_element) {
+    return;
+  }
+
+  const active_section = find_elements_section(active_element);
+  if (!active_section) {
+    return;
+  }
+
+  if (event.key === "ArrowDown") {
+    if (!active_section?.next) {
+      return;
+    }
+    active_element = story.sections[active_section.next[0].next];
+    text_editor_load(active_element);
+    return;
+  }
+
+  if (!story?.sections) {
+    return;
+  }
+  var parent_section = null;
+  var sibbling_index = null;
+  for (const section_id of Object.keys(story.sections)) {
+    const section = story.sections[section_id];
+    if (!section?.next) {
+      continue;
+    }
+    for (var i = 0; i < section.next.length; i++) {
+      const choice = section.next[i];
+      if (choice.next === active_element.id) {
+        parent_section = section;
+        sibbling_index = i;
+        break;
+      }
+    }
+    if (parent_section) {
+      break;
+    }
+  }
+
+  if (!parent_section) {
+    return;
+  }
+
+  if (event.key === "ArrowUp") {
+    text_editor_load(parent_section);
+    return;
+  }
+
+  if (event.key === "ArrowLeft") {
+    if (sibbling_index > 0) {
+      text_editor_load(
+        story.sections[parent_section.next[sibbling_index - 1].next]
+      );
+      return;
+    }
+  }
+  if (event.key === "ArrowRight") {
+    if (sibbling_index < parent_section.next.length - 1) {
+      text_editor_load(
+        story.sections[parent_section.next[sibbling_index + 1].next]
+      );
+      return;
+    }
+  }
+}
+
 text_area.addEventListener("change", handle_text_change);
 
 text_area.addEventListener("paste", paste_image);
@@ -416,8 +490,14 @@ load_button.addEventListener("click", load_graph);
 clear_all_button.addEventListener("click", clear_all);
 add_media_button.addEventListener("click", add__or_remove_media);
 
+text_area.addEventListener("keydown", (event) => {
+  event.stopPropagation();
+});
+
+document.addEventListener("keydown", handle_global_key_down);
+
 async function load_example() {
-  const url = "example_story.json";
+  const url = "../stories/example_story.json";
   try {
     const response = await fetch(url);
     if (!response.ok) {
