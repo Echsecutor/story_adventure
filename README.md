@@ -4,17 +4,31 @@ This is a minimalist framework for writing / playing through (non-linear) storie
 
 ## Introduction
 
-Let's introduce the basic idea by example: have a look at the [example story](editor/example_story.json).
+Have a look at the [example story](stories/example_story.json).
 
 A **Story Adventure** is primarily a set of **Sections** together with a **State** representing the current (initially the starting) state.
+The **State** can also hold variables that you can set initially (e.g. for consistent naming of entities) or change during the game.
+
 **Sections** links to each other via **Choices** in the `.next` array of each section. Sections without choices are terminal.
+Sections can also contain **Media**, with a type (image/video) and the link to the src. This can also be embedded as a data link.
+Embedding Media has the advantage of creating an all-in-one file, but the obvious disadvantage of creating large files with inefficient encoding of binary data.
+
+**Choices** may contain a description which is then actually displayed as a choice when playing through the adventure.
+If you leave the description empty, it is just a "next" type button to break long sections into readable chunks/change grafics. You likely do not want to do this if there is more then one choice.
 
 ## Editor
 
-Try online at: https://echsecutor.github.io/story_adventure/editor
-- Files never leave your computer, the editor is pure JS running in your browser
-
 Using [the editor](./editor/) you can write your own story adventures by providing text and media for each section and linking the sections by choices.
+This is a proof of concept implementation, feel free to contribute a better ui!
+
+- Files never leave your computer, the editor is pure JS running in your browser
+- 👉️ Try online at: https://echsecutor.github.io/story_adventure/editor  👈️
+
+## Viewer
+
+Using [the viewer](./viewer/) you can play thtough any story adventure. This is a proof of concept implementation, feel free to contribute a better ui!
+
+- 👉️ Try online at: https://echsecutor.github.io/story_adventure/viewer  👈️
 
 
 ## Acknowledgment
