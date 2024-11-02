@@ -1,0 +1,24 @@
+export const supported_actions={
+  "NONE":{
+    "parameters":[]
+  },
+  "INPUT":{
+    "parameters":[
+        "VARIABLE",
+        "STRING"
+    ]
+  },
+  "SET":{
+    "parameters":[
+        "VARIABLE",
+        "STRING"
+    ]
+  },
+  "IF_SET_ADD_CHOICE":{
+    "parameters":[
+        "VARIABLE",
+        "SECTION",
+        "STRING"
+    ]
+  }
+}

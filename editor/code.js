@@ -1,5 +1,6 @@
 import cytoscape from "./cytoscape.esm.min.js";
 import { toast_alert } from "./toast.js";
+import { supported_actions } from "./common.js";
 
 var story = {};
 
@@ -17,6 +18,7 @@ const load_button = document.getElementById("load_button");
 const clear_all_button = document.getElementById("clear_all_button");
 const add_media_button = document.getElementById("add_media_button");
 const section_select = document.getElementById("section_select");
+const action_div = document.getElementById("action_div");
 
 const variables_menu = document.getElementById("variables_menu");
 
@@ -166,6 +168,106 @@ function load_variables_menu() {
   add_menu_item(variables_menu, "Add Variable", add_variable);
 }
 
+function add_action_select_to(col, action) {
+  const select = col.appendChild(document.createElement("select"));
+  select.classList.add("form-select");
+  for (const supported_action of Object.keys(supported_actions)) {
+    const option = select.appendChild(document.createElement("option"));
+    select.classList.add("form-select");
+    option.text = supported_action;
+    option.value = supported_action;
+  }
+  select.value = action.action;
+  select.onchange = () => {
+    action.action = select.options[select.selectedIndex].value;
+    action.parameters = [];
+    for (const parameter_type of supported_actions[action.action].parameters) {
+      action.parameters.push("");
+    }
+    console.debug("Changed to action", action);
+    text_editor_load(active_element);
+  };
+}
+
+function add_parameter(col, action, parameter_index) {
+  const parameter_type =
+    supported_actions[action.action].parameters[parameter_index];
+  if (parameter_type == "STRING") {
+    const input = col.appendChild(document.createElement("input"));
+    input.type = "text";
+    input.classList.add("form-control");
+    input.value = action.parameters[parameter_index];
+    input.addEventListener("change", () => {
+      action.parameters[parameter_index] = input.value;
+      console.debug("changed action", action);
+    });
+  }
+  if (parameter_type == "VARIABLE") {
+    const select = col.appendChild(document.createElement("select"));
+    select.classList.add("form-select");
+    if (!story?.state?.variables) {
+      return;
+    }
+    for (const variable of Object.keys(story.state.variables)) {
+      const option = select.appendChild(document.createElement("option"));
+      select.classList.add("form-select");
+      option.text = variable;
+      option.value = variable;
+    }
+    select.value = action.parameters[parameter_index];
+    select.onchange = () => {
+      action.parameters[parameter_index] =
+        select.options[select.selectedIndex].value;
+    };
+  }
+  if (parameter_type == "SECTION") {
+    const select = col.appendChild(document.createElement("select"));
+    select.classList.add("form-select");
+    for (const section_key of Object.keys(story.sections)) {
+      const option = select.appendChild(document.createElement("option"));
+      select.classList.add("form-select");
+      option.text = story.sections[section_key].id;
+      option.value = story.sections[section_key].id;
+    }
+    select.value = action.parameters[parameter_index];
+    select.onchange = () => {
+      action.parameters[parameter_index] =
+        select.options[select.selectedIndex].value;
+    };
+  }
+}
+
+function load_actions(section) {
+  action_div.innerHTML = `
+      <div class="row">
+          <div class="col">
+            <button type="button" id="add_action_button" class="btn btn-primary">Add Action</button>
+          </div>
+        </div>
+    `;
+  document
+    .getElementById("add_action_button")
+    .addEventListener("click", add_action);
+
+  if (!section?.script) {
+    console.debug("No scripts for section", section.id);
+    return;
+  }
+  for (const action of section.script) {
+    const row = action_div.appendChild(document.createElement("div"));
+    row.classList.add("row");
+    const first_col = row.appendChild(document.createElement("div"));
+    first_col.classList.add("col");
+    add_action_select_to(first_col, action);
+
+    for (let i = 0; i < action.parameters.length; i++) {
+      const para_col = row.appendChild(document.createElement("div"));
+      para_col.classList.add("col");
+      add_parameter(para_col, action, i);
+    }
+  }
+}
+
 function text_editor_load(element) {
   if (!element) {
     console.error("Can not load empty element into text editor");
@@ -182,18 +284,25 @@ function text_editor_load(element) {
   text_label.innerText = "Story for Section " + elements_section.id;
 
   if (element.next && typeof element.next === "string") {
+    // active element is an edge
     text_label.innerText =
       "Choice going from Section " +
       elements_section.id +
       " to Section " +
       element.next;
+    if (!action_div.classList.contains("d-none")) {
+      action_div.classList.add("d-none");
+    }
   } else {
+    // active element is a node
     cy.$("node").unselect();
     cy.getElementById(elements_section.id).select();
+    action_div.classList.remove("d-none");
+    load_actions(element);
   }
 
   for (const text_container of text_containers) {
-    text_container.style.display = "flex";
+    text_container.classList.remove("d-none");
   }
   text_area.value = "";
   active_element = element;
@@ -218,7 +327,9 @@ function text_editor_load(element) {
 
 function text_editor_hide() {
   for (const text_container of text_containers) {
-    text_container.style.display = "none";
+    if (!text_container.classList.contains("d-none")) {
+      text_container.classList.add("d-none");
+    }
   }
 }
 
@@ -247,6 +358,7 @@ function find_elements_section(element) {
       return section;
     }
   }
+  console.log("no section for element");
   return null;
 }
 
@@ -456,8 +568,14 @@ function get_parent_section_of_active_element() {
 }
 
 function handle_global_key_down(event) {
-  console.log("keydown", event);
+  //console.debug("keydown", event);
 
+  if (
+    document.activeElement.nodeName === "INPUT" ||
+    document.activeElement.nodeName === "TEXTAREA"
+  ) {
+    return;
+  }
   for (const key of Object.keys(hot_keys)) {
     if (event.key === key) {
       hot_keys[key].action();
@@ -508,6 +626,10 @@ function handle_global_key_down(event) {
       );
       return;
     }
+    text_editor_load(
+      story.sections[parent_section.next[parent_section.next.length - 1].next]
+    );
+    return;
   }
   if (event.key === "ArrowRight") {
     event.stopPropagation();
@@ -517,7 +639,27 @@ function handle_global_key_down(event) {
       );
       return;
     }
+    text_editor_load(story.sections[parent_section.next[0].next]);
+    return;
   }
+}
+
+function add_action() {
+  const active_section = find_elements_section(active_element);
+  if (!active_section) {
+    return;
+  }
+
+  if (!active_section?.script) {
+    active_section.script = [];
+  }
+
+  active_section.script.push({
+    action: "NONE",
+    parameters: [],
+  });
+  console.debug("added action to section", active_section.id);
+  text_editor_load(active_section);
 }
 
 text_area.addEventListener("change", handle_text_change);
@@ -531,12 +673,6 @@ download_button.addEventListener("click", download_graph);
 load_button.addEventListener("click", load_graph);
 clear_all_button.addEventListener("click", clear_all);
 add_media_button.addEventListener("click", add_or_remove_media);
-
-text_area.addEventListener("keydown", (event) => {
-  if (!event.ctrlKey && !event.altKey) {
-    event.stopPropagation();
-  }
-});
 
 document.addEventListener("keydown", handle_global_key_down);
 
