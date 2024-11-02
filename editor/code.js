@@ -25,6 +25,10 @@ const hot_keys = {
     description: "Add new Section",
     action: handle_add_node,
   },
+  m: {
+    description: "Add Media",
+    action: add_or_remove_media,
+  },
 };
 
 var active_element = null;
@@ -368,7 +372,7 @@ function load_graph() {
   });
 }
 
-function add__or_remove_media() {
+function add_or_remove_media() {
   if (active_element?.media?.type) {
     active_element.media = {};
     text_editor_load(active_element);
@@ -431,6 +435,7 @@ function get_parent_section_of_active_element() {
   var sibbling_index = null;
 
   for (const section_id of Object.keys(story.sections)) {
+    const section = story.sections[section_id];
     if (!section?.next) {
       continue;
     }
@@ -456,6 +461,7 @@ function handle_global_key_down(event) {
   for (const key of Object.keys(hot_keys)) {
     if (event.key === key) {
       hot_keys[key].action();
+      event.stopPropagation();
     }
   }
 
@@ -469,6 +475,7 @@ function handle_global_key_down(event) {
   }
 
   if (event.key === "ArrowDown") {
+    event.stopPropagation();
     if (!active_section?.next || active_section.next.length < 1) {
       return;
     }
@@ -488,11 +495,13 @@ function handle_global_key_down(event) {
   }
 
   if (event.key === "ArrowUp") {
+    event.stopPropagation();
     text_editor_load(parent_section);
     return;
   }
 
   if (event.key === "ArrowLeft") {
+    event.stopPropagation();
     if (sibbling_index > 0) {
       text_editor_load(
         story.sections[parent_section.next[sibbling_index - 1].next]
@@ -501,6 +510,7 @@ function handle_global_key_down(event) {
     }
   }
   if (event.key === "ArrowRight") {
+    event.stopPropagation();
     if (sibbling_index < parent_section.next.length - 1) {
       text_editor_load(
         story.sections[parent_section.next[sibbling_index + 1].next]
@@ -520,10 +530,12 @@ add_edge_button.addEventListener("click", handle_add_edge);
 download_button.addEventListener("click", download_graph);
 load_button.addEventListener("click", load_graph);
 clear_all_button.addEventListener("click", clear_all);
-add_media_button.addEventListener("click", add__or_remove_media);
+add_media_button.addEventListener("click", add_or_remove_media);
 
 text_area.addEventListener("keydown", (event) => {
-  event.stopPropagation();
+  if (!event.ctrlKey && !event.altKey) {
+    event.stopPropagation();
+  }
 });
 
 document.addEventListener("keydown", handle_global_key_down);
