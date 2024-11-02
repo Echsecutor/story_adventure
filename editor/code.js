@@ -16,8 +16,16 @@ const download_button = document.getElementById("download_button");
 const load_button = document.getElementById("load_button");
 const clear_all_button = document.getElementById("clear_all_button");
 const add_media_button = document.getElementById("add_media_button");
+const section_select = document.getElementById("section_select");
 
 const variables_menu = document.getElementById("variables_menu");
+
+const hot_keys = {
+  s: {
+    description: "Add new Section",
+    action: handle_add_node,
+  },
+};
 
 var active_element = null;
 text_editor_hide();
@@ -53,6 +61,7 @@ var cy = cytoscape({
 function display_adventure_graph(adventure, cyto) {
   console.debug("drawing adventure graph", adventure);
   cyto.remove("node");
+  section_select.innerHTML = "";
 
   for (const id in adventure.sections) {
     const section = adventure.sections[id];
@@ -65,7 +74,19 @@ function display_adventure_graph(adventure, cyto) {
     });
 
     console.log("node added", new_node);
+
+    const section_option = section_select.appendChild(
+      document.createElement("option")
+    );
+    section_option.text = id;
+    section_option.value = id;
   }
+
+  const section_option = section_select.appendChild(
+    document.createElement("option")
+  );
+  section_option.text = "New Section";
+  section_option.value = "new_section";
 
   for (const id in adventure.sections) {
     const section = adventure.sections[id];
@@ -101,8 +122,6 @@ function display_adventure_graph(adventure, cyto) {
   });
   layout.run();
   cyto.fit();
-
-  load_variables_menu();
 }
 function edit_variable(variable) {
   let new_value = prompt(
@@ -277,30 +296,30 @@ function handle_add_node() {
 
   display_adventure_graph(story, cy);
   text_editor_load(story.sections[next_id]);
+  return next_id;
 }
 
 function handle_add_edge() {
-  if (
-    !active_element ||
-    !active_element?.id ||
-    !story?.sections?.[active_element.id]
-  ) {
-    toast_alert("Please select the starting node, than click add edge.");
+  const elements_section = find_elements_section(active_element);
+
+  if (!elements_section) {
+    toast_alert("Please select the starting node, than add edge.");
     return;
   }
 
-  let targetId = prompt(
-    "Please enter the target for the edge starting at " + active_element?.id
-  );
+  let targetId = section_select.options[section_select.selectedIndex].value;
   if (!targetId) {
     return;
   }
-
-  if (!active_element?.next) {
-    active_element.next = [];
+  if (targetId == "new_section") {
+    targetId = handle_add_node();
   }
 
-  active_element.next.push({
+  if (!elements_section?.next) {
+    elements_section.next = [];
+  }
+
+  elements_section.next.push({
     text: "",
     next: targetId,
   });
@@ -407,34 +426,11 @@ function paste_image(event) {
   }
 }
 
-function handle_global_key_down(event) {
-  console.log("keydown", event);
-
-  if (!active_element) {
-    return;
-  }
-
-  const active_section = find_elements_section(active_element);
-  if (!active_section) {
-    return;
-  }
-
-  if (event.key === "ArrowDown") {
-    if (!active_section?.next) {
-      return;
-    }
-    active_element = story.sections[active_section.next[0].next];
-    text_editor_load(active_element);
-    return;
-  }
-
-  if (!story?.sections) {
-    return;
-  }
+function get_parent_section_of_active_element() {
   var parent_section = null;
   var sibbling_index = null;
+
   for (const section_id of Object.keys(story.sections)) {
-    const section = story.sections[section_id];
     if (!section?.next) {
       continue;
     }
@@ -450,6 +446,42 @@ function handle_global_key_down(event) {
       break;
     }
   }
+
+  return { parent_section, sibbling_index };
+}
+
+function handle_global_key_down(event) {
+  console.log("keydown", event);
+
+  for (const key of Object.keys(hot_keys)) {
+    if (event.key === key) {
+      hot_keys[key].action();
+    }
+  }
+
+  if (!active_element) {
+    return;
+  }
+
+  const active_section = find_elements_section(active_element);
+  if (!active_section) {
+    return;
+  }
+
+  if (event.key === "ArrowDown") {
+    if (!active_section?.next || active_section.next.length < 1) {
+      return;
+    }
+    active_element = story.sections[active_section.next[0].next];
+    text_editor_load(active_element);
+    return;
+  }
+
+  if (!story?.sections) {
+    return;
+  }
+  const { parent_section, sibbling_index } =
+    get_parent_section_of_active_element();
 
   if (!parent_section) {
     return;
@@ -509,6 +541,9 @@ async function load_example() {
   }
 }
 
-load_example().then(() => {
+function on_load() {
   display_adventure_graph(story, cy);
-});
+  load_variables_menu();
+}
+
+load_example().then(on_load);

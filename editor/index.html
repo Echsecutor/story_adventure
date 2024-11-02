@@ -35,23 +35,22 @@
               </ul>
             </li>
             <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" id="navbarEditMenu" role="button"
-                data-bs-toggle="dropdown" aria-expanded="false">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarEditMenu" role="button" data-bs-toggle="dropdown"
+                aria-expanded="false">
                 Edit
               </a>
               <ul class="dropdown-menu" aria-labelledby="navbarEditMenu">
-                <li><a class="dropdown-item" id="add_node_button"  href="#">Add Section</a></li>
-                <li><a class="dropdown-item" id="add_edge_button" href="#">Add Choice</a></li>
+                <li><a class="dropdown-item" id="add_node_button" href="#">Add Section</a></li>
               </ul>
             </li>
             <li class="nav-item dropdown"></li>
-              <a class="nav-link dropdown-toggle" href="#" id="navbarVariablesMenu" role="button"
-                data-bs-toggle="dropdown" aria-expanded="false">
-                Story Variables
-              </a>
-              <ul class="dropdown-menu" aria-labelledby="navbarVariablesMenu" id="variables_menu">
-                
-              </ul>
+            <a class="nav-link dropdown-toggle" href="#" id="navbarVariablesMenu" role="button"
+              data-bs-toggle="dropdown" aria-expanded="false">
+              Story Variables
+            </a>
+            <ul class="dropdown-menu" aria-labelledby="navbarVariablesMenu" id="variables_menu">
+
+            </ul>
             </li>
           </ul>
         </div>
@@ -62,7 +61,7 @@
         <div id="cy"></div>
       </div>
     </div>
-    
+
     <div class="row text_editor_container">
       <div class="col">
         <strong><label for="text" class="form-label" id="text_label">Story of the Selected Section</label></strong>
@@ -75,6 +74,18 @@
       </div>
     </div>
     <div class="row text_editor_container">
+      <div class="col">
+        <div class="row">
+          <div class="col text-end">
+            <select class="form-select" aria-label="Select next section to addd choice" id="section_select">
+              <option>1</option>
+            </select>
+          </div>
+          <div class="col text-start">
+            <button type="button" id="add_edge_button" class="btn btn-primary">Add Choice</button>
+          </div>
+        </div>
+      </div>
       <div class="col">
         <button type="button" id="add_media_button" class="btn btn-primary">
           Add Media
