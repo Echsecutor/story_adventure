@@ -121,6 +121,28 @@ function replace_variables(text, variables) {
   return re;
 }
 
+function execute_actions(script) {
+  for (const action of script) {
+    if (action.action === "INPUT") {
+      if (!action?.parameters || action.parameters.length < 2) {
+        console.error("Need to parameters to ask for input", action);
+        return;
+      }
+      const user_input = prompt(action.parameters[1]);
+      supported_actions[action.action].action(story, [
+        action.parameters[0],
+        user_input,
+      ]);
+      return;
+    }
+    if (!(action.action in supported_actions)) {
+      console.error("No such action", action.action);
+      return;
+    }
+    supported_actions[action.action].action(story, action.parameters);
+  }
+}
+
 function load_section(id, add_current_section_to_history = true) {
   if (!story.state) {
     story.state = {};
@@ -160,7 +182,9 @@ function load_section(id, add_current_section_to_history = true) {
     }
     background_image.style.display = "inline-block";
   }
-
+  if (section.script) {
+    execute_actions(section.script);
+  }
   choices_row.innerHTML = "";
   if (section?.next) {
     for (const choice of section.next) {
