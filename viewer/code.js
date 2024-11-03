@@ -1,6 +1,7 @@
 import { toast_alert, toast_ok } from "./toast.js";
 import { marked } from "./marked.esm.js";
 import DOMPurify from "./purify.es.mjs";
+import { supported_actions } from "./common.js";
 
 var story = {};
 
@@ -9,6 +10,13 @@ const viewer_states = Object.freeze({
   PLAYING: "PLAYING",
 });
 
+const hot_keys = {
+  b: {
+    description: "back",
+    action: one_step_back,
+  },
+};
+
 let current_viewer_state = viewer_states.MENU;
 
 const menu_container = document.getElementById("menu_container");
@@ -16,6 +24,13 @@ const story_container = document.getElementById("story_container");
 const story_text = document.getElementById("story_text");
 const choices_row = document.getElementById("choices_row");
 const background_image = document.getElementById("background_image");
+
+function one_step_back() {
+  if (!story?.state?.history || story.state.history.length < 1) {
+    return;
+  }
+  load_section(story.state.history.pop(), false);
+}
 
 function load_file(content_handler, read_as_data) {
   var input = document.createElement("input");
@@ -49,7 +64,7 @@ function load_graph_from_file() {
 }
 
 function load_graph_from_url(url) {
-  toast_ok("Loading story from " + url)
+  toast_ok("Loading story from " + url);
 
   fetch(url)
     .then((response) => {
@@ -106,10 +121,19 @@ function replace_variables(text, variables) {
   return re;
 }
 
-function load_section(id) {
+function load_section(id, add_current_section_to_history = true) {
+  if (!story.state) {
+    story.state = {};
+  }
+  if (!story.state.history) {
+    story.state.history = [];
+  }
+  if (add_current_section_to_history) {
+    story.state.history.push(story.state.current_section);
+  }
   story.state.current_section = id;
   if (!story?.sections?.[id]) {
-    toast_alert("Section ${id} is missing from the story");
+    toast_alert(`Section ${id} is missing from the story`);
     return;
   }
 
@@ -157,14 +181,6 @@ function load_section(id) {
       });
     }
   }
-
-  /*
-   <div class="col">
-          <button type="button" id="load_button" class="btn btn-primary">
-            left
-          </button>
-        </div>
-        */
 }
 
 function show_ui_components_according_to_state() {
@@ -188,10 +204,42 @@ function read_query_params() {
   }
 }
 
+function handle_global_click() {
+  const section = story.sections[story.state.current_section];
+  if (!section?.next) {
+    return;
+  }
+  if (section.next.length != 1) {
+    return;
+  }
+  load_section(section.next[0].next);
+}
+
+function handle_global_key_down(event) {
+  if (
+    document.activeElement.nodeName === "INPUT" ||
+    document.activeElement.nodeName === "TEXTAREA"
+  ) {
+    return;
+  }
+  for (const key of Object.keys(hot_keys)) {
+    if (event.key === key) {
+      hot_keys[key].action();
+      event.stopPropagation();
+    }
+  }
+}
+
+function on_load() {
+  show_ui_components_according_to_state();
+  read_query_params();
+}
+
 document
   .getElementById("load_button")
   .addEventListener("click", load_graph_from_file);
 
-show_ui_components_according_to_state();
+document.addEventListener("click", handle_global_click);
+document.addEventListener("keydown", handle_global_key_down);
 
-read_query_params();
+on_load();
