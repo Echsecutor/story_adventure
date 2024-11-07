@@ -200,8 +200,9 @@ function load_section(id, add_current_section_to_history = true) {
         button.innerHTML = '<i class="bi bi-arrow-right-circle-fill"></i>';
       }
 
-      button.addEventListener("click", () => {
+      button.addEventListener("click", (event) => {
         load_section(choice.next);
+        event.stopPropagation();
       });
     }
   }
@@ -229,6 +230,12 @@ function read_query_params() {
 }
 
 function handle_global_click() {
+  if (
+    document.activeElement.nodeName === "INPUT" ||
+    document.activeElement.nodeName === "BUTTON"
+  ) {
+    return;
+  }
   const section = story.sections[story.state.current_section];
   if (!section?.next) {
     return;
