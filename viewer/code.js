@@ -161,6 +161,10 @@ function load_section(id, add_current_section_to_history = true) {
 
   const section = story.sections[id];
 
+  if (section.script) {
+    execute_actions(section.script);
+  }
+
   let text = "";
   if (section?.text_lines) {
     text = section.text_lines.join("\n");
@@ -182,9 +186,7 @@ function load_section(id, add_current_section_to_history = true) {
     }
     background_image.style.display = "inline-block";
   }
-  if (section.script) {
-    execute_actions(section.script);
-  }
+
   choices_row.innerHTML = "";
   if (section?.next) {
     for (const choice of section.next) {
@@ -195,7 +197,11 @@ function load_section(id, add_current_section_to_history = true) {
       button.type = "button";
 
       if (choice?.text) {
-        button.appendChild(document.createTextNode(choice.text));
+        button.appendChild(
+          document.createTextNode(
+            replace_variables(choice.text, story.state?.variables)
+          )
+        );
       } else {
         button.innerHTML = '<i class="bi bi-arrow-right-circle-fill"></i>';
       }

@@ -54,6 +54,14 @@ var cy = cytoscape({
       "text-valign": "center",
       "text-halign": "center",
     })
+    .selector(".leave")
+    .style({
+      shape: "round-hexagon",
+    })
+    .selector(".root")
+    .style({
+      shape: "diamond",
+    })
     .selector("edge")
     .css({
       "curve-style": "bezier",
@@ -120,6 +128,9 @@ function display_adventure_graph(adventure, cyto) {
       console.log("edge added", new_edge);
     }
   }
+
+  cyto.$("node").leaves().addClass("leave");
+  cyto.$("node").roots().addClass("root");
 
   const layout = cyto.layout({
     name: "breadthfirst",

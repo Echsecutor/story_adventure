@@ -27,7 +27,7 @@ export const supported_actions = {
         );
         return;
       }
-      if (!story?.state?.currnet_section) {
+      if (!story?.state?.current_section) {
         console.log(
           "No current section to add choice for IF_SET_ADD_CHOICE action",
           story.state
@@ -35,10 +35,43 @@ export const supported_actions = {
         return;
       }
       if (story?.state?.variables?.[parameters[0]]) {
-        story.sections[story.state.currnet_section].next.push({
+        if (!story.sections[story.state.current_section].next) {
+          story.sections[story.state.current_section].next = [];
+        }
+        story.sections[story.state.current_section].next.push({
           text: parameters[2],
           next: parameters[1],
         });
+      }
+    },
+  },
+  IF_SET_REMOVE_CHOICE: {
+    parameters: ["VARIABLE", "SECTION"],
+    action: (story, parameters) => {
+      if (!parameters || parameters.length < 2) {
+        console.log(
+          "To few parameters for IF_SET_REMOVE_CHOICE action",
+          parameters
+        );
+        return;
+      }
+      if (!story?.state?.current_section) {
+        console.log(
+          "No current section to add choice for IF_SET_ADD_CHOICE action",
+          story.state
+        );
+        return;
+      }
+      if (story?.state?.variables?.[parameters[0]]) {
+        const choices = story.sections[story.state.current_section].next;
+        for (const choice of choices) {
+          if (choice.next == parameters[1]) {
+            story.sections[story.state.current_section].next = choices.splice(
+              choices.indexOf(choice),
+              1
+            );
+          }
+        }
       }
     },
   },
