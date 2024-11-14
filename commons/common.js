@@ -38,6 +38,12 @@ export const supported_actions = {
         if (!story.sections[story.state.current_section].next) {
           story.sections[story.state.current_section].next = [];
         }
+        for (const choice of story.sections[story.state.current_section].next) {
+          if (choice?.next == parameters[1] && choice?.text == parameters[2]) {
+            // choice already exists
+            return;
+          }
+        }
         story.sections[story.state.current_section].next.push({
           text: parameters[2],
           next: parameters[1],
