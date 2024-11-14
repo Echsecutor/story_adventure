@@ -24,6 +24,7 @@ const story_container = document.getElementById("story_container");
 const story_text = document.getElementById("story_text");
 const choices_row = document.getElementById("choices_row");
 const background_image = document.getElementById("background_image");
+const spinner = document.getElementById("spinner");
 
 function one_step_back() {
   if (!story?.state?.history || story.state.history.length < 1) {
@@ -65,6 +66,7 @@ function load_graph_from_file() {
 
 function load_graph_from_url(url) {
   toast_ok("Loading story from " + url);
+  show_spinner();
 
   fetch(url)
     .then((response) => {
@@ -79,7 +81,8 @@ function load_graph_from_url(url) {
     .catch((error) => {
       toast_alert("Error loading story from " + url);
       console.error("error loading url:", url, error);
-    });
+    })
+    .finally(hide_spinner);
 }
 
 function start_playing() {
@@ -184,7 +187,7 @@ function load_section(id, add_current_section_to_history = true) {
     if (!background_image.style) {
       background_image.style = {};
     }
-    background_image.style.display = "inline-block";
+    background_image.classList.remove("d-none");
   }
 
   choices_row.innerHTML = "";
@@ -216,13 +219,17 @@ function load_section(id, add_current_section_to_history = true) {
 
 function show_ui_components_according_to_state() {
   if (current_viewer_state == viewer_states.MENU) {
-    menu_container.style.display = "block";
-    story_container.style.display = "none";
+    if (!story_container.classList.contains("d-none")) {
+      story_container.classList.add("d-none");
+    }
+    menu_container.classList.remove("d-none");
     return;
   }
   if (current_viewer_state == viewer_states.PLAYING) {
-    menu_container.style.display = "none";
-    story_container.style.display = "block";
+    if (!menu_container.classList.contains("d-none")) {
+      menu_container.classList.add("d-none");
+    }
+    story_container.classList.remove("d-none");
     return;
   }
 }
@@ -264,6 +271,16 @@ function handle_global_key_down(event) {
       hot_keys[key].action();
       event.stopPropagation();
     }
+  }
+}
+
+function show_spinner() {
+  spinner.classList.remove("d-none");
+}
+
+function hide_spinner() {
+  if (!spinner.classList.contains("d-none")) {
+    spinner.classList.add("d-none");
   }
 }
 
