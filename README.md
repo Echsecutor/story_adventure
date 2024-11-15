@@ -35,10 +35,11 @@ Using [the viewer](./viewer/) you can play thtough any story adventure. This is 
 
 We proudly acknowledge using the following open source components in this project:
 
-- [Cytoscape.js](https://github.com/cytoscape/cytoscape.js) for drawing the graph view of the story
 - [Bootstrap 5](https://github.com/twbs/bootstrap) for UI components
-- [marked](https://github.com/markedjs/marked) for Markdown rendering
-- [DOMPurify](https://github.com/cure53/DOMPurify) for HTML sanitization
+- [Cytoscape.js](https://github.com/cytoscape/cytoscape.js) for drawing the story graph in the editor
+- [marked](https://github.com/markedjs/marked) for Markdown rendering in the viewer
+- [DOMPurify](https://github.com/cure53/DOMPurify) for HTML sanitization in the viewer
+- [JSZip](https://github.com/Stuk/jszip) for zipping
 
 See there for the corresponding licenses.
 

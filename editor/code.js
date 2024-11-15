@@ -1,5 +1,5 @@
 import cytoscape from "./cytoscape.esm.min.js";
-import { toast_alert } from "./toast.js";
+import { toast_alert, toast_ok } from "./toast.js";
 import { supported_actions } from "./common.js";
 
 var story = {};
@@ -13,7 +13,6 @@ const img_container = document.getElementById("img_container");
 const delete_button = document.getElementById("delete_button");
 const add_node_button = document.getElementById("add_node_button");
 const add_edge_button = document.getElementById("add_edge_button");
-const download_button = document.getElementById("download_button");
 const load_button = document.getElementById("load_button");
 const clear_all_button = document.getElementById("clear_all_button");
 const add_media_button = document.getElementById("add_media_button");
@@ -467,38 +466,97 @@ function handle_add_edge() {
   );
 }
 
-function download_graph() {
-  var dataStr =
-    "data:text/json;charset=utf-8," +
-    encodeURIComponent(JSON.stringify(story, null, 2));
+function download_media_in_section(
+  current_index,
+  section_ids,
+  finall_callback
+) {
+  console.debug("current_index", current_index);
+  if (current_index >= section_ids.length) {
+    finall_callback();
+    return;
+  }
 
-  var dlAnchorElem = document.createElement("a");
-  dlAnchorElem.style.display = "none";
-  document.body.appendChild(dlAnchorElem);
+  const section = story.sections[section_ids[current_index]];
+  if (section?.media?.src.startsWith?.("http")) {
+    console.debug(`Embedding ${section.media.src}`);
+    fetch(section.media.src)
+      .then((response) => {
+        if (response.status === 200) {
+          return response.blob();
+        } else {
+          console.log(
+            `Error ${response.status} fetching pic ${section.media.src}`
+          );
+        }
+      })
+      .then((imageBlob) => {
+        read_blob_and_handle(
+          imageBlob,
+          (content) => {
+            section.media.src = content;
+            download_media_in_section(
+              current_index + 1,
+              section_ids,
+              finall_callback
+            );
+          },
+          true
+        );
+      });
+  } else {
+    download_media_in_section(current_index + 1, section_ids, finall_callback);
+  }
+}
 
-  dlAnchorElem.setAttribute("href", dataStr);
-  dlAnchorElem.setAttribute("download", "adventure_graph.json");
-  dlAnchorElem.click();
+function download_graph_in_one() {
+  toast_ok("Downloading all external picture references...");
+
+  const section_ids = Object.keys(story.sections);
+
+  download_media_in_section(0, section_ids, () => {
+    toast_ok("All pictures embedded. Generting json for download...");
+
+    var dataStr =
+      "data:text/json;charset=utf-8," +
+      encodeURIComponent(JSON.stringify(story, null, 2));
+
+    var dlAnchorElem = document.createElement("a");
+    dlAnchorElem.style.display = "none";
+    document.body.appendChild(dlAnchorElem);
+
+    dlAnchorElem.setAttribute("href", dataStr);
+    dlAnchorElem.setAttribute("download", "adventure_graph.json");
+    dlAnchorElem.click();
+  });
+}
+
+function download_graph_split() {
+  toast_alert("Not yet implemented");
 }
 
 function load_file(content_handler, read_as_data) {
   var input = document.createElement("input");
   input.type = "file";
   input.onchange = (e) => {
-    var file = e.target.files[0];
-    var reader = new FileReader();
-    if (read_as_data) {
-      reader.readAsDataURL(file);
-    } else {
-      reader.readAsText(file, "UTF-8");
-    }
-    reader.onload = (readerEvent) => {
-      const content = readerEvent.target.result;
-      //console.log(content);
-      content_handler(content);
-    };
+    const file = e.target.files[0];
+    read_blob_and_handle(file, content_handler, read_as_data);
   };
   input.click();
+}
+
+function read_blob_and_handle(blob, content_handler, read_as_data) {
+  const reader = new FileReader();
+  if (read_as_data) {
+    reader.readAsDataURL(blob);
+  } else {
+    reader.readAsText(file, "UTF-8");
+  }
+  reader.onload = (readerEvent) => {
+    const content = readerEvent.target.result;
+    //console.log(content);
+    content_handler(content);
+  };
 }
 
 function load_graph() {
@@ -693,12 +751,18 @@ text_area.addEventListener("paste", paste_image);
 delete_button.addEventListener("click", handle_delete);
 add_node_button.addEventListener("click", handle_add_node);
 add_edge_button.addEventListener("click", handle_add_edge);
-download_button.addEventListener("click", download_graph);
+document
+  .getElementById("download_in_one_button")
+  .addEventListener("click", download_graph_in_one);
+document
+  .getElementById("download_split_button")
+  .addEventListener("click", download_graph_split);
 load_button.addEventListener("click", load_graph);
 clear_all_button.addEventListener("click", clear_all);
 add_media_button.addEventListener("click", add_or_remove_media);
-document.getElementById("redraw_button").addEventListener("click", redraw_adventure_graph);
-
+document
+  .getElementById("redraw_button")
+  .addEventListener("click", redraw_adventure_graph);
 
 document.addEventListener("keydown", handle_global_key_down);
 

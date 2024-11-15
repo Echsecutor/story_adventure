@@ -18,15 +18,6 @@ function toast(text, bg_class) {
     document.createElement("strong").appendChild(document.createTextNode(text))
   );
 
-  /*
-  const toast_header = toast.appendChild(document.createElement("div"));
-  toast_header.className = "toast-header";
-  toast_header.appendChild(
-    document
-      .createElement("strong")
-      .appendChild(document.createTextNode(header))
-  );
-  */
   const close_button = toast.appendChild(document.createElement("button"));
   close_button.type = "button";
   close_button.className = "btn-close btn-close-white me-2 m-auto";
