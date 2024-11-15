@@ -72,29 +72,48 @@ var cy = cytoscape({
     }),
 }); // cy init
 
-function display_adventure_graph(adventure, cyto) {
-  console.debug("drawing adventure graph", adventure);
-  cyto.remove("node");
+function add_node(section) {
+  cy.add([{ group: "nodes", data: section }]);
+  const new_node = cy.getElementById(section.id);
+
+  new_node.on("tap", function (evt) {
+    text_editor_load(section);
+  });
+
+  console.log("node added", new_node);
+
+  const section_option = section_select.appendChild(
+    document.createElement("option")
+  );
+  section_option.text = section.id;
+  section_option.value = section.id;
+}
+
+function add_edge(section, choice) {
+  const edge_id = section.id + "-" + choice.next;
+  cy.add([
+    {
+      group: "edges",
+      data: {
+        id: edge_id,
+        source: section.id,
+        target: choice.next,
+      },
+    },
+  ]);
+  const new_edge = cy.getElementById(edge_id);
+
+  new_edge.on("tap", function (evt) {
+    text_editor_load(choice);
+  });
+
+  console.log("edge added", new_edge);
+}
+
+function redraw_adventure_graph() {
+  console.debug("drawing adventure graph", story);
+  cy.remove("node");
   section_select.innerHTML = "";
-
-  for (const id in adventure.sections) {
-    const section = adventure.sections[id];
-    section.id = id;
-    cyto.add([{ group: "nodes", data: section }]);
-    const new_node = cyto.getElementById(section.id);
-
-    new_node.on("tap", function (evt) {
-      text_editor_load(section);
-    });
-
-    console.log("node added", new_node);
-
-    const section_option = section_select.appendChild(
-      document.createElement("option")
-    );
-    section_option.text = id;
-    section_option.value = id;
-  }
 
   const section_option = section_select.appendChild(
     document.createElement("option")
@@ -102,43 +121,32 @@ function display_adventure_graph(adventure, cyto) {
   section_option.text = "New Section";
   section_option.value = "new_section";
 
-  for (const id in adventure.sections) {
-    const section = adventure.sections[id];
+  for (const id in story.sections) {
+    const section = story.sections[id];
+    section.id = id;
+    add_node(section);
+  }
+
+  for (const id in story.sections) {
+    const section = story.sections[id];
     if (!section.next) {
       continue;
     }
     for (const next of section.next) {
-      const edge_id = section.id + "-" + next.next;
-      cyto.add([
-        {
-          group: "edges",
-          data: {
-            id: edge_id,
-            source: section.id,
-            target: next.next,
-          },
-        },
-      ]);
-      const new_edge = cyto.getElementById(edge_id);
-
-      new_edge.on("tap", function (evt) {
-        text_editor_load(next);
-      });
-
-      console.log("edge added", new_edge);
+      add_edge(section, next);
     }
   }
 
-  cyto.$("node").leaves().addClass("leave");
-  cyto.$("node").roots().addClass("root");
+  cy.$("node").leaves().addClass("leave");
+  cy.$("node").roots().addClass("root");
 
-  const layout = cyto.layout({
+  const layout = cy.layout({
     name: "breadthfirst",
     directed: true,
     padding: 10,
   });
   layout.run();
-  cyto.fit();
+  cy.fit();
 }
 function edit_variable(variable) {
   let new_value = prompt(
@@ -403,7 +411,7 @@ function handle_delete() {
     }
   }
   text_editor_hide();
-  display_adventure_graph(story, cy);
+  redraw_adventure_graph();
 }
 
 function handle_add_node() {
@@ -421,7 +429,9 @@ function handle_add_node() {
     text_lines: [""],
   };
 
-  display_adventure_graph(story, cy);
+  add_node(story.sections[next_id]);
+
+  //redraw_adventure_graph();
   text_editor_load(story.sections[next_id]);
   return next_id;
 }
@@ -451,7 +461,10 @@ function handle_add_edge() {
     next: targetId,
   });
 
-  display_adventure_graph(story, cy);
+  add_edge(
+    elements_section,
+    elements_section.next[elements_section.next.length - 1]
+  );
 }
 
 function download_graph() {
@@ -491,7 +504,7 @@ function load_file(content_handler, read_as_data) {
 function load_graph() {
   load_file((content) => {
     story = JSON.parse(content);
-    display_adventure_graph(story, cy);
+    redraw_adventure_graph();
   });
 }
 
@@ -522,7 +535,7 @@ function clear_all() {
     return;
   }
   story = {};
-  display_adventure_graph(story, cy);
+  redraw_adventure_graph();
   text_editor_hide();
 }
 
@@ -684,6 +697,8 @@ download_button.addEventListener("click", download_graph);
 load_button.addEventListener("click", load_graph);
 clear_all_button.addEventListener("click", clear_all);
 add_media_button.addEventListener("click", add_or_remove_media);
+document.getElementById("redraw_button").addEventListener("click", redraw_adventure_graph);
+
 
 document.addEventListener("keydown", handle_global_key_down);
 
@@ -701,7 +716,7 @@ async function load_example() {
 }
 
 function on_load() {
-  display_adventure_graph(story, cy);
+  redraw_adventure_graph();
   load_variables_menu();
 }
 
