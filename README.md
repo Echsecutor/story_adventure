@@ -2,9 +2,19 @@
 
 This is a minimalist framework for writing / playing through (non-linear) stories.
 
+If you like this, consider supporting further development!
+
+<a href="https://www.buymeacoffee.com/Echsecutor" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
+
+## TL;DR
+
+- 👉️ [Editor](https://echsecutor.github.io/story_adventure/editor)  👈️
+- 👉️ [Viewer](https://echsecutor.github.io/story_adventure/viewer)  👈️
+
+
 ## Introduction
 
-Have a look at the [example story](stories/example_story.json).
+Have a look at the [example story](stories/example_story.json) to see the format.
 
 A **Story Adventure** is primarily a set of **Sections** together with a **State** representing the current (initially the starting) state.
 The **State** can also hold variables that you can set initially (e.g. for consistent naming of entities) or change during the game.
@@ -19,16 +29,16 @@ If you leave the description empty, it is just a "next" type button to break lon
 ## Editor
 
 Using [the editor](./editor/) you can write your own story adventures by providing text and media for each section and linking the sections by choices.
-This is a proof of concept implementation, feel free to contribute a better ui!
 
 - Files never leave your computer, the editor is pure JS running in your browser
-- 👉️ Try online at: https://echsecutor.github.io/story_adventure/editor  👈️
+- Try at: https://echsecutor.github.io/story_adventure/editor 
 
 ## Viewer
 
-Using [the viewer](./viewer/) you can play thtough any story adventure. This is a proof of concept implementation, feel free to contribute a better ui!
+Using [the viewer](./viewer/) you can play thtough any story adventure.
 
-- 👉️ Try online at: https://echsecutor.github.io/story_adventure/viewer  👈️
+- Files never leave your computer, the viewer is pure JS running in your browser
+- Try at: https://echsecutor.github.io/story_adventure/viewer 
 
 
 ## Acknowledgment
