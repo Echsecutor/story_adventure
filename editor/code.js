@@ -88,6 +88,11 @@ function add_node(section) {
   section_option.value = section.id;
 }
 
+function remove_edge(from, to) {
+  const edge_id = from + "-" + to;
+  cy.remove("#" + edge_id);
+}
+
 function add_edge(section, choice) {
   const edge_id = section.id + "-" + choice.next;
   cy.add([
@@ -385,6 +390,7 @@ function handle_delete() {
     return;
   }
 
+  const parent_section = find_elements_section(active_element);
   var deleted_section_id = null;
   if (story?.sections?.[active_element?.id]) {
     delete story.sections[active_element.id];
@@ -410,7 +416,14 @@ function handle_delete() {
     }
   }
   text_editor_hide();
-  redraw_adventure_graph();
+
+  if (deleted_section_id) {
+    cy.remove("#" + deleted_section_id);
+  } else {
+    remove_edge(parent_section?.id, active_element?.next);
+  }
+
+  //redraw_adventure_graph();
 }
 
 function handle_add_node() {
@@ -550,7 +563,7 @@ function read_blob_and_handle(blob, content_handler, read_as_data) {
   if (read_as_data) {
     reader.readAsDataURL(blob);
   } else {
-    reader.readAsText(file, "UTF-8");
+    reader.readAsText(blob, "UTF-8");
   }
   reader.onload = (readerEvent) => {
     const content = readerEvent.target.result;
