@@ -1,0 +1,239 @@
+{
+  "sections": {
+    "1": {
+      "id": "1",
+      "text_lines": [
+        "# 1",
+        "",
+        "This is a variable/actions test story. Initially no variables are set.",
+        "",
+        "",
+        "```",
+        "v1=1",
+        "```",
+        "",
+        "- v1=${v1}",
+        "- v2=${v2}",
+        "- v3=${v3}",
+        "- v4=${v4}",
+        "- v5=${v5}",
+        "- v6=${v6}"
+      ],
+      "script": [
+        {
+          "action": "SET",
+          "parameters": [
+            "v1",
+            "1"
+          ]
+        }
+      ],
+      "next": [
+        {
+          "text": "2",
+          "next": 2
+        }
+      ]
+    },
+    "2": {
+      "id": "2",
+      "text_lines": [
+        "# 2",
+        "",
+        "```",
+        "if(v1){",
+        "  v2=2",
+        "}",
+        "",
+        "if(v6){",
+        "  ADD_CHOICE(4, \"new\")",
+        "}",
+        "```",
+        "",
+        "- v1=${v1}",
+        "- v2=${v2}",
+        "- v3=${v3}",
+        "- v4=${v4}",
+        "- v5=${v5}",
+        "- v6=${v6}"
+      ],
+      "script": [
+        {
+          "action": "IF_SET_DO",
+          "parameters": [
+            "v1",
+            "SET",
+            "v2",
+            "2"
+          ]
+        },
+        {
+          "action": "IF_SET_DO",
+          "parameters": [
+            "v6",
+            "ADD_CHOICE",
+            "4",
+            "new"
+          ]
+        }
+      ],
+      "next": [
+        {
+          "text": "3",
+          "next": 3
+        }
+      ]
+    },
+    "3": {
+      "id": "3",
+      "text_lines": [
+        "# 3",
+        "",
+        "```",
+        "if(v1){",
+        "  if(v2){",
+        "    v3=3",
+        "  }",
+        "}",
+        "",
+        "if(v6){",
+        "  v5=6",
+        "}",
+        "",
+        "if(v5){",
+        " ADD_CHOICE(5, \"goto 5\")",
+        "}",
+        "",
+        "",
+        "```",
+        "",
+        "",
+        "",
+        "- v1=${v1}",
+        "- v2=${v2}",
+        "- v3=${v3}",
+        "- v4=${v4}",
+        "- v5=${v5}",
+        "- v6=${v6}"
+      ],
+      "script": [
+        {
+          "action": "IF_SET_DO",
+          "parameters": [
+            "v1",
+            "IF_SET_DO",
+            "v2",
+            "SET",
+            "v3",
+            "3"
+          ]
+        },
+        {
+          "action": "IF_SET_DO",
+          "parameters": [
+            "v6",
+            "SET",
+            "v5",
+            "6"
+          ]
+        },
+        {
+          "action": "IF_SET_DO",
+          "parameters": [
+            "v5",
+            "ADD_CHOICE",
+            "5",
+            "goto 5"
+          ]
+        }
+      ],
+      "next": [
+        {
+          "text": "4",
+          "next": 4
+        }
+      ]
+    },
+    "4": {
+      "id": "4",
+      "text_lines": [
+        "# 4",
+        "",
+        "```",
+        "if(v3){",
+        "  ADD_CHOICE(1, \"new v1\")",
+        "}",
+        "",
+        "if (! v6){",
+        "  REMOVE_CHOICE(5)",
+        "}",
+        "",
+        "v6=6",
+        "",
+        "```",
+        "",
+        "- v1=${v1}",
+        "- v2=${v2}",
+        "- v3=${v3}",
+        "- v4=${v4}",
+        "- v5=${v5}",
+        "- v6=${v6}"
+      ],
+      "script": [
+        {
+          "action": "IF_SET_DO",
+          "parameters": [
+            "v3",
+            "ADD_CHOICE",
+            "1",
+            "new v1"
+          ]
+        },
+        {
+          "action": "IF_NOT_SET_DO",
+          "parameters": [
+            "v6",
+            "REMOVE_CHOICE",
+            "5"
+          ]
+        },
+        {
+          "action": "SET",
+          "parameters": [
+            "v6",
+            "6"
+          ]
+        }
+      ],
+      "next": [
+        {
+          "text": "5",
+          "next": 5
+        }
+      ]
+    },
+    "5": {
+      "id": "5",
+      "text_lines": [
+        "# 5",
+        "",
+        "- v1=${v1}",
+        "- v2=${v2}",
+        "- v3=${v3}",
+        "- v4=${v4}",
+        "- v5=${v5}",
+        "- v6=${v6}"
+      ]
+    }
+  },
+  "state": {
+    "variables": {
+      "v1": "",
+      "v2": "",
+      "v3": "",
+      "v4": "",
+      "v5": "",
+      "v6": ""
+    }
+  }
+}

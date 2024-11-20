@@ -115,10 +115,19 @@ export const supported_actions = {
       const choices = story.sections[story.state.current_section].next;
       for (const choice of choices) {
         if (choice.next == parameters[0]) {
-          story.sections[story.state.current_section].next = choices.splice(
+          console.debug(
+            "Removing choice",
+            choice,
+            "at position",
+            choices.indexOf(choice),
+            "in",
+            choices
+          );
+          story.sections[story.state.current_section].next.splice(
             choices.indexOf(choice),
             1
           );
+          return;
         }
       }
     },

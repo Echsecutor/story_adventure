@@ -627,6 +627,7 @@ function load_graph() {
   load_file((content) => {
     story = JSON.parse(content);
     redraw_adventure_graph();
+    load_variables_menu();
   });
 }
 
@@ -659,6 +660,7 @@ function clear_all() {
   story = {};
   redraw_adventure_graph();
   text_editor_hide();
+  load_variables_menu();
 }
 
 function paste_image(event) {
