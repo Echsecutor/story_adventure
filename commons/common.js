@@ -17,6 +17,112 @@ export const supported_actions = {
     ],
     action: set_variable,
   },
+  IF_SET_DO: {
+    parameters: ["VARIABLE", "ACTION"],
+    action: (story, parameters) => {
+      if (!parameters || parameters.length < 2) {
+        console.log("To few parameters for IF_SET_DO action", parameters);
+        return;
+      }
+      if (!supported_actions?.[parameters[1]]) {
+        console.log("No such action", parameters[1]);
+        return;
+      }
+      if (story?.state?.variables?.[parameters[0]]) {
+        console.debug(
+          "chaining to action",
+          parameters[1],
+          "with parameters",
+          parameters.slice(2)
+        );
+        return supported_actions[parameters[1]].action(
+          story,
+          parameters.slice(2)
+        );
+      }
+    },
+  },
+  IF_NOT_SET_DO: {
+    parameters: ["VARIABLE", "ACTION"],
+    action: (story, parameters) => {
+      if (!parameters || parameters.length < 2) {
+        console.log("To few parameters for IF_NOT_SET_DO action", parameters);
+        return;
+      }
+      if (!supported_actions?.[parameters[1]]) {
+        console.log("No such action", parameters[1]);
+        return;
+      }
+      if (!story?.state?.variables?.[parameters[0]]) {
+        console.debug(
+          "chaining to action",
+          parameters[1],
+          "with parameters",
+          parameters.slice(2)
+        );
+        return supported_actions[parameters[1]].action(
+          story,
+          parameters.slice(2)
+        );
+      }
+    },
+  },
+  ADD_CHOICE: {
+    parameters: ["SECTION", "STRING"],
+    action: (story, parameters) => {
+      if (!parameters || parameters.length < 2) {
+        console.log("To few parameters for ADD_CHOICE action", parameters);
+        return;
+      }
+      if (!story?.state?.current_section) {
+        console.log(
+          "No current section to add choice for ADD_CHOICE action",
+          story.state
+        );
+        return;
+      }
+
+      if (!story.sections[story.state.current_section].next) {
+        story.sections[story.state.current_section].next = [];
+      }
+      for (const choice of story.sections[story.state.current_section].next) {
+        if (choice?.next == parameters[0] && choice?.text == parameters[1]) {
+          // choice already exists
+          return;
+        }
+      }
+      story.sections[story.state.current_section].next.push({
+        text: parameters[1],
+        next: parameters[0],
+      });
+    },
+  },
+  REMOVE_CHOICE: {
+    parameters: ["SECTION"],
+    action: (story, parameters) => {
+      if (!parameters || parameters.length < 1) {
+        console.log("To few parameters for REMOVE_CHOICE action", parameters);
+        return;
+      }
+      if (!story?.state?.current_section) {
+        console.log(
+          "No current section to add choice for IF_SET_ADD_CHOICE action",
+          story.state
+        );
+        return;
+      }
+
+      const choices = story.sections[story.state.current_section].next;
+      for (const choice of choices) {
+        if (choice.next == parameters[0]) {
+          story.sections[story.state.current_section].next = choices.splice(
+            choices.indexOf(choice),
+            1
+          );
+        }
+      }
+    },
+  },
   IF_SET_ADD_CHOICE: {
     parameters: ["VARIABLE", "SECTION", "STRING"],
     action: (story, parameters) => {

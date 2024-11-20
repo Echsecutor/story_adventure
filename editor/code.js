@@ -191,7 +191,7 @@ function load_variables_menu() {
   add_menu_item(variables_menu, "Add Variable", add_variable);
 }
 
-function add_action_select_to(col, action) {
+function add_action_select_to(col, current_value, apply_new_action) {
   const select = col.appendChild(document.createElement("select"));
   select.classList.add("form-select");
   for (const supported_action of Object.keys(supported_actions)) {
@@ -200,21 +200,23 @@ function add_action_select_to(col, action) {
     option.text = supported_action;
     option.value = supported_action;
   }
-  select.value = action.action;
+  select.value = current_value;
   select.onchange = () => {
-    action.action = select.options[select.selectedIndex].value;
-    action.parameters = [];
-    for (const parameter_type of supported_actions[action.action].parameters) {
-      action.parameters.push("");
-    }
-    console.debug("Changed to action", action);
+    apply_new_action(select.options[select.selectedIndex].value);
     text_editor_load(active_element);
   };
 }
 
-function add_parameter(col, action, parameter_index) {
+function add_parameter(
+  col,
+  action,
+  parameter_index,
+  action_type,
+  parameter_type_index,
+  row
+) {
   const parameter_type =
-    supported_actions[action.action].parameters[parameter_index];
+    supported_actions[action_type].parameters[parameter_type_index];
   if (parameter_type == "STRING") {
     const input = col.appendChild(document.createElement("input"));
     input.type = "text";
@@ -258,6 +260,50 @@ function add_parameter(col, action, parameter_index) {
         select.options[select.selectedIndex].value;
     };
   }
+  if (parameter_type == "ACTION") {
+    col.remove();
+    add_action_and_parameter_inputs_to_row(
+      row,
+      action,
+      (new_action) => {
+        action.parameters[parameter_index] = new_action;
+        action.parameters.splice(parameter_index + 1);
+        for (const parameter_type of supported_actions[new_action].parameters) {
+          action.parameters.push("");
+        }
+      },
+      action.parameters[parameter_index],
+      parameter_index + 1
+    );
+  }
+}
+
+function add_action_and_parameter_inputs_to_row(
+  row,
+  action,
+  apply_new_action,
+  action_type,
+  start_in_current_action_params
+) {
+  const first_col = row.appendChild(document.createElement("div"));
+  first_col.classList.add("col");
+  add_action_select_to(first_col, action_type, apply_new_action);
+
+  if (!supported_actions[action_type]) {
+    return;
+  }
+  for (let i = 0; i < supported_actions[action_type].parameters.length; i++) {
+    const para_col = row.appendChild(document.createElement("div"));
+    para_col.classList.add("col");
+    add_parameter(
+      para_col,
+      action,
+      start_in_current_action_params + i,
+      action_type,
+      i,
+      row
+    );
+  }
 }
 
 function load_actions(section) {
@@ -279,15 +325,20 @@ function load_actions(section) {
   for (const action of section.script) {
     const row = action_div.appendChild(document.createElement("div"));
     row.classList.add("row");
-    const first_col = row.appendChild(document.createElement("div"));
-    first_col.classList.add("col");
-    add_action_select_to(first_col, action);
-
-    for (let i = 0; i < action.parameters.length; i++) {
-      const para_col = row.appendChild(document.createElement("div"));
-      para_col.classList.add("col");
-      add_parameter(para_col, action, i);
-    }
+    add_action_and_parameter_inputs_to_row(
+      row,
+      action,
+      (new_action) => {
+        action.action = new_action;
+        action.parameters = [];
+        for (const parameter_type of supported_actions[action.action]
+          .parameters) {
+          action.parameters.push("");
+        }
+      },
+      action.action,
+      0
+    );
   }
 }
 

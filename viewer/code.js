@@ -126,18 +126,6 @@ function replace_variables(text, variables) {
 
 function execute_actions(script) {
   for (const action of script) {
-    if (action.action === "INPUT") {
-      if (!action?.parameters || action.parameters.length < 2) {
-        console.error("Need to parameters to ask for input", action);
-        return;
-      }
-      const user_input = prompt(action.parameters[1]);
-      supported_actions[action.action].action(story, [
-        action.parameters[0],
-        user_input,
-      ]);
-      return;
-    }
     if (!(action.action in supported_actions)) {
       console.error("No such action", action.action);
       return;
@@ -284,7 +272,25 @@ function hide_spinner() {
   }
 }
 
+function overwrite_actions() {
+  supported_actions["INPUT"].action = (st, parameters) => {
+    if (!parameters || parameters.length < 2) {
+      console.error("Need to parameters to ask for input", action);
+      return;
+    }
+    const user_input = prompt(parameters[1]);
+    if (!story.state) {
+      story.state = {};
+    }
+    if (!story.state.variables) {
+      story.state.variables = {};
+    }
+    story.state.variables[parameters[0]] = user_input;
+  };
+}
+
 function on_load() {
+  overwrite_actions();
   show_ui_components_according_to_state();
   read_query_params();
 }
