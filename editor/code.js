@@ -1,6 +1,11 @@
 import cytoscape from "./cytoscape.esm.min.js";
+import cytoscapeKlay from './cytoscape-klay.js';
+
+cytoscape.use( cytoscapeKlay );
+
 import { toast_alert, toast_ok } from "./toast.js";
 import { supported_actions } from "./common.js";
+
 
 var story = {};
 
@@ -45,8 +50,7 @@ var cy = cytoscape({
     .stylesheet()
     .selector("node")
     .css({
-      height: 80,
-      width: 80,
+      "padding": 10,
       "border-width": 3,
       "border-opacity": 0.5,
       content: "data(id)",
@@ -56,10 +60,12 @@ var cy = cytoscape({
     .selector(".leave")
     .style({
       shape: "round-hexagon",
+      "background-color": "red",
     })
     .selector(".root")
     .style({
       shape: "diamond",
+      "background-color": "green",
     })
     .selector("edge")
     .css({
@@ -144,14 +150,33 @@ function redraw_adventure_graph() {
   cy.$("node").leaves().addClass("leave");
   cy.$("node").roots().addClass("root");
 
-  const layout = cy.layout({
-    name: "breadthfirst",
-    directed: true,
-    padding: 10,
-  });
+  const layouts = {
+    breadthfirst: {
+      name: "breadthfirst",
+      directed: true,
+      spacingFactor:1.3,
+      animate: true,
+    },
+    cose: {
+      name: "cose",
+      animate: true,
+    },
+    klay: {
+      name: "klay",
+      animate: true,
+      klay: {
+        direction: 'RIGHT', // Overall direction of edges: horizontal (right / left) or vertical (down / up)
+        /* UNDEFINED, RIGHT, LEFT, DOWN, UP */
+        thoroughness: 14 // How much effort should be spent to produce a nice layout..
+      }
+    },
+  };
+
+  const layout = cy.layout(layouts["klay"]);
   layout.run();
   cy.fit();
 }
+
 function edit_variable(variable) {
   let new_value = prompt(
     `Set variable ${variable} with current value '${story?.state?.variables?.[variable]}'`

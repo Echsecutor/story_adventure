@@ -47,6 +47,7 @@ We proudly acknowledge using the following open source components in this projec
 
 - [Bootstrap 5](https://github.com/twbs/bootstrap) for UI components
 - [Cytoscape.js](https://github.com/cytoscape/cytoscape.js) for drawing the story graph in the editor
+  -[cytoscape-klay](https://github.com/cytoscape/cytoscape.js-klay) for the graph layout
 - [marked](https://github.com/markedjs/marked) for Markdown rendering in the viewer
 - [DOMPurify](https://github.com/cure53/DOMPurify) for HTML sanitization in the viewer
 - [JSZip](https://github.com/Stuk/jszip) for zipping
