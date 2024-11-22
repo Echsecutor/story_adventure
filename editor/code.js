@@ -1,11 +1,10 @@
 import cytoscape from "./cytoscape.esm.min.js";
-import cytoscapeKlay from './cytoscape-klay.js';
+import cytoscapeKlay from "./cytoscape-klay.js";
 
-cytoscape.use( cytoscapeKlay );
+cytoscape.use(cytoscapeKlay);
 
 import { toast_alert, toast_ok } from "./toast.js";
 import { supported_actions } from "./common.js";
-
 
 var story = {};
 
@@ -50,7 +49,7 @@ var cy = cytoscape({
     .stylesheet()
     .selector("node")
     .css({
-      "padding": 10,
+      padding: 10,
       "border-width": 3,
       "border-opacity": 0.5,
       content: "data(id)",
@@ -80,6 +79,17 @@ var cy = cytoscape({
 function add_node(section) {
   cy.add([{ group: "nodes", data: section }]);
   const new_node = cy.getElementById(section.id);
+
+  const active_section = find_elements_section(active_element);
+  if (active_section) {
+    const active_node = cy.getElementById(active_section.id);
+    if (active_node) {
+      new_node.position({
+        x: active_node.position("x") + 100,
+        y: active_node.position("y") + 20,
+      });
+    }
+  }
 
   new_node.on("tap", function (evt) {
     text_editor_load(section);
@@ -154,7 +164,7 @@ function redraw_adventure_graph() {
     breadthfirst: {
       name: "breadthfirst",
       directed: true,
-      spacingFactor:1.3,
+      spacingFactor: 1.3,
       animate: true,
     },
     cose: {
@@ -165,10 +175,11 @@ function redraw_adventure_graph() {
       name: "klay",
       animate: true,
       klay: {
-        direction: 'RIGHT', // Overall direction of edges: horizontal (right / left) or vertical (down / up)
+        aspectRatio: 10, // The aimed aspect ratio of the drawing, that is the quotient of width by height
+        direction: "RIGHT", // Overall direction of edges: horizontal (right / left) or vertical (down / up)
         /* UNDEFINED, RIGHT, LEFT, DOWN, UP */
-        thoroughness: 14 // How much effort should be spent to produce a nice layout..
-      }
+        thoroughness: 14, // How much effort should be spent to produce a nice layout..
+      },
     },
   };
 
