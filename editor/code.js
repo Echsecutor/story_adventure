@@ -1,10 +1,13 @@
 import cytoscape from "./cytoscape.esm.min.js";
 import cytoscapeKlay from "./cytoscape-klay.js";
+import JSZip from "./jszip.js";
 
 cytoscape.use(cytoscapeKlay);
 
 import { toast_alert, toast_ok } from "./toast.js";
 import { supported_actions } from "./common.js";
+
+const data_url_regexp = /^data:image\/([a-z]*);base64,(.*)$/;
 
 var story = {};
 
@@ -566,14 +569,10 @@ function handle_add_edge() {
   );
 }
 
-function download_media_in_section(
-  current_index,
-  section_ids,
-  finall_callback
-) {
+function download_media_in_section(current_index, section_ids, final_callback) {
   console.debug("current_index", current_index);
   if (current_index >= section_ids.length) {
-    finall_callback();
+    final_callback();
     return;
   }
 
@@ -598,14 +597,14 @@ function download_media_in_section(
             download_media_in_section(
               current_index + 1,
               section_ids,
-              finall_callback
+              final_callback
             );
           },
           true
         );
       });
   } else {
-    download_media_in_section(current_index + 1, section_ids, finall_callback);
+    download_media_in_section(current_index + 1, section_ids, final_callback);
   }
 }
 
@@ -621,18 +620,65 @@ function download_graph_in_one() {
       "data:text/json;charset=utf-8," +
       encodeURIComponent(JSON.stringify(story, null, 2));
 
-    var dlAnchorElem = document.createElement("a");
-    dlAnchorElem.style.display = "none";
-    document.body.appendChild(dlAnchorElem);
-
-    dlAnchorElem.setAttribute("href", dataStr);
-    dlAnchorElem.setAttribute("download", "adventure_graph.json");
-    dlAnchorElem.click();
+    trigger_data_dl(dataStr);
   });
 }
 
-function download_graph_split() {
-  toast_alert("Not yet implemented");
+function trigger_data_dl(dataStr, file_name) {
+  if (!file_name) {
+    file_name = "adventure_graph.json";
+  }
+  var dlAnchorElem = document.createElement("a");
+  dlAnchorElem.style.display = "none";
+  document.body.appendChild(dlAnchorElem);
+
+  dlAnchorElem.setAttribute("href", dataStr);
+  dlAnchorElem.setAttribute("download", file_name);
+  dlAnchorElem.click();
+  window.setTimeout(dlAnchorElem.remove, 1000);
+}
+
+async function download_graph_split() {
+  toast_ok("Extracting images into separate files");
+  const story_deep_copy = JSON.parse(JSON.stringify(story));
+  var zip = new JSZip();
+  var folder = zip.folder("adventure");
+
+  for (const section_id in story.sections) {
+    const section = story.sections[section_id];
+    if (!section?.media?.src) {
+      continue;
+    }
+    const match = section.media.src.match(data_url_regexp);
+    if (match) {
+      const type = match[1];
+      const data = match[2];
+      console.log("Adding image for section", section, "to zip");
+      const file_name = section_id + "." + type;
+      story_deep_copy.sections[section.id].media.src = "./" + file_name;
+      folder.file(file_name, data, { base64: true });
+    } else {
+      console.debug("section media src did not match data url regexp", section);
+    }
+  }
+
+  folder.file(get_file_safe_title() + ".json", JSON.stringify(story_deep_copy));
+
+  toast_ok("Generating Zip");
+  zip.generateAsync({ type: "base64" }).then(function (content) {
+    trigger_data_dl(
+      "data:application/zip;base64," + content,
+      get_file_safe_title() + ".zip"
+    );
+    //saveAs(content, "example.zip");
+  });
+}
+
+function get_file_safe_title() {
+  if (!story?.meta?.title) {
+    return "story_adventure";
+  }
+  return story.meta.title.replaceAll(/[^a-z0-9-_]/gi, "_");
 }
 
 function load_file(content_handler, read_as_data) {
