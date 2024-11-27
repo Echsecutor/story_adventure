@@ -577,7 +577,7 @@ function download_media_in_section(current_index, section_ids, final_callback) {
   }
 
   const section = story.sections[section_ids[current_index]];
-  if (section?.media?.src.startsWith?.("http")) {
+  if (section?.media?.src && !section.media.src.startsWith?.("data")) {
     console.debug(`Embedding ${section.media.src}`);
     fetch(section.media.src)
       .then((response) => {
