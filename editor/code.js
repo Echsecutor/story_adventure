@@ -635,7 +635,6 @@ function trigger_data_dl(dataStr, file_name) {
   dlAnchorElem.setAttribute("href", dataStr);
   dlAnchorElem.setAttribute("download", file_name);
   dlAnchorElem.click();
-  window.setTimeout(dlAnchorElem.remove, 1000);
 }
 
 async function download_graph_split() {
