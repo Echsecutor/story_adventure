@@ -1,0 +1,288 @@
+{
+  "sections": {
+    "1": {
+      "id": "1",
+      "text_lines": [
+        "Es war einmal eine Dözessin mit Namen ${name},",
+        "",
+        "sie lebte ein *glückliches* Leben..."
+      ],
+      "next": [
+        {
+          "text": "in einem großen Schloss",
+          "next": 2
+        },
+        {
+          "text": "in einem Katzenhaus",
+          "next": 3
+        }
+      ],
+      "media": {
+        "type": "image",
+        "src": "./1.png"
+      },
+      "script": [
+        {
+          "action": "INPUT",
+          "parameters": [
+            "name",
+            "Wie heißt die Dözessin?"
+          ]
+        }
+      ]
+    },
+    "2": {
+      "id": "2",
+      "text_lines": [
+        "namens ${haus}."
+      ],
+      "media": {
+        "type": "image",
+        "src": "./2.png"
+      },
+      "next": [
+        {
+          "text": "",
+          "next": "4"
+        }
+      ],
+      "script": [
+        {
+          "action": "SET",
+          "parameters": [
+            "haus",
+            "Candy Castle"
+          ]
+        }
+      ]
+    },
+    "3": {
+      "id": "3",
+      "text_lines": [
+        "mit Namen ${haus}."
+      ],
+      "media": {
+        "type": "image",
+        "src": "./3.png"
+      },
+      "next": [
+        {
+          "text": "",
+          "next": 4
+        }
+      ],
+      "script": [
+        {
+          "action": "SET",
+          "parameters": [
+            "haus",
+            "Kitty World Haus"
+          ]
+        }
+      ]
+    },
+    "4": {
+      "id": "4",
+      "text_lines": [
+        "Ihr bester Freund war ..."
+      ],
+      "media": {
+        "type": "image",
+        "src": "./4.png"
+      },
+      "next": [
+        {
+          "text": "Eddy der super Elefant!",
+          "next": 5
+        },
+        {
+          "text": "Anna die freundliche Affendame",
+          "next": 6
+        }
+      ]
+    },
+    "5": {
+      "id": "5",
+      "text_lines": [
+        "Eddy ist wirklich super!"
+      ],
+      "media": {
+        "type": "image",
+        "src": "./5.png"
+      },
+      "next": [
+        {
+          "text": "",
+          "next": 7
+        }
+      ],
+      "script": [
+        {
+          "action": "SET",
+          "parameters": [
+            "freund",
+            "Eddy"
+          ]
+        }
+      ]
+    },
+    "6": {
+      "id": "6",
+      "text_lines": [
+        "Sehr freundlich!"
+      ],
+      "media": {
+        "type": "image",
+        "src": "./6.png"
+      },
+      "script": [
+        {
+          "action": "SET",
+          "parameters": [
+            "freund",
+            "Anna"
+          ]
+        }
+      ],
+      "next": [
+        {
+          "text": "",
+          "next": "8"
+        }
+      ]
+    },
+    "7": {
+      "id": "7",
+      "text_lines": [
+        "${name} fliegt gern mit Eddy durch die Wolken."
+      ],
+      "media": {
+        "type": "image",
+        "src": "./7.png"
+      },
+      "next": [
+        {
+          "text": "",
+          "next": 8
+        }
+      ]
+    },
+    "8": {
+      "id": "8",
+      "text_lines": [
+        "Eines Tages finden ${name} und ${freund} einen verletzten Vogel.",
+        "",
+        "*Piep!*"
+      ],
+      "media": {
+        "type": "image",
+        "src": "./8.png"
+      },
+      "next": [
+        {
+          "text": "Sie helfen dem Vogel!",
+          "next": 9
+        },
+        {
+          "text": "Pustekuchen!",
+          "next": 11
+        }
+      ]
+    },
+    "9": {
+      "id": "9",
+      "text_lines": [
+        "Sie bringen den Vogel ins ${haus} und versuchen ihn gesund zu pflegen."
+      ],
+      "next": [
+        {
+          "text": "",
+          "next": 10
+        }
+      ],
+      "media": {
+        "type": "image",
+        "src": "./9.png"
+      }
+    },
+    "10": {
+      "id": "10",
+      "text_lines": [
+        "Zum Glück konnten ${name} und ${freund} den kleinen Vogel schnell wieder auf die Beine bringen."
+      ],
+      "media": {
+        "type": "image",
+        "src": "./10.png"
+      },
+      "next": [
+        {
+          "text": "",
+          "next": 12
+        }
+      ]
+    },
+    "11": {
+      "id": "11",
+      "text_lines": [
+        "Nun ist der Vogel nicht nur verletzt, sondern auch sehr traurig!"
+      ],
+      "media": {
+        "type": "image",
+        "src": "./11.png"
+      },
+      "next": [
+        {
+          "text": "Na gut, sie helfen ihm doch!",
+          "next": "9"
+        },
+        {
+          "text": "Pech!",
+          "next": 13
+        }
+      ]
+    },
+    "12": {
+      "id": "12",
+      "text_lines": [
+        "# Happy End!"
+      ],
+      "media": {
+        "type": "image",
+        "src": "./12.png"
+      }
+    },
+    "13": {
+      "id": "13",
+      "text_lines": [
+        "Der Vogel ist wirklich sauer und jagt ${name} ins ${haus}"
+      ],
+      "media": {
+        "type": "image",
+        "src": "./13.png"
+      },
+      "next": [
+        {
+          "text": "",
+          "next": 14
+        }
+      ]
+    },
+    "14": {
+      "id": "14",
+      "text_lines": [
+        "Wie traurig!"
+      ],
+      "media": {
+        "type": "image",
+        "src": "./14.png"
+      }
+    }
+  },
+  "state": {
+    "variables": {
+      "name": "Rosie",
+      "freund": "",
+      "haus": ""
+    }
+  }
+}
