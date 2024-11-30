@@ -6,7 +6,10 @@ cytoscape.use(cytoscapeKlay);
 
 import { toast_alert, toast_ok } from "./toast.js";
 import { supported_actions } from "./common.js";
-import { create_element_with_classes_and_attributes } from "./utils.js";
+import {
+  create_element_with_classes_and_attributes,
+  get_text_from_section,
+} from "./utils.js";
 
 const data_url_regexp = /^data:image\/([a-z]*);base64,(.*)$/;
 
@@ -925,6 +928,10 @@ document
   .getElementById("redraw_button")
   .addEventListener("click", redraw_adventure_graph);
 
+document
+  .getElementById("linearize_button")
+  .addEventListener("click", create_linear_story);
+
 document.addEventListener("keydown", handle_global_key_down);
 
 async function load_example() {
@@ -938,6 +945,105 @@ async function load_example() {
   } catch (error) {
     console.error(error.message);
   }
+}
+
+function create_linear_story() {
+  const start_at = prompt("Start at section:", "1");
+  if (!start_at) {
+    return;
+  }
+  const end_at = prompt("Finish at section:");
+  if (!end_at) {
+    return;
+  }
+  const passing_through = [];
+  var passing = prompt(
+    "Add section to pass through list (leave empty to finish):"
+  );
+  while (passing) {
+    passing_through.push(passing);
+    passing = prompt(
+      "Add section to pass through list (leave empty to finish):"
+    );
+  }
+  toast_ok("Generating linear story...");
+  console.debug(
+    "Creating linearized story from",
+    start_at,
+    "to",
+    end_at,
+    "passing_through",
+    passing_through
+  );
+  const linearized_history = depth_first_search(
+    [start_at],
+    end_at,
+    passing_through
+  );
+  console.debug("linearized_history", linearized_history);
+  toast_ok("Found a linear story. Generating Markdown...");
+
+  const markdown = markdown_from_section_id_list(linearized_history);
+
+  trigger_data_dl(
+    "data:text/plain;charset=utf-8," + encodeURIComponent(markdown),
+    get_file_safe_title() + ".md"
+  );
+}
+
+function markdown_from_section_id_list(section_ids) {
+  let md = "";
+  for (const id of section_ids) {
+    console.debug("adding section to markdown", id);
+    md += get_text_from_section(story.sections?.[id], story?.state?.variables);
+    md += "\n\n";
+    if (story.sections?.[id]?.media?.src) {
+      md += "![](" + story.sections?.[id]?.media?.src + ")\n\n";
+    }
+  }
+  return md;
+}
+
+function depth_first_search(linearized_history, end_at, passing_through) {
+  if (linearized_history[linearized_history.length - 1] == end_at) {
+    console.debug("dfs reached target", end_at);
+    if (passing_through) {
+      for (const passing of passing_through) {
+        if (!linearized_history.includes(passing)) {
+          console.debug(linearized_history, "not passing through", passing);
+          return null;
+        }
+      }
+    }
+    console.debug(
+      linearized_history,
+      "is passing through all of",
+      passing_through
+    );
+    return linearized_history;
+  }
+  const current_section_id = linearized_history[linearized_history.length - 1];
+  const current_section = story.sections[current_section_id];
+  if (!current_section) {
+    toast_alert("No section " + current_section_id);
+    return null;
+  }
+  if (!current_section.next) {
+    console.debug("Dead end", current_section_id);
+    return null;
+  }
+  for (const next of current_section.next) {
+    const found_path = depth_first_search(
+      [...linearized_history, next.next],
+      end_at,
+      passing_through
+    );
+    if (found_path) {
+      return found_path;
+    }
+  }
+  console.debug("No continuation possible for", linearized_history);
+  return null;
 }
 
 function on_load() {

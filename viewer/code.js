@@ -2,6 +2,7 @@ import { toast_alert, toast_ok } from "./toast.js";
 import { marked } from "./marked.esm.js";
 import DOMPurify from "./purify.es.mjs";
 import { supported_actions } from "./common.js";
+import { replace_variables, get_text_from_section } from "./utils.js";
 
 var story = {};
 
@@ -113,17 +114,6 @@ function start_playing() {
   show_ui_components_according_to_state();
 }
 
-function replace_variables(text, variables) {
-  if (!variables || !text) {
-    return text;
-  }
-  var re = text;
-  for (const key in variables) {
-    re = re.replaceAll("${" + key + "}", variables[key]);
-  }
-  return re;
-}
-
 function execute_actions(script) {
   for (const action of script) {
     if (!(action.action in supported_actions)) {
@@ -156,18 +146,11 @@ function load_section(id, add_current_section_to_history = true) {
     execute_actions(section.script);
   }
 
-  let text = "";
-  if (section?.text_lines) {
-    text = section.text_lines.join("\n");
-  } else if (section?.text) {
-    text = section.text;
-  }
+  const text = get_text_from_section(section, story.state?.variables)
+
   if (!text) {
     toast_alert("This section has no text");
   }
-
-  text = replace_variables(text, story.state?.variables);
-
   story_text.innerHTML = DOMPurify.sanitize(marked.parse(text));
 
   if (section?.media?.type === "image" && section?.media?.src) {

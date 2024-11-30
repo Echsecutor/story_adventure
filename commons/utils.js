@@ -22,3 +22,24 @@ export function create_element_with_classes_and_attributes(
   }
   return element;
 }
+
+export function replace_variables(text, variables) {
+    if (!variables || !text) {
+      return text;
+    }
+    var re = text;
+    for (const key in variables) {
+      re = re.replaceAll("${" + key + "}", variables[key]);
+    }
+    return re;
+  }
+
+  export function get_text_from_section(section, variables){
+    let text = "";
+    if (section?.text_lines) {
+      text = section.text_lines.join("\n");
+    } else if (section?.text) {
+      text = section.text;
+    }
+    return replace_variables(text, variables);
+  }
