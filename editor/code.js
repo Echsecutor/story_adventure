@@ -6,6 +6,7 @@ cytoscape.use(cytoscapeKlay);
 
 import { toast_alert, toast_ok } from "./toast.js";
 import { supported_actions } from "./common.js";
+import { create_element_with_classes_and_attributes } from "./utils.js";
 
 const data_url_regexp = /^data:image\/([a-z]*);base64,(.*)$/;
 
@@ -101,10 +102,11 @@ function add_node(section) {
   console.log("node added", new_node);
 
   const section_option = section_select.appendChild(
-    document.createElement("option")
+    create_element_with_classes_and_attributes("option", null, {
+      text: section.id,
+      value: section.id,
+    })
   );
-  section_option.text = section.id;
-  section_option.value = section.id;
 }
 
 function remove_edge(from, to) {
@@ -139,10 +141,11 @@ function redraw_adventure_graph() {
   section_select.innerHTML = "";
 
   const section_option = section_select.appendChild(
-    document.createElement("option")
+    create_element_with_classes_and_attributes("option", null, {
+      text: "New Section",
+      value: "new_section",
+    })
   );
-  section_option.text = "New Section";
-  section_option.value = "new_section";
 
   for (const id in story.sections) {
     const section = story.sections[id];
@@ -212,12 +215,18 @@ function add_variable() {
 }
 
 function add_menu_item(menu, text, on_click) {
-  const new_li = menu.appendChild(document.createElement("li"));
-  const new_a = new_li.appendChild(document.createElement("a"));
-  new_a.href = "#";
-  new_a.classList.add("dropdown-item");
-  new_a.innerText = text;
-  new_a.onclick = on_click;
+  menu.appendChild(document.createElement("li")).appendChild(
+    create_element_with_classes_and_attributes(
+      "a",
+      ["dropdown-item"],
+      {
+        href: "#",
+      },
+      {
+        click: on_click,
+      }
+    )
+  ).innerText = text;
 }
 
 function load_variables_menu() {
@@ -234,10 +243,12 @@ function add_action_select_to(col, current_value, apply_new_action) {
   const select = col.appendChild(document.createElement("select"));
   select.classList.add("form-select");
   for (const supported_action of Object.keys(supported_actions)) {
-    const option = select.appendChild(document.createElement("option"));
-    select.classList.add("form-select");
-    option.text = supported_action;
-    option.value = supported_action;
+    const option = select.appendChild(
+      create_element_with_classes_and_attributes("option", ["form-select"], {
+        text: supported_action,
+        value: supported_action,
+      })
+    );
   }
   select.value = current_value;
   select.onchange = () => {
@@ -614,7 +625,7 @@ function download_graph_in_one() {
   const section_ids = Object.keys(story.sections);
 
   download_media_in_section(0, section_ids, () => {
-    toast_ok("All pictures embedded. Generting json for download...");
+    toast_ok("All pictures embedded. Generating json for download...");
 
     var dataStr =
       "data:text/json;charset=utf-8," +
@@ -626,15 +637,19 @@ function download_graph_in_one() {
 
 function trigger_data_dl(dataStr, file_name) {
   if (!file_name) {
-    file_name = "adventure_graph.json";
+    file_name = get_file_safe_title() + ".json";
   }
-  var dlAnchorElem = document.createElement("a");
-  dlAnchorElem.style.display = "none";
-  document.body.appendChild(dlAnchorElem);
+  var dlAnchorElem = create_element_with_classes_and_attributes("a", null, {
+    href: dataStr,
+    download: file_name,
+  });
+  dlAnchorElem.innerText = file_name;
 
-  dlAnchorElem.setAttribute("href", dataStr);
-  dlAnchorElem.setAttribute("download", file_name);
+  toast_ok("Your download is ready", dlAnchorElem);
+
   dlAnchorElem.click();
+
+  return dlAnchorElem;
 }
 
 async function download_graph_split() {
@@ -669,7 +684,6 @@ async function download_graph_split() {
       "data:application/zip;base64," + content,
       get_file_safe_title() + ".zip"
     );
-    //saveAs(content, "example.zip");
   });
 }
 
