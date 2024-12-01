@@ -104,12 +104,11 @@ function add_node(section) {
 
   console.log("node added", new_node);
 
-  const section_option = section_select.appendChild(
+  section_select.appendChild(
     create_element_with_classes_and_attributes("option", null, {
-      text: section.id,
       value: section.id,
     })
-  );
+  ).text = section.id;
 }
 
 function remove_edge(from, to) {
@@ -142,13 +141,11 @@ function redraw_adventure_graph() {
   console.debug("drawing adventure graph", story);
   cy.remove("node");
   section_select.innerHTML = "";
-
-  const section_option = section_select.appendChild(
+  section_select.appendChild(
     create_element_with_classes_and_attributes("option", null, {
-      text: "New Section",
       value: "new_section",
     })
-  );
+  ).text = "New Section";
 
   for (const id in story.sections) {
     const section = story.sections[id];
@@ -246,12 +243,11 @@ function add_action_select_to(col, current_value, apply_new_action) {
   const select = col.appendChild(document.createElement("select"));
   select.classList.add("form-select");
   for (const supported_action of Object.keys(supported_actions)) {
-    const option = select.appendChild(
+    select.appendChild(
       create_element_with_classes_and_attributes("option", ["form-select"], {
-        text: supported_action,
         value: supported_action,
       })
-    );
+    ).text = supported_action;
   }
   select.value = current_value;
   select.onchange = () => {
@@ -947,7 +943,7 @@ async function load_example() {
   }
 }
 
-function create_linear_story() {
+async function create_linear_story() {
   const start_at = prompt("Start at section:", "1");
   if (!start_at) {
     return;
@@ -975,23 +971,41 @@ function create_linear_story() {
     "passing_through",
     passing_through
   );
-  const linearized_history = depth_first_search(
-    [start_at],
-    end_at,
-    passing_through
-  );
-  console.debug("linearized_history", linearized_history);
-  toast_ok("Found a linear story. Generating Markdown...");
+  depth_first_search([start_at], end_at, passing_through)
+    .then((linearized_history) => {
+      console.debug("linearized_history", linearized_history);
+      if (!linearized_history) {
+        toast_alert(
+          "I could not find a linear story which starts at " +
+            start_at +
+            " and ends at " +
+            end_at +
+            " while passing through all of " +
+            passing_through
+        );
+        return;
+      }
 
-  const markdown = markdown_from_section_id_list(linearized_history);
+      toast_ok("Found a linear story. Generating Markdown...");
 
-  trigger_data_dl(
-    "data:text/plain;charset=utf-8," + encodeURIComponent(markdown),
-    get_file_safe_title() + ".md"
-  );
+      return markdown_from_section_id_list(linearized_history);
+    })
+    .then((markdown) => {
+      if (!markdown) {
+        return;
+      }
+      trigger_data_dl(
+        "data:text/plain;charset=utf-8," + encodeURIComponent(markdown),
+        get_file_safe_title() + ".md"
+      );
+    })
+    .catch((error) => {
+      console.error(error);
+      toast_alert("Error generating linearized story");
+    });
 }
 
-function markdown_from_section_id_list(section_ids) {
+async function markdown_from_section_id_list(section_ids) {
   let md = "";
   for (const id of section_ids) {
     console.debug("adding section to markdown", id);
@@ -1004,7 +1018,7 @@ function markdown_from_section_id_list(section_ids) {
   return md;
 }
 
-function depth_first_search(linearized_history, end_at, passing_through) {
+async function depth_first_search(linearized_history, end_at, passing_through) {
   if (linearized_history[linearized_history.length - 1] == end_at) {
     console.debug("dfs reached target", end_at);
     if (passing_through) {
@@ -1033,7 +1047,11 @@ function depth_first_search(linearized_history, end_at, passing_through) {
     return null;
   }
   for (const next of current_section.next) {
-    const found_path = depth_first_search(
+    if (linearized_history.includes(next.next)) {
+      console.log("cycle detected. not following", next);
+      continue;
+    }
+    const found_path = await depth_first_search(
       [...linearized_history, next.next],
       end_at,
       passing_through
