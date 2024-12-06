@@ -9,6 +9,8 @@ import { supported_actions } from "./common.js";
 import {
   create_element_with_classes_and_attributes,
   get_text_from_section,
+  viewer_files,
+  editor_files,
 } from "./utils.js";
 
 const data_url_regexp = /^data:image\/([a-z]*);base64,(.*)$/;
@@ -105,10 +107,11 @@ function add_node(section) {
   console.log("node added", new_node);
 
   section_select.appendChild(
-    create_element_with_classes_and_attributes("option", null, {
-      value: section.id,
+    create_element_with_classes_and_attributes("option", {
+      attributes: { value: section.id },
+      text: section.id,
     })
-  ).text = section.id;
+  );
 }
 
 function remove_edge(from, to) {
@@ -142,10 +145,11 @@ function redraw_adventure_graph() {
   cy.remove("node");
   section_select.innerHTML = "";
   section_select.appendChild(
-    create_element_with_classes_and_attributes("option", null, {
-      value: "new_section",
+    create_element_with_classes_and_attributes("option", {
+      attributes: { value: "new_section" },
+      text: "New Section",
     })
-  ).text = "New Section";
+  );
 
   for (const id in story.sections) {
     const section = story.sections[id];
@@ -216,17 +220,17 @@ function add_variable() {
 
 function add_menu_item(menu, text, on_click) {
   menu.appendChild(document.createElement("li")).appendChild(
-    create_element_with_classes_and_attributes(
-      "a",
-      ["dropdown-item"],
-      {
+    create_element_with_classes_and_attributes("a", {
+      class_list: ["dropdown-item"],
+      attributes: {
         href: "#",
       },
-      {
+      event_listener: {
         click: on_click,
-      }
-    )
-  ).innerText = text;
+      },
+      text: text,
+    })
+  );
 }
 
 function load_variables_menu() {
@@ -244,10 +248,14 @@ function add_action_select_to(col, current_value, apply_new_action) {
   select.classList.add("form-select");
   for (const supported_action of Object.keys(supported_actions)) {
     select.appendChild(
-      create_element_with_classes_and_attributes("option", ["form-select"], {
-        value: supported_action,
+      create_element_with_classes_and_attributes("option", {
+        class_list: ["form-select"],
+        attributes: {
+          value: supported_action,
+        },
+        text: supported_action,
       })
-    ).text = supported_action;
+    );
   }
   select.value = current_value;
   select.onchange = () => {
@@ -638,13 +646,25 @@ function trigger_data_dl(dataStr, file_name) {
   if (!file_name) {
     file_name = get_file_safe_title() + ".json";
   }
-  var dlAnchorElem = create_element_with_classes_and_attributes("a", null, {
-    href: dataStr,
-    download: file_name,
-  });
-  dlAnchorElem.innerText = file_name;
+  var p = create_element_with_classes_and_attributes("p");
+  var dlAnchorElem = p.appendChild(
+    create_element_with_classes_and_attributes("a", {
+      attributes: {
+        href: dataStr,
+        download: file_name,
+      },
+      class_list: ["link-warning"],
+      text: file_name,
+    })
+  );
 
-  toast_ok("Your download is ready", dlAnchorElem);
+  toast_ok(
+    "Your file is ready",
+    p,
+    create_element_with_classes_and_attributes("p", {
+      innerHTML: "Your download should start shortly...",
+    })
+  );
 
   dlAnchorElem.click();
 
@@ -655,7 +675,7 @@ async function download_graph_split() {
   toast_ok("Extracting images into separate files");
   const story_deep_copy = JSON.parse(JSON.stringify(story));
   var zip = new JSZip();
-  var folder = zip.folder("adventure");
+  var folder = zip.folder(get_file_safe_title());
 
   for (const section_id in story.sections) {
     const section = story.sections[section_id];
@@ -668,22 +688,78 @@ async function download_graph_split() {
       const data = match[2];
       console.log("Adding image for section", section, "to zip");
       const file_name = section_id + "." + type;
-      story_deep_copy.sections[section.id].media.src = "./" + file_name;
+      story_deep_copy.sections[section.id].media.src =
+        "../" + get_file_safe_title() + "/" + file_name;
       folder.file(file_name, data, { base64: true });
     } else {
       console.debug("section media src did not match data url regexp", section);
     }
   }
 
+  toast_ok("Saving Story");
+
   folder.file(get_file_safe_title() + ".json", JSON.stringify(story_deep_copy));
 
-  toast_ok("Generating Zip");
-  zip.generateAsync({ type: "base64" }).then(function (content) {
-    trigger_data_dl(
-      "data:application/zip;base64," + content,
-      get_file_safe_title() + ".zip"
-    );
+  add_stroy_adventure_files(zip).then(() => {
+    toast_ok("Generating Zip");
+    zip.generateAsync({ type: "base64" }).then(function (content) {
+      trigger_data_dl(
+        "data:application/zip;base64," + content,
+        get_file_safe_title() + ".zip"
+      );
+    });
   });
+}
+
+async function add_stroy_adventure_files(zip) {
+  const wait_for_all = [];
+  toast_ok("Adding viewer to archive");
+  const viewer_folder = zip.folder("viewer");
+  for (const file_name of viewer_files) {
+    wait_for_all.push(
+      fetch("../viewer/" + file_name)
+        .then((response) => response.blob())
+        .then((blob) => {
+          viewer_folder.file(file_name, blob);
+        })
+    );
+  }
+  toast_ok("Adding editor to archive");
+  const editor_folder = zip.folder("editor");
+  for (const file_name of editor_files) {
+    wait_for_all.push(
+      fetch("../editor/" + file_name)
+        .then((response) => response.blob())
+        .then((blob) => {
+          editor_folder.file(file_name, blob);
+        })
+    );
+  }
+  wait_for_all.push(
+    fetch("../LICENSE")
+      .then((response) => response.blob())
+      .then((blob) => {
+        zip.file("LICENSE", blob);
+      })
+  );
+  const story_name = get_file_safe_title();
+  zip.file(
+    "index.html",
+    `<!DOCTYPE html>
+<html>
+  <head>
+    <title>Loading Adventure...</title>
+  </head>
+
+  <body>
+    <script>
+        window.location.href="./viewer/?load=../${story_name}/${story_name}.json";
+    </script>
+  </body>
+</html>
+    `
+  );
+  return Promise.all(wait_for_all);
 }
 
 function get_file_safe_title() {
