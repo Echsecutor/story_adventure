@@ -17,6 +17,13 @@ export const supported_actions = {
     ],
     action: set_variable,
   },
+  ADD_TO_VARIABLE: {
+    parameters: [
+      "VARIABLE",
+      "STRING", // value to add
+    ],
+    action: add_to_variable,
+  },
   IF_SET_DO: {
     parameters: ["VARIABLE", "ACTION"],
     action: (story, parameters) => {
@@ -198,16 +205,32 @@ export const supported_actions = {
   },
 };
 
-function set_variable(story, parameters) {
-  if (!parameters || parameters.length < 2) {
-    console.log("To few parameters to set variable", parameters);
-    return;
-  }
+function set_story_variable(key, value) {
   if (!story.state) {
     story.state = {};
   }
   if (!story.state.variables) {
     story.state.variables = {};
   }
-  story.state.variables[parameters[0]] = parameters[1];
+  story.state.variables[key] = value;
+}
+
+function set_variable(story, parameters) {
+  if (!parameters || parameters.length < 2) {
+    console.log("To few parameters to set variable", parameters);
+    return;
+  }
+  set_story_variable(parameters[0], parameters[1]);
+}
+
+function add_to_variable(story, parameters) {
+  if (!parameters || parameters.length < 2) {
+    console.log("To few parameters to add to variable", parameters);
+    return;
+  }
+
+  set_story_variable(
+    parameters[0],
+    String(Number(parameters[0]) + Number(parameters[1]))
+  );
 }
