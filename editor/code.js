@@ -587,7 +587,11 @@ function handle_add_edge() {
   );
 }
 
-function download_media_in_section(current_index, section_ids, final_callback) {
+async function download_media_in_section(
+  current_index,
+  section_ids,
+  final_callback
+) {
   console.debug("current_index", current_index);
   if (current_index >= section_ids.length) {
     final_callback();
@@ -597,7 +601,7 @@ function download_media_in_section(current_index, section_ids, final_callback) {
   const section = story.sections[section_ids[current_index]];
   if (section?.media?.src && !section.media.src.startsWith?.("data")) {
     console.debug(`Embedding ${section.media.src}`);
-    fetch(section.media.src)
+    return fetch(section.media.src)
       .then((response) => {
         if (response.status === 200) {
           return response.blob();
@@ -622,27 +626,35 @@ function download_media_in_section(current_index, section_ids, final_callback) {
         );
       });
   } else {
-    download_media_in_section(current_index + 1, section_ids, final_callback);
+    return download_media_in_section(
+      current_index + 1,
+      section_ids,
+      final_callback
+    );
   }
 }
 
-function download_graph_in_one() {
+async function download_as_is() {
+  toast_ok("Generating JSON for download...");
+  var dataStr =
+    "data:text/json;charset=utf-8," +
+    encodeURIComponent(JSON.stringify(story, null, 2));
+
+  trigger_data_dl(dataStr);
+}
+
+async function download_graph_in_one() {
   toast_ok("Downloading all external picture references...");
 
   const section_ids = Object.keys(story.sections);
 
   download_media_in_section(0, section_ids, () => {
     toast_ok("All pictures embedded. Generating json for download...");
-
-    var dataStr =
-      "data:text/json;charset=utf-8," +
-      encodeURIComponent(JSON.stringify(story, null, 2));
-
-    trigger_data_dl(dataStr);
+    download_as_is();
   });
 }
 
-function trigger_data_dl(dataStr, file_name) {
+async function trigger_data_dl(dataStr, file_name) {
   if (!file_name) {
     file_name = get_file_safe_title() + ".json";
   }
@@ -667,8 +679,6 @@ function trigger_data_dl(dataStr, file_name) {
   );
 
   dlAnchorElem.click();
-
-  return dlAnchorElem;
 }
 
 async function download_graph_split() {
@@ -987,6 +997,10 @@ text_area.addEventListener("paste", paste_image);
 delete_button.addEventListener("click", handle_delete);
 add_node_button.addEventListener("click", handle_add_node);
 add_edge_button.addEventListener("click", handle_add_edge);
+
+document
+  .getElementById("download_as_is_button")
+  .addEventListener("click", download_as_is);
 document
   .getElementById("download_in_one_button")
   .addEventListener("click", download_graph_in_one);
