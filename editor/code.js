@@ -1022,6 +1022,16 @@ document
 
 document.addEventListener("keydown", handle_global_key_down);
 
+document
+  .getElementById("story_modal")
+  .addEventListener("shown.bs.modal", () => {
+    document.getElementById("story_code").innerHTML = JSON.stringify(
+      story,
+      null,
+      2
+    );
+  });
+
 async function load_last_story_or_example() {
   try {
     const storyJson = localStorage.getItem(current_editor_story_key);

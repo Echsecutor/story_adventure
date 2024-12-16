@@ -13,6 +13,23 @@
 </head>
 
 <body>
+
+  <div class="modal fade modal-xl" id="story_modal" tabindex="-1" aria-labelledby="story_modal_label" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="story_modal_label">Current Story JSON</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <pre id="story_code">
+            loading...
+          </pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="container" id="graph_card">
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
       <div class="container-fluid">
@@ -32,9 +49,13 @@
                 <li><a class="dropdown-item" id="clear_all_button" href="#">New Adventure</a></li>
                 <li><a class="dropdown-item" id="load_button" href="#">Load Adventure</a></li>
                 <li><a class="dropdown-item" id="download_as_is_button" href="#">Save Adventure as it is</a></li>
-                <li><a class="dropdown-item" id="download_in_one_button" href="#">Save Adventure with all images in one file</a></li>
-                <li><a class="dropdown-item" id="download_split_button" href="#">Generate playable adventure bundle</a></li>
+                <li><a class="dropdown-item" id="download_in_one_button" href="#">Save Adventure with all images in one
+                    file</a></li>
+                <li><a class="dropdown-item" id="download_split_button" href="#">Generate playable adventure bundle</a>
+                </li>
                 <li><a class="dropdown-item" id="linearize_button" href="#">Create Linear Story</a></li>
+                <li><a class="dropdown-item" id="show_story_modal_button" href="#" data-bs-toggle="modal"
+                    data-bs-target="#story_modal">Display Current Story JSON</a></li>
               </ul>
             </li>
             <li class="nav-item dropdown">

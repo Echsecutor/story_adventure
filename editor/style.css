@@ -3,7 +3,7 @@ body {
 }
 
 #cy {
-  height: 60vh;
+  height: 50vh;
   width: 100%;
   position: relative;
 }
@@ -26,4 +26,17 @@ body {
 .row{
   margin-top: 5px;
   margin-bottom: 5px;
+}
+
+pre {
+  font-family: Consolas,"courier new", monospace;
+  color: greenyellow;
+  background-color: black;
+  padding: 2px;
+  display: block;
+  width: 100%;
+}
+
+#story_code{
+  overflow: hidden;
 }
