@@ -15,6 +15,7 @@ import {
 const data_url_regexp = /^data:image\/([a-z]*);base64,(.*)$/;
 
 var story = {};
+const current_editor_story_key = "current_editor_story";
 
 const text_area = document.getElementById("text");
 const text_label = document.getElementById("text_label");
@@ -1021,7 +1022,17 @@ document
 
 document.addEventListener("keydown", handle_global_key_down);
 
-async function load_example() {
+async function load_last_story_or_example() {
+  try {
+    const storyJson = localStorage.getItem(current_editor_story_key);
+    if (storyJson) {
+      story = JSON.parse(storyJson);
+      return;
+    }
+  } catch (err) {
+    console.error("Error loading story from local storage", err);
+  }
+
   const url = "../stories/example_story.json";
   try {
     const response = await fetch(url);
@@ -1155,9 +1166,26 @@ async function depth_first_search(linearized_history, end_at, passing_through) {
   return null;
 }
 
+function local_save() {
+  console.debug("local save");
+  localStorage.setItem(
+    current_editor_story_key,
+    JSON.stringify(story, null, 2)
+  );
+}
+
+function set_save_interval() {
+  window.setInterval(local_save, 30000);
+}
+
 function on_load() {
   redraw_adventure_graph();
   load_variables_menu();
 }
 
-load_example().then(on_load);
+async function init() {
+  load_last_story_or_example().then(on_load);
+  set_save_interval();
+}
+
+init();
