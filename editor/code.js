@@ -27,7 +27,6 @@ const delete_button = document.getElementById("delete_button");
 const add_node_button = document.getElementById("add_node_button");
 const add_edge_button = document.getElementById("add_edge_button");
 const load_button = document.getElementById("load_button");
-const clear_all_button = document.getElementById("clear_all_button");
 const add_media_button = document.getElementById("add_media_button");
 const section_select = document.getElementById("section_select");
 const action_div = document.getElementById("action_div");
@@ -400,6 +399,9 @@ function load_actions(section) {
 }
 
 function text_editor_load(element) {
+  if (!element) {
+    element = active_element;
+  }
   if (!element) {
     console.error("Can not load empty element into text editor");
     return;
@@ -833,15 +835,17 @@ function add_or_remove_media() {
   }
 }
 
-function clear_all() {
-  if (
-    confirm("Really start a new story? Unsaved state will be lost.") != true
-  ) {
-    return;
-  }
-  story = {};
+function new_story() {
+  story = {
+    sections: {
+      1: {
+        text_lines: [""],
+        id: 1,
+      },
+    },
+  };
+  text_editor_load(story.sections["1"]);
   redraw_adventure_graph();
-  text_editor_hide();
   load_variables_menu();
 }
 
@@ -1010,7 +1014,9 @@ document
   .getElementById("download_split_button")
   .addEventListener("click", download_graph_split);
 load_button.addEventListener("click", load_graph);
-clear_all_button.addEventListener("click", clear_all);
+document
+  .getElementById("clear_all_button")
+  .addEventListener("click", new_story);
 add_media_button.addEventListener("click", add_or_remove_media);
 document
   .getElementById("redraw_button")
