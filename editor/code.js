@@ -9,8 +9,7 @@ import { supported_actions } from "./common.js";
 import {
   create_element_with_classes_and_attributes,
   get_text_from_section,
-  viewer_files,
-  editor_files,
+  tools_files,
 } from "./utils.js";
 
 const data_url_regexp = /^data:image\/([a-z]*);base64,(.*)$/;
@@ -640,7 +639,7 @@ async function download_as_is() {
     "data:text/json;charset=utf-8," +
     encodeURIComponent(JSON.stringify(story, null, 2));
 
-  trigger_data_dl(dataStr);
+  return trigger_data_dl(dataStr);
 }
 
 async function download_graph_in_one() {
@@ -721,41 +720,43 @@ async function download_graph_split() {
   });
 }
 
-async function add_stroy_adventure_files(zip) {
+async function add_to_zip(zip, folder, global_path = "../") {
   const wait_for_all = [];
-  toast_ok("Adding viewer to archive");
-  const viewer_folder = zip.folder("viewer");
-  for (const file_name of viewer_files) {
-    wait_for_all.push(
-      fetch("../viewer/" + file_name)
-        .then((response) => response.blob())
-        .then((blob) => {
-          viewer_folder.file(file_name, blob);
-        })
-    );
+
+  if (folder?.files) {
+    for (const file_name of folder.files) {
+      wait_for_all.push(
+        fetch(global_path + file_name)
+          .then((response) => response.blob())
+          .then((blob) => {
+            editor_folder.file(file_name, blob);
+          })
+      );
+    }
+    if (folder?.folders) {
+      for (const sub_folder of folder.folders) {
+        const zip_sub_folder = folder.folder(sub_folder);
+        wait_for_all.push(
+          add_to_zip(
+            zip_sub_folder,
+            folder.folders[sub_folder],
+            global_path + "/" + sub_folder
+          )
+        );
+      }
+    }
   }
-  toast_ok("Adding editor to archive");
-  const editor_folder = zip.folder("editor");
-  for (const file_name of editor_files) {
-    wait_for_all.push(
-      fetch("../editor/" + file_name)
-        .then((response) => response.blob())
-        .then((blob) => {
-          editor_folder.file(file_name, blob);
-        })
-    );
-  }
-  wait_for_all.push(
-    fetch("../LICENSE")
-      .then((response) => response.blob())
-      .then((blob) => {
-        zip.file("LICENSE", blob);
-      })
-  );
-  const story_name = get_file_safe_title();
-  zip.file(
-    "index.html",
-    `<!DOCTYPE html>
+
+  return Promise.all(wait_for_all);
+}
+
+async function add_stroy_adventure_files(zip) {
+  toast_ok("Adding tools to archive");
+  return add_to_zip(zip, tools_files).then(() => {
+    const story_name = get_file_safe_title();
+    zip.file(
+      "index.html",
+      `<!DOCTYPE html>
 <html>
   <head>
     <title>Loading Adventure...</title>
@@ -768,8 +769,8 @@ async function add_stroy_adventure_files(zip) {
   </body>
 </html>
     `
-  );
-  return Promise.all(wait_for_all);
+    );
+  });
 }
 
 function get_file_safe_title() {
