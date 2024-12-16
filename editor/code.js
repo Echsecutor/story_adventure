@@ -1141,7 +1141,7 @@ async function depth_first_search(linearized_history, end_at, passing_through) {
     console.debug("dfs reached target", end_at);
     if (passing_through) {
       for (const passing of passing_through) {
-        if (!linearized_history.includes(passing)) {
+        if (!linearized_history.includes(String(passing)) && !linearized_history.includes(Number(passing)) ) {
           console.debug(linearized_history, "not passing through", passing);
           return null;
         }
