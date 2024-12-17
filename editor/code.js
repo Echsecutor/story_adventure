@@ -689,7 +689,7 @@ async function download_graph_split() {
   toast_ok("Extracting images into separate files");
   const story_deep_copy = JSON.parse(JSON.stringify(story));
   var zip = new JSZip();
-  var folder = zip.folder(get_file_safe_title());
+  var folder = zip.folder("stories").folder(get_file_safe_title());
 
   for (const section_id in story.sections) {
     const section = story.sections[section_id];
@@ -703,7 +703,7 @@ async function download_graph_split() {
       console.log("Adding image for section", section, "to zip");
       const file_name = section_id + "." + type;
       story_deep_copy.sections[section.id].media.src =
-        "../" + get_file_safe_title() + "/" + file_name;
+        "../stories/"+ get_file_safe_title() + "/" + file_name;
       folder.file(file_name, data, { base64: true });
     } else {
       console.debug("section media src did not match data url regexp", section);
@@ -739,21 +739,21 @@ async function add_to_zip(zip, folder, global_path = "../") {
         fetch(global_path + file_name)
           .then((response) => response.blob())
           .then((blob) => {
-            editor_folder.file(file_name, blob);
+            zip.file(file_name, blob);
           })
       );
     }
-    if (folder?.folders) {
-      for (const sub_folder of folder.folders) {
-        const zip_sub_folder = folder.folder(sub_folder);
-        wait_for_all.push(
-          add_to_zip(
-            zip_sub_folder,
-            folder.folders[sub_folder],
-            global_path + "/" + sub_folder
-          )
-        );
-      }
+  }
+  if (folder?.folders) {
+    for (const sub_folder in folder.folders) {
+      const zip_sub_folder = zip.folder(sub_folder);
+      wait_for_all.push(
+        add_to_zip(
+          zip_sub_folder,
+          folder.folders[sub_folder],
+          global_path + sub_folder + "/"
+        )
+      );
     }
   }
 
@@ -774,7 +774,7 @@ async function add_stroy_adventure_files(zip) {
 
   <body>
     <script>
-        window.location.href="./viewer/?load=../${story_name}/${story_name}.json";
+        window.location.href="./viewer/?load=../stories/${story_name}/${story_name}.json";
     </script>
   </body>
 </html>
