@@ -4,22 +4,26 @@ const store_name = "stories";
 
 let db;
 
+function handle_error(event, reject, msg) {
+  const error = event?.error || event?.target?.error;
+  console.error(msg, event);
+  reject(error);
+}
+
 async function init() {
   return new Promise((resolve, reject) => {
     const open_request = window.indexedDB.open(db_name, db_version);
 
     // Register two event handlers to act on the database being opened successfully, or not
     open_request.onerror = (event) => {
-      console.error("Error loading database.", event);
-      reject(event?.error);
+      handle_error(event, reject, "Error loading database");
     };
 
     open_request.onupgradeneeded = (event) => {
       db = event.target.result;
 
       db.onerror = (event) => {
-        console.error("Error loading database.", event);
-        reject(event?.error);
+        handle_error(event, reject, "Error initializing database");
       };
       db.createObjectStore(store_name, {
         keyPath: "id",
@@ -40,8 +44,14 @@ async function open_transaction() {
     await init();
   }
   const transaction = db.transaction([store_name], "readwrite");
-  transaction.onerror = () => {
-    console.error(`Transaction not opened due to error: ${transaction.error}`);
+  transaction.onerror = (event) => {
+    handle_error(
+      event,
+      (error) => {
+        throw error;
+      },
+      "Error loading database"
+    );
   };
   return transaction;
 }
@@ -83,9 +93,7 @@ function resolve_store_request(store_request, resolve, reject) {
     resolve(item?.story);
   };
   store_request.onerror = (event) => {
-    const error = event?.error || event?.target?.error;
-    console.log("Error in store event", event);
-    reject(error);
+    handle_error(event,reject, "Error in store operation");
   };
 }
 
