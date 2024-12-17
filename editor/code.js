@@ -12,6 +12,8 @@ import {
   tools_files,
 } from "./utils.js";
 
+import { save_story, get_story } from "./storage.js";
+
 const data_url_regexp = /^data:image\/([a-z]*);base64,(.*)$/;
 
 var story = {};
@@ -712,15 +714,20 @@ async function download_graph_split() {
 
   folder.file(get_file_safe_title() + ".json", JSON.stringify(story_deep_copy));
 
-  add_stroy_adventure_files(zip).then(() => {
-    toast_ok("Generating Zip");
-    zip.generateAsync({ type: "base64" }).then(function (content) {
-      trigger_data_dl(
-        "data:application/zip;base64," + content,
-        get_file_safe_title() + ".zip"
-      );
+  add_stroy_adventure_files(zip)
+    .then(() => {
+      toast_ok("Generating Zip");
+      zip.generateAsync({ type: "base64" }).then(function (content) {
+        trigger_data_dl(
+          "data:application/zip;base64," + content,
+          get_file_safe_title() + ".zip"
+        );
+      });
+    })
+    .catch((err) => {
+      console.error("Error generating story adventure zip", err);
+      toast_alert("Error generating bundle.");
     });
-  });
 }
 
 async function add_to_zip(zip, folder, global_path = "../") {
@@ -996,53 +1003,10 @@ function add_action() {
   text_editor_load(active_section);
 }
 
-text_area.addEventListener("change", handle_text_change);
-
-text_area.addEventListener("paste", paste_image);
-
-delete_button.addEventListener("click", handle_delete);
-add_node_button.addEventListener("click", handle_add_node);
-add_edge_button.addEventListener("click", handle_add_edge);
-
-document
-  .getElementById("download_as_is_button")
-  .addEventListener("click", download_as_is);
-document
-  .getElementById("download_in_one_button")
-  .addEventListener("click", download_graph_in_one);
-document
-  .getElementById("download_split_button")
-  .addEventListener("click", download_graph_split);
-load_button.addEventListener("click", load_graph);
-document
-  .getElementById("clear_all_button")
-  .addEventListener("click", new_story);
-add_media_button.addEventListener("click", add_or_remove_media);
-document
-  .getElementById("redraw_button")
-  .addEventListener("click", redraw_adventure_graph);
-
-document
-  .getElementById("linearize_button")
-  .addEventListener("click", create_linear_story);
-
-document.addEventListener("keydown", handle_global_key_down);
-
-document
-  .getElementById("story_modal")
-  .addEventListener("shown.bs.modal", () => {
-    document.getElementById("story_code").innerHTML = JSON.stringify(
-      story,
-      null,
-      2
-    );
-  });
-
 async function load_last_story_or_example() {
   try {
-    const storyJson = localStorage.getItem(current_editor_story_key);
-    if (storyJson) {
-      story = JSON.parse(storyJson);
+    story = await get_story(current_editor_story_key);
+    if (story) {
       return;
     }
   } catch (err) {
@@ -1141,7 +1105,10 @@ async function depth_first_search(linearized_history, end_at, passing_through) {
     console.debug("dfs reached target", end_at);
     if (passing_through) {
       for (const passing of passing_through) {
-        if (!linearized_history.includes(String(passing)) && !linearized_history.includes(Number(passing)) ) {
+        if (
+          !linearized_history.includes(String(passing)) &&
+          !linearized_history.includes(Number(passing))
+        ) {
           console.debug(linearized_history, "not passing through", passing);
           return null;
         }
@@ -1182,12 +1149,22 @@ async function depth_first_search(linearized_history, end_at, passing_through) {
   return null;
 }
 
-function local_save() {
-  console.debug("local save");
-  localStorage.setItem(
-    current_editor_story_key,
-    JSON.stringify(story, null, 2)
-  );
+var error_in_autosave_reported = false;
+async function local_save() {
+  try {
+    console.debug("local save");
+    await save_story(current_editor_story_key, story);
+    if (error_in_autosave_reported) {
+      toast_ok("Autosaving is working.");
+    }
+    error_in_autosave_reported = false;
+  } catch (err) {
+    console.error("Error in autosave", err);
+    if (!error_in_autosave_reported) {
+      toast_alert("Error auto-saving the story.");
+    }
+    error_in_autosave_reported = true;
+  }
 }
 
 function set_save_interval() {
@@ -1200,8 +1177,53 @@ function on_load() {
 }
 
 async function init() {
+  add_listeners();
   load_last_story_or_example().then(on_load);
   set_save_interval();
+}
+
+function add_listeners() {
+  text_area.addEventListener("change", handle_text_change);
+
+  text_area.addEventListener("paste", paste_image);
+
+  delete_button.addEventListener("click", handle_delete);
+  add_node_button.addEventListener("click", handle_add_node);
+  add_edge_button.addEventListener("click", handle_add_edge);
+
+  document
+    .getElementById("download_as_is_button")
+    .addEventListener("click", download_as_is);
+  document
+    .getElementById("download_in_one_button")
+    .addEventListener("click", download_graph_in_one);
+  document
+    .getElementById("download_split_button")
+    .addEventListener("click", download_graph_split);
+  load_button.addEventListener("click", load_graph);
+  document
+    .getElementById("clear_all_button")
+    .addEventListener("click", new_story);
+  add_media_button.addEventListener("click", add_or_remove_media);
+  document
+    .getElementById("redraw_button")
+    .addEventListener("click", redraw_adventure_graph);
+
+  document
+    .getElementById("linearize_button")
+    .addEventListener("click", create_linear_story);
+
+  document.addEventListener("keydown", handle_global_key_down);
+
+  document
+    .getElementById("story_modal")
+    .addEventListener("shown.bs.modal", () => {
+      document.getElementById("story_code").innerHTML = JSON.stringify(
+        story,
+        null,
+        2
+      );
+    });
 }
 
 init();

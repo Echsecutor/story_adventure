@@ -51,6 +51,7 @@ export function get_text_from_section(section, variables) {
   return replace_variables(text, variables);
 }
 
+
 export const tools_files = {
   files: ["LICENSE"],
   folders: {
