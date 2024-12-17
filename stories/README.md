@@ -3,10 +3,26 @@
 This collection of stories is shared along with the [Story Adventure Tools](https://github.com/Echsecutor/story_adventure).
 
 - Der Weihnachtsmann
+  - German
   - By Ronja Schmittner
   - Images have been created by Ronja using the [Microsoft Designer](https://designer.microsoft.com/image-creator). See there for legal terms.
-  - [View/Play the story here](https://echsecutor.github.io/story_adventure/viewer/?load=https://echsecutor.github.io/story_adventure/stories/Der_Weihnachtsmann/Der_Weihnachtsmann.json)
-
+  - [Play the story here](https://echsecutor.github.io/story_adventure/viewer/?load=https://echsecutor.github.io/story_adventure/stories/Der_Weihnachtsmann/Der_Weihnachtsmann.json)
+- Prinzessin
+  - German
+  - By Ronja Schmittner
+  - Images have been created by Ronja using the [Microsoft Designer](https://designer.microsoft.com/image-creator). See there for legal terms.
+  - [Play the story here](https://echsecutor.github.io/story_adventure/viewer/?load=https://echsecutor.github.io/story_adventure/stories/Prinzessin/Prinzessin.json)
+- Example Story
+  - English
+  - By Sebastian Schmittner
+  - Mostly to demonstrate the file format
+  - [Play the story here](https://echsecutor.github.io/story_adventure/viewer/?load=https://echsecutor.github.io/story_adventure/stories/example_story.json)
+- Action Test Story
+  - English
+  - By Sebastian Schmittner
+  - For testing actions and variables
+  - [Play the story here](https://echsecutor.github.io/story_adventure/viewer/?load=https://echsecutor.github.io/story_adventure/stories/test.json)
+    - But look at the [json](./test.json) and understand the actions, that is really all it is good for
 
 ## License
 
