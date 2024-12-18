@@ -69,3 +69,7 @@ body {
 .row {
   margin-top: 5px;
 }
+
+:link { color: greenyellow; }
+:visited { color: greenyellow; }
+:link:active, :visited:active { color: greenyellow; }

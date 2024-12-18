@@ -16,6 +16,35 @@ const hot_keys = {
     description: "back",
     action: one_step_back,
   },
+  f: {
+    description: "toggle full screen",
+    action: () => {
+      if (document.fullscreenElement) {
+        document.exitFullscreen();
+        return;
+      }
+      const element = document.body;
+      const requestMethod =
+        element.requestFullScreen ||
+        element.webkitRequestFullScreen ||
+        element.mozRequestFullScreen ||
+        element.msRequestFullScreen;
+      if (requestMethod) {
+        // Native full screen.
+        requestMethod.call(element);
+      }
+    },
+  },
+  h: {
+    description: "toggle hide text",
+    action: () => {
+      if (story_container.classList.contains("d-none")) {
+        story_container.classList.remove("d-none");
+      } else {
+        story_container.classList.add("d-none");
+      }
+    },
+  },
 };
 
 let current_viewer_state = viewer_states.MENU;
@@ -146,7 +175,7 @@ function load_section(id, add_current_section_to_history = true) {
     execute_actions(section.script);
   }
 
-  const text = get_text_from_section(section, story.state?.variables)
+  const text = get_text_from_section(section, story.state?.variables);
 
   if (!text) {
     toast_alert("This section has no text");
@@ -216,7 +245,8 @@ function read_query_params() {
 function handle_global_click() {
   if (
     document.activeElement.nodeName === "INPUT" ||
-    document.activeElement.nodeName === "BUTTON"
+    document.activeElement.nodeName === "BUTTON" ||
+    !story?.state?.current_section
   ) {
     return;
   }
@@ -262,13 +292,7 @@ function overwrite_actions() {
       return;
     }
     const user_input = prompt(parameters[1]);
-    if (!story.state) {
-      story.state = {};
-    }
-    if (!story.state.variables) {
-      story.state.variables = {};
-    }
-    story.state.variables[parameters[0]] = user_input;
+    supported_actions["SET"].action(st, [parameters[0], user_input]);
   };
 }
 

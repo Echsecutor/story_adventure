@@ -205,7 +205,7 @@ export const supported_actions = {
   },
 };
 
-function set_story_variable(key, value) {
+function set_story_variable(story, key, value) {
   if (!story.state) {
     story.state = {};
   }
@@ -213,6 +213,7 @@ function set_story_variable(key, value) {
     story.state.variables = {};
   }
   story.state.variables[key] = value;
+  console.debug(`Setting ${key} = ${value}`);
 }
 
 function set_variable(story, parameters) {
@@ -220,7 +221,7 @@ function set_variable(story, parameters) {
     console.log("To few parameters to set variable", parameters);
     return;
   }
-  set_story_variable(parameters[0], parameters[1]);
+  set_story_variable(story, parameters[0], parameters[1]);
 }
 
 function add_to_variable(story, parameters) {
@@ -230,6 +231,7 @@ function add_to_variable(story, parameters) {
   }
 
   set_story_variable(
+    story,
     parameters[0],
     String(Number(parameters[0]) + Number(parameters[1]))
   );

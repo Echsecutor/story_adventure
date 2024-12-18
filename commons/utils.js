@@ -32,6 +32,7 @@ export function create_element_with_classes_and_attributes(
 
 export function replace_variables(text, variables) {
   if (!variables || !text) {
+    console.debug("Not replacing variables", text, variables);
     return text;
   }
   var re = text;
@@ -50,7 +51,6 @@ export function get_text_from_section(section, variables) {
   }
   return replace_variables(text, variables);
 }
-
 
 export const tools_files = {
   files: ["LICENSE"],

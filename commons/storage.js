@@ -66,18 +66,19 @@ export async function save_story(id, story) {
       story: story,
     };
 
+    // save = put or add
     resolve_store_request(
       transaction.objectStore(store_name).get(id),
       () => {
         resolve_store_request(
-          transaction.objectStore(store_name).put(new_item),
+          transaction.objectStore(store_name).put(new_item), // if exists -> put to update
           resolve,
           reject
         );
       },
       () => {
         resolve_store_request(
-          transaction.objectStore(store_name).add(new_item),
+          transaction.objectStore(store_name).add(new_item), // if not exists -> add
           resolve,
           reject
         );
