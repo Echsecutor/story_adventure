@@ -40,3 +40,8 @@ pre {
 #story_code{
   overflow: hidden;
 }
+
+.toast-container{
+  top: 2px;
+  right: 2px;
+}

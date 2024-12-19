@@ -51,6 +51,7 @@ We proudly acknowledge using the following open source components in this projec
 - [marked](https://github.com/markedjs/marked) for Markdown rendering in the viewer
 - [DOMPurify](https://github.com/cure53/DOMPurify) for HTML sanitization in the viewer
 - [JSZip](https://github.com/Stuk/jszip) for zipping
+- [file-saver](https://github.com/eligrey/FileSaver.js/tree/master) for more easily saving large files directly from the browsers memory
 - [esm.sh](https://github.com/esm-dev/esm.sh) for converting the old JS packages among the above into esm modules
 
 See there for the corresponding licenses and meta-dependencies.

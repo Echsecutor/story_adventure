@@ -23,7 +23,7 @@ function toast(text, auto_hide, bg_class) {
   toast.setAttribute("data-bs-autohide", auto_hide);
   toast.setAttribute("aria-atomic", "true");
   toast.setAttribute("aria-live", "polite");
-  
+
   toast.className =
     "toast align-items-center text-white border-0 d-flex p-3 " + bg_class;
   toast.role = "alert";
@@ -49,9 +49,14 @@ function toast(text, auto_hide, bg_class) {
   if (!class_container) {
     class_container = document.body.appendChild(document.createElement("div"));
     class_container.classList.add("toast-container");
+
   }
 
   class_container.appendChild(toast);
+
+  toast.addEventListener('hidden.bs.toast', function () {
+    toast.remove();
+  })
 
   const bootstrap_toast = new bootstrap.Toast(toast);
   bootstrap_toast.show();

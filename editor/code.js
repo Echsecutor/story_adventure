@@ -1,6 +1,7 @@
 import cytoscape from "./cytoscape.esm.min.js";
 import cytoscapeKlay from "./cytoscape-klay.js";
 import JSZip from "./jszip.js";
+import saveAs from "./file-saver.js";
 
 cytoscape.use(cytoscapeKlay);
 
@@ -640,11 +641,11 @@ async function download_media_in_section(
 
 async function download_as_is() {
   toast_ok("Generating JSON for download...");
-  var dataStr =
-    "data:text/json;charset=utf-8," +
-    encodeURIComponent(JSON.stringify(story, null, 2));
 
-  return trigger_data_dl(dataStr);
+  var blob = new Blob([JSON.stringify(story, null, 2)], {
+    type: "text/json;charset=utf-8",
+  });
+  return save_file(blob, get_file_safe_title() + ".json");
 }
 
 async function download_graph_in_one() {
@@ -656,34 +657,6 @@ async function download_graph_in_one() {
     toast_ok("All pictures embedded. Generating json for download...");
     download_as_is();
   });
-}
-
-async function trigger_data_dl(dataStr, file_name) {
-  if (!file_name) {
-    file_name = get_file_safe_title() + ".json";
-  }
-  console.debug("dl triggered for file", file_name);
-  var p = create_element_with_classes_and_attributes("p");
-  var dlAnchorElem = p.appendChild(
-    create_element_with_classes_and_attributes("a", {
-      attributes: {
-        href: dataStr,
-        download: file_name,
-      },
-      class_list: ["link-warning"],
-      text: file_name,
-    })
-  );
-
-  toast_ok(
-    "Your file is ready",
-    p,
-    create_element_with_classes_and_attributes("p", {
-      innerHTML: "Your download should start shortly...",
-    })
-  );
-
-  dlAnchorElem.click();
 }
 
 async function download_graph_split() {
@@ -747,20 +720,21 @@ async function download_graph_split() {
       const percentage = create_element_with_classes_and_attributes("p");
       toast_ok("Generating Zip", "false", percentage);
       zip
-        .generateAsync({ type: "base64" }, function updateCallback(metadata) {
+        .generateAsync({ type: "blob" }, function updateCallback(metadata) {
           percentage.innerHTML = metadata.percent.toFixed(2) + " %";
         })
         .then(function (content) {
-          trigger_data_dl(
-            "data:application/zip;base64," + content,
-            get_file_safe_title() + ".zip"
-          );
+          return save_file(content, get_file_safe_title() + ".zip");
         });
     })
     .catch((err) => {
       console.error("Error generating story adventure zip", err);
       toast_alert("Error generating bundle.");
     });
+}
+
+async function save_file(blob, file_name) {
+  return saveAs(blob, file_name);
 }
 
 async function add_to_zip(zip, folder, global_path = "../") {
@@ -1109,10 +1083,8 @@ async function create_linear_story() {
       if (!markdown) {
         return;
       }
-      trigger_data_dl(
-        "data:text/plain;charset=utf-8," + encodeURIComponent(markdown),
-        get_file_safe_title() + ".md"
-      );
+      var blob = new Blob([markdown], { type: "text/plain;charset=utf-8" });
+      save_file(blob, get_file_safe_title() + ".md");
     })
     .catch((error) => {
       console.error(error);
