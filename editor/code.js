@@ -662,6 +662,7 @@ async function trigger_data_dl(dataStr, file_name) {
   if (!file_name) {
     file_name = get_file_safe_title() + ".json";
   }
+  console.debug("dl triggered for file", file_name);
   var p = create_element_with_classes_and_attributes("p");
   var dlAnchorElem = p.appendChild(
     create_element_with_classes_and_attributes("a", {
@@ -691,6 +692,7 @@ async function download_graph_split() {
   var zip = new JSZip();
   var folder = zip.folder("stories").folder(get_file_safe_title());
 
+  const wait_for_all = [];
   for (const section_id in story.sections) {
     const section = story.sections[section_id];
     if (!section?.media?.src) {
@@ -703,12 +705,38 @@ async function download_graph_split() {
       console.log("Adding image for section", section, "to zip");
       const file_name = section_id + "." + type;
       story_deep_copy.sections[section.id].media.src =
-        "../stories/"+ get_file_safe_title() + "/" + file_name;
+        "../stories/" + get_file_safe_title() + "/" + file_name;
       folder.file(file_name, data, { base64: true });
     } else {
-      console.debug("section media src did not match data url regexp", section);
+      console.debug(
+        "section media src did not match data url regexp. Try fetching.",
+        section
+      );
+      const typeMatch = section.media.src.match(".*\\.([a-zA-Z]*)$");
+      var type = "jpg";
+      if (typeMatch) {
+        type = typeMatch[1];
+      } else {
+        console.warn("Could not determine file type of", section.media.src);
+      }
+      const file_name = section_id + "." + type;
+      story_deep_copy.sections[section.id].media.src =
+        "../stories/" + get_file_safe_title() + "/" + file_name;
+      wait_for_all.push(
+        fetch(section.media.src)
+          .then((response) => response.blob())
+          .then((blob) => {
+            folder.file(file_name, blob);
+            console.debug("Saved", file_name);
+          })
+      );
     }
   }
+
+  if (wait_for_all) {
+    await Promise.all(wait_for_all);
+  }
+  console.log("All pics saved");
 
   toast_ok("Saving Story");
 
@@ -716,13 +744,18 @@ async function download_graph_split() {
 
   add_stroy_adventure_files(zip)
     .then(() => {
-      toast_ok("Generating Zip");
-      zip.generateAsync({ type: "base64" }).then(function (content) {
-        trigger_data_dl(
-          "data:application/zip;base64," + content,
-          get_file_safe_title() + ".zip"
-        );
-      });
+      const percentage = create_element_with_classes_and_attributes("p");
+      toast_ok("Generating Zip", "false", percentage);
+      zip
+        .generateAsync({ type: "base64" }, function updateCallback(metadata) {
+          percentage.innerHTML = metadata.percent.toFixed(2) + " %";
+        })
+        .then(function (content) {
+          trigger_data_dl(
+            "data:application/zip;base64," + content,
+            get_file_safe_title() + ".zip"
+          );
+        });
     })
     .catch((err) => {
       console.error("Error generating story adventure zip", err);
