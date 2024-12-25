@@ -276,64 +276,92 @@ function add_parameter(
 ) {
   const parameter_type =
     supported_actions[action_type].parameters[parameter_type_index];
-  if (parameter_type == "STRING") {
-    const input = col.appendChild(document.createElement("input"));
-    input.type = "text";
-    input.classList.add("form-control");
-    input.value = action.parameters[parameter_index];
-    input.addEventListener("change", () => {
-      action.parameters[parameter_index] = input.value;
-      console.debug("changed action", action);
-    });
-  }
-  if (parameter_type == "VARIABLE") {
-    const select = col.appendChild(document.createElement("select"));
-    select.classList.add("form-select");
-    if (!story?.state?.variables) {
-      return;
-    }
-    for (const variable of Object.keys(story.state.variables)) {
-      const option = select.appendChild(document.createElement("option"));
-      select.classList.add("form-select");
-      option.text = variable;
-      option.value = variable;
-    }
-    select.value = action.parameters[parameter_index];
-    select.onchange = () => {
-      action.parameters[parameter_index] =
-        select.options[select.selectedIndex].value;
-    };
-  }
-  if (parameter_type == "SECTION") {
-    const select = col.appendChild(document.createElement("select"));
-    select.classList.add("form-select");
-    for (const section_key of Object.keys(story.sections)) {
-      const option = select.appendChild(document.createElement("option"));
-      select.classList.add("form-select");
-      option.text = story.sections[section_key].id;
-      option.value = story.sections[section_key].id;
-    }
-    select.value = action.parameters[parameter_index];
-    select.onchange = () => {
-      action.parameters[parameter_index] =
-        select.options[select.selectedIndex].value;
-    };
-  }
-  if (parameter_type == "ACTION") {
-    col.remove();
-    add_action_and_parameter_inputs_to_row(
-      row,
-      action,
-      (new_action) => {
-        action.parameters[parameter_index] = new_action;
-        action.parameters.splice(parameter_index + 1);
-        for (const parameter_type of supported_actions[new_action].parameters) {
-          action.parameters.push("");
-        }
-      },
-      action.parameters[parameter_index],
-      parameter_index + 1
-    );
+  switch (parameter_type) {
+    case "STRING":
+      const input = col.appendChild(document.createElement("input"));
+      input.type = "text";
+      input.classList.add("form-control");
+      input.value = action.parameters[parameter_index];
+      input.addEventListener("change", () => {
+        action.parameters[parameter_index] = input.value;
+        console.debug("changed action", action);
+      });
+      break;
+    case "VARIABLE":
+      const selectVariable = col.appendChild(document.createElement("select"));
+      selectVariable.classList.add("form-select");
+      if (!story?.state?.variables) {
+        return;
+      }
+      for (const variable of Object.keys(story.state.variables)) {
+        const option = selectVariable.appendChild(
+          document.createElement("option")
+        );
+        selectVariable.classList.add("form-select");
+        option.text = variable;
+        option.value = variable;
+      }
+      selectVariable.value = action.parameters[parameter_index];
+      selectVariable.onchange = () => {
+        action.parameters[parameter_index] =
+          selectVariable.options[selectVariable.selectedIndex].value;
+      };
+      break;
+    case "SECTION":
+      const selectSection = col.appendChild(document.createElement("select"));
+      selectSection.classList.add("form-select");
+      for (const section_key of Object.keys(story.sections)) {
+        const option = selectSection.appendChild(
+          document.createElement("option")
+        );
+        selectSection.classList.add("form-select");
+        option.text = story.sections[section_key].id;
+        option.value = story.sections[section_key].id;
+      }
+      selectSection.value = action.parameters[parameter_index];
+      selectSection.onchange = () => {
+        action.parameters[parameter_index] =
+          selectSection.options[selectSection.selectedIndex].value;
+      };
+      break;
+    case "ACTION":
+      col.remove();
+      add_action_and_parameter_inputs_to_row(
+        row,
+        action,
+        (new_action) => {
+          action.parameters[parameter_index] = new_action;
+          action.parameters.splice(parameter_index + 1);
+          for (const parameter_type of supported_actions[new_action]
+            .parameters) {
+            action.parameters.push("");
+          }
+        },
+        action.parameters[parameter_index],
+        parameter_index + 1
+      );
+      break;
+    case "ENUM":
+      const selectEnum = col.appendChild(document.createElement("select"));
+      selectEnum.classList.add("form-select");
+      const enum_options = supported_actions[action_type]?.enum;
+      if (!enum_options) {
+        console.error("Action does not specify enum values", action);
+        break;
+      }
+      for (const enumValue of enum_options) {
+        const option = selectEnum.appendChild(document.createElement("option"));
+        option.text = enumValue;
+        option.value = enumValue;
+      }
+      selectEnum.value = action.parameters[parameter_index];
+      selectEnum.onchange = () => {
+        action.parameters[parameter_index] =
+          selectEnum.options[selectEnum.selectedIndex].value;
+      };
+      break;
+    default:
+      console.error("Unsupported parameter type:", parameter_type);
   }
 }
 

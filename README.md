@@ -50,8 +50,8 @@ We proudly acknowledge using the following open source components in this projec
   -[cytoscape-klay](https://github.com/cytoscape/cytoscape.js-klay) for the graph layout
 - [marked](https://github.com/markedjs/marked) for Markdown rendering in the viewer
 - [DOMPurify](https://github.com/cure53/DOMPurify) for HTML sanitization in the viewer
-- [JSZip](https://github.com/Stuk/jszip) for zipping
-- [file-saver](https://github.com/eligrey/FileSaver.js/tree/master) for more easily saving large files directly from the browsers memory
+- [JSZip](https://github.com/Stuk/jszip) for zipping (bundle export)
+- [file-saver](https://github.com/eligrey/FileSaver.js/tree/master) for large files directly from the browsers memory
 - [esm.sh](https://github.com/esm-dev/esm.sh) for converting the old JS packages among the above into esm modules
 
 See there for the corresponding licenses and meta-dependencies.
@@ -64,7 +64,7 @@ Copyright 2024 Sebastian Schmittner
 <img alt="AGPLV3" style="border-width:0" src="https://www.gnu.org/graphics/agplv3-with-text-162x68.png" /><br />
 </a>
 
-All code published in this repository is free software: you can redistribute it and/or modify it under the terms of the
+All code published in this repository is free software. Everything written by me, i.e. excluding the dependencies mentioned in the Acknowledgment, can be redistributed and/or modified under the terms of the
 GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 

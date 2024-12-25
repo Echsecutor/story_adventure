@@ -24,6 +24,40 @@ export const supported_actions = {
     ],
     action: add_to_variable,
   },
+  COMPARE_DO: {
+    parameters: ["VARIABLE", "ENUM", "STRING", "ACTION"],
+    enum: ["=", "!=", ">", ">=", "<=", "<"],
+    action: function (story, parameters) {
+      if (!parameters || parameters.length < 4) {
+        console.log("To few parameters for COMPARE_DO action", parameters);
+        return;
+      }
+      if (!this.enum.includes(parameters[1])) {
+        console.log("Bad enum", parameters[1], "in");
+        return;
+      }
+      const operator = parameters[1];
+
+      const next_action = supported_actions?.[parameters[3]]?.action
+      if (!next_action) {
+        console.log("No such action", parameters[3]);
+        return;
+      }
+      
+      if (!story?.state?.variables?.[parameters[0]]) {
+        console.debug(`COMPARE_DO var ${parameters[0]} not set`);
+        return;
+      }
+      const variable_value = story?.state?.variables?.[parameters[0]];
+
+      if (compare(variable_value, operator, parameters[2])) {
+        return next_action(
+          story,
+          parameters.slice(4)
+        );
+      }
+    },
+  },
   IF_SET_DO: {
     parameters: ["VARIABLE", "ACTION"],
     action: (story, parameters) => {
@@ -233,6 +267,35 @@ function add_to_variable(story, parameters) {
   set_story_variable(
     story,
     parameters[0],
-    String(Number(parameters[0]) + Number(parameters[1]))
+    String(Number(story?.state?.variables?.[parameters[0]]) + Number(parameters[1]))
   );
+}
+
+function compare(value1, operator, value2) {
+  let result;
+  switch (operator) {
+    case "=":
+      result = value1 == value2;
+      break;
+    case "<":
+      result = Number(value1) < Number(value2);
+      break;
+    case ">":
+      result = Number(value1) > Number(value2);
+      break;
+    case "!=":
+      result = String(value1) != String(value2);
+      break;
+    case ">=":
+      result = Number(value1) >= Number(value2);
+      break;
+    case "<=":
+      result = Number(value1) <= Number(value2);
+      break;
+    default:
+      console.log("Unsupported operator", operator);
+      return false;
+  }
+  console.log(`Comparison result for ${value1} ${operator} ${value2}: ${result}`);
+  return result;
 }
