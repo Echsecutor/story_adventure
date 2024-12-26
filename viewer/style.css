@@ -1,6 +1,8 @@
 body {
   font: 14px helvetica neue, helvetica, arial, sans-serif;
   background-color: black;
+  color: white;
+  font-size: x-large;
 }
 
 #background {
@@ -20,7 +22,7 @@ body {
 
 #menu_container {
   position: relative;
-  top: 50vh;
+  top: 25vh;
 }
 
 #spinner {
@@ -29,10 +31,8 @@ body {
   width: 100vw;
 }
 
-#story_container {
+.container {
   max-width: 100vw;
-  color: white;
-  font-size: x-large;
 }
 
 @media screen and (min-width: 780px) {
@@ -50,7 +50,7 @@ body {
   }
 }
 
-#story_container button {
+.btn {
   font-size: x-large;
 }
 

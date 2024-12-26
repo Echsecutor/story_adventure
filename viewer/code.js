@@ -2,7 +2,11 @@ import { toast_alert, toast_ok } from "./toast.js";
 import { marked } from "./marked.esm.js";
 import DOMPurify from "./purify.es.mjs";
 import { supported_actions } from "./common.js";
-import { replace_variables, get_text_from_section } from "./utils.js";
+import {
+  replace_variables,
+  get_text_from_section,
+  create_element_with_classes_and_attributes,
+} from "./utils.js";
 
 var story = {};
 
@@ -13,11 +17,11 @@ const viewer_states = Object.freeze({
 
 const hot_keys = {
   b: {
-    description: "back",
+    description: "One step back",
     action: one_step_back,
   },
   f: {
-    description: "toggle full screen",
+    description: "Toggle full screen",
     action: () => {
       if (document.fullscreenElement) {
         document.exitFullscreen();
@@ -36,7 +40,7 @@ const hot_keys = {
     },
   },
   h: {
-    description: "toggle hide text",
+    description: "Toggle show/hide text",
     action: () => {
       if (story_container.classList.contains("d-none")) {
         story_container.classList.remove("d-none");
@@ -49,7 +53,6 @@ const hot_keys = {
 
 let current_viewer_state = viewer_states.MENU;
 
-const menu_container = document.getElementById("menu_container");
 const story_container = document.getElementById("story_container");
 const story_text = document.getElementById("story_text");
 const choices_row = document.getElementById("choices_row");
@@ -217,11 +220,66 @@ function load_section(id, add_current_section_to_history = true) {
   }
 }
 
+function display_hotkeys() {
+  const explain_hotkeys = document.getElementById("explain_hotkeys");
+
+  explain_hotkeys.innerHTML = "";
+  explain_hotkeys.appendChild(
+    create_element_with_classes_and_attributes("p", {
+      innerHTML: "Use the following hotkeys anywhere in the viewer:",
+    })
+  );
+  const table_body = explain_hotkeys
+    .appendChild(
+      create_element_with_classes_and_attributes(
+        "table",
+        {
+          class_list: ["table"],
+        },
+        create_element_with_classes_and_attributes(
+          "thead",
+          {},
+          create_element_with_classes_and_attributes(
+            "tr",
+            {},
+            create_element_with_classes_and_attributes("th", {
+              attributes: { scope: "col" },
+              innerHTML: "Key",
+            }),
+            create_element_with_classes_and_attributes("th", {
+              attributes: { scope: "col" },
+              innerHTML: "Description",
+            })
+          )
+        )
+      )
+    )
+    .appendChild(create_element_with_classes_and_attributes("tbody"));
+
+  for (const key in hot_keys) {
+    const description = hot_keys[key]?.description;
+    table_body.appendChild(
+      create_element_with_classes_and_attributes(
+        "tr",
+        {},
+        create_element_with_classes_and_attributes("td", {
+          innerHTML: `<strong>${key}</strong>`,
+        }),
+        create_element_with_classes_and_attributes("td", {
+          innerHTML: description,
+        })
+      )
+    );
+  }
+}
+
 function show_ui_components_according_to_state() {
+  const menu_container = document.getElementById("menu_container");
   if (current_viewer_state == viewer_states.MENU) {
     if (!story_container.classList.contains("d-none")) {
       story_container.classList.add("d-none");
     }
+    display_hotkeys();
     menu_container.classList.remove("d-none");
     return;
   }

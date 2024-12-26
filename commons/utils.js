@@ -27,6 +27,12 @@ export function create_element_with_classes_and_attributes(
   if (properties?.text) {
     element.text = properties.text;
   }
+
+  for (var i = 2; i < arguments.length; i++) {
+    console.debug("Appending", arguments[i]);
+    element.appendChild(arguments[i]);
+  }
+
   return element;
 }
 
