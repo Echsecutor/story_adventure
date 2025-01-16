@@ -117,29 +117,37 @@ function add_node(section) {
 }
 
 function remove_edge(from, to) {
-  const edge_id = from + "-" + to;
-  cy.remove("#" + edge_id);
+  try {
+    const edge_id = from + "-" + to;
+    cy.remove("#" + edge_id);
+  } catch (e) {
+    console.error("error removing edge", e);
+  }
 }
 
 function add_edge(section, choice) {
-  const edge_id = section.id + "-" + choice.next;
-  cy.add([
-    {
-      group: "edges",
-      data: {
-        id: edge_id,
-        source: section.id,
-        target: choice.next,
+  try {
+    const edge_id = section.id + "-" + choice.next;
+    cy.add([
+      {
+        group: "edges",
+        data: {
+          id: edge_id,
+          source: section.id,
+          target: choice.next,
+        },
       },
-    },
-  ]);
-  const new_edge = cy.getElementById(edge_id);
+    ]);
+    const new_edge = cy.getElementById(edge_id);
 
-  new_edge.on("tap", function (evt) {
-    text_editor_load(choice);
-  });
+    new_edge.on("tap", function (evt) {
+      text_editor_load(choice);
+    });
 
-  console.log("edge added", new_edge);
+    console.log("edge added", new_edge);
+  } catch (e) {
+    console.error("error adding edge", e);
+  }
 }
 
 function redraw_adventure_graph() {
