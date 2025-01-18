@@ -299,3 +299,4 @@ function compare(value1, operator, value2) {
   console.log(`Comparison result for ${value1} ${operator} ${value2}: ${result}`);
   return result;
 }
+

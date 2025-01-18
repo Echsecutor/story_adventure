@@ -11,6 +11,8 @@ import {
   create_element_with_classes_and_attributes,
   get_text_from_section,
   tools_files,
+  get_file_safe_title,
+  load_file
 } from "./utils.js";
 
 import { save_story, get_story } from "./storage.js";
@@ -681,7 +683,7 @@ async function download_as_is() {
   var blob = new Blob([JSON.stringify(story, null, 2)], {
     type: "text/json;charset=utf-8",
   });
-  return save_file(blob, get_file_safe_title() + ".json");
+  return save_file(blob, get_file_safe_title(story) + ".json");
 }
 
 async function download_graph_in_one() {
@@ -699,7 +701,7 @@ async function download_graph_split() {
   toast_ok("Extracting images into separate files");
   const story_deep_copy = JSON.parse(JSON.stringify(story));
   var zip = new JSZip();
-  var folder = zip.folder("stories").folder(get_file_safe_title());
+  var folder = zip.folder("stories").folder(get_file_safe_title(story));
 
   const wait_for_all = [];
   for (const section_id in story.sections) {
@@ -714,7 +716,7 @@ async function download_graph_split() {
       console.log("Adding image for section", section, "to zip");
       const file_name = section_id + "." + type;
       story_deep_copy.sections[section.id].media.src =
-        "../stories/" + get_file_safe_title() + "/" + file_name;
+        "../stories/" + get_file_safe_title(story) + "/" + file_name;
       folder.file(file_name, data, { base64: true });
     } else {
       console.debug(
@@ -730,7 +732,7 @@ async function download_graph_split() {
       }
       const file_name = section_id + "." + type;
       story_deep_copy.sections[section.id].media.src =
-        "../stories/" + get_file_safe_title() + "/" + file_name;
+        "../stories/" + get_file_safe_title(story) + "/" + file_name;
       wait_for_all.push(
         fetch(section.media.src)
           .then((response) => response.blob())
@@ -749,7 +751,7 @@ async function download_graph_split() {
 
   toast_ok("Saving Story");
 
-  folder.file(get_file_safe_title() + ".json", JSON.stringify(story_deep_copy));
+  folder.file(get_file_safe_title(story) + ".json", JSON.stringify(story_deep_copy));
 
   add_stroy_adventure_files(zip)
     .then(() => {
@@ -760,7 +762,7 @@ async function download_graph_split() {
           percentage.innerHTML = metadata.percent.toFixed(2) + " %";
         })
         .then(function (content) {
-          return save_file(content, get_file_safe_title() + ".zip");
+          return save_file(content, get_file_safe_title(story) + ".zip");
         });
     })
     .catch((err) => {
@@ -806,7 +808,7 @@ async function add_to_zip(zip, folder, global_path = "../") {
 async function add_stroy_adventure_files(zip) {
   toast_ok("Adding tools to archive");
   return add_to_zip(zip, tools_files).then(() => {
-    const story_name = get_file_safe_title();
+    const story_name = get_file_safe_title(story);
     zip.file(
       "index.html",
       `<!DOCTYPE html>
@@ -826,36 +828,7 @@ async function add_stroy_adventure_files(zip) {
   });
 }
 
-function get_file_safe_title() {
-  if (!story?.meta?.title) {
-    return "story_adventure";
-  }
-  return story.meta.title.replaceAll(/[^a-z0-9-_]/gi, "_");
-}
 
-function load_file(content_handler, read_as_data) {
-  var input = document.createElement("input");
-  input.type = "file";
-  input.onchange = (e) => {
-    const file = e.target.files[0];
-    read_blob_and_handle(file, content_handler, read_as_data);
-  };
-  input.click();
-}
-
-function read_blob_and_handle(blob, content_handler, read_as_data) {
-  const reader = new FileReader();
-  if (read_as_data) {
-    reader.readAsDataURL(blob);
-  } else {
-    reader.readAsText(blob, "UTF-8");
-  }
-  reader.onload = (readerEvent) => {
-    const content = readerEvent.target.result;
-    //console.log(content);
-    content_handler(content);
-  };
-}
 
 function load_graph() {
   load_file((content) => {
@@ -1120,7 +1093,7 @@ async function create_linear_story() {
         return;
       }
       var blob = new Blob([markdown], { type: "text/plain;charset=utf-8" });
-      save_file(blob, get_file_safe_title() + ".md");
+      save_file(blob, get_file_safe_title(story) + ".md");
     })
     .catch((error) => {
       console.error(error);

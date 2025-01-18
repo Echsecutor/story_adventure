@@ -6,7 +6,11 @@ import {
   replace_variables,
   get_text_from_section,
   create_element_with_classes_and_attributes,
+  load_file,
+  get_file_safe_title,
 } from "./utils.js";
+
+import saveAs from "./file-saver.js";
 
 var story = {};
 
@@ -19,6 +23,48 @@ const hot_keys = {
   b: {
     description: "One step back",
     action: one_step_back,
+  },
+  s: {
+    description: "Save your progress for the current adventure",
+    action: () => {
+      var blob = new Blob(
+        [
+          JSON.stringify(
+            {
+              meta: story.meta,
+              state: story.state,
+            },
+            null,
+            2
+          ),
+        ],
+        {
+          type: "text/json;charset=utf-8",
+        }
+      );
+      return saveAs(blob, get_file_safe_title(story) + "_save.json");
+    },
+  },
+  l: {
+    description:
+      "Load progress for the current adventure. (load the adventure first)",
+    action: () => {
+      load_file((content) => {
+        const saved = JSON.parse(content);
+        if (!story?.meta?.title) {
+          toast_alert("Please load the story first!");
+          return;
+        }
+        if (story.meta.title != saved.meta?.title) {
+          toast_alert(
+            `The loaded story is '${story.meta.title}' but the save game is for '${saved.meta?.title}'`
+          );
+          return;
+        }
+        story.state = saved.state;
+        start_playing();
+      });
+    },
   },
   f: {
     description: "Toggle full screen",
@@ -64,26 +110,6 @@ function one_step_back() {
     return;
   }
   load_section(story.state.history.pop(), false);
-}
-
-function load_file(content_handler, read_as_data) {
-  var input = document.createElement("input");
-  input.type = "file";
-  input.onchange = (e) => {
-    var file = e.target.files[0];
-    var reader = new FileReader();
-    if (read_as_data) {
-      reader.readAsDataURL(file);
-    } else {
-      reader.readAsText(file, "UTF-8");
-    }
-    reader.onload = (readerEvent) => {
-      const content = readerEvent.target.result;
-      //console.log(content);
-      content_handler(content);
-    };
-  };
-  input.click();
 }
 
 function load_graph_from_file() {

@@ -121,3 +121,34 @@ export const tools_files = {
     },
   },
 };
+
+export function get_file_safe_title(story) {
+  if (!story?.meta?.title) {
+    return "story_adventure";
+  }
+  return story.meta.title.replaceAll(/[^a-z0-9-_]/gi, "_");
+}
+
+export function load_file(content_handler, read_as_data) {
+  var input = document.createElement("input");
+  input.type = "file";
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    read_blob_and_handle(file, content_handler, read_as_data);
+  };
+  input.click();
+}
+
+function read_blob_and_handle(blob, content_handler, read_as_data) {
+  const reader = new FileReader();
+  if (read_as_data) {
+    reader.readAsDataURL(blob);
+  } else {
+    reader.readAsText(blob, "UTF-8");
+  }
+  reader.onload = (readerEvent) => {
+    const content = readerEvent.target.result;
+    //console.log(content);
+    content_handler(content);
+  };
+}

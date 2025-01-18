@@ -58,7 +58,7 @@ See there for the corresponding licenses and meta-dependencies.
 
 ## License
 
-Copyright 2024 Sebastian Schmittner
+Copyright 2024-2025 Sebastian Schmittner
 
 <a href="https://www.gnu.org/licenses/agpl-3.0.html">
 <img alt="AGPLV3" style="border-width:0" src="https://www.gnu.org/graphics/agplv3-with-text-162x68.png" /><br />
@@ -69,4 +69,4 @@ GNU General Public License as published by the Free Software Foundation, either 
 (at your option) any later version.
 
 For the included open source projects, different licenses might be applicable. See the respective projects pages listed above for details.
-</a>
+
