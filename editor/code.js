@@ -12,7 +12,7 @@ import {
   get_text_from_section,
   tools_files,
   get_file_safe_title,
-  load_file
+  load_file,
 } from "./utils.js";
 
 import { save_story, get_story } from "./storage.js";
@@ -35,6 +35,7 @@ const load_button = document.getElementById("load_button");
 const add_media_button = document.getElementById("add_media_button");
 const section_select = document.getElementById("section_select");
 const action_div = document.getElementById("action_div");
+const media_src = document.getElementById("media_src");
 
 const variables_menu = document.getElementById("variables_menu");
 
@@ -44,7 +45,7 @@ const hot_keys = {
     action: handle_add_node,
   },
   m: {
-    description: "Add Media",
+    description: "Load Picture",
     action: add_or_remove_media,
   },
 };
@@ -457,7 +458,7 @@ function text_editor_load(element) {
 
   text_label.innerText = "Story for Section " + elements_section.id;
 
-  if (element.next && typeof element.next === "string") {
+  if (element.next && !Array.isArray(element.next)) {
     // active element is an edge
     text_label.innerText =
       "Choice going from Section " +
@@ -486,6 +487,10 @@ function text_editor_load(element) {
   if (element?.text) {
     text_area.value = element.text;
   }
+  media_src.value = "";
+  if (element?.media?.src) {
+    media_src.value = element?.media?.src;
+  }
   if (element?.media?.type === "image") {
     img_container.style.display = "block";
     const img = img_container?.getElementsByTagName("img")?.[0];
@@ -495,7 +500,7 @@ function text_editor_load(element) {
     add_media_button.innerHTML = "Remove Media";
   } else {
     img_container.style.display = "none";
-    add_media_button.innerHTML = "Add Media";
+    add_media_button.innerHTML = "Load Picture";
   }
 }
 
@@ -751,7 +756,10 @@ async function download_graph_split() {
 
   toast_ok("Saving Story");
 
-  folder.file(get_file_safe_title(story) + ".json", JSON.stringify(story_deep_copy));
+  folder.file(
+    get_file_safe_title(story) + ".json",
+    JSON.stringify(story_deep_copy)
+  );
 
   add_stroy_adventure_files(zip)
     .then(() => {
@@ -828,8 +836,6 @@ async function add_stroy_adventure_files(zip) {
   });
 }
 
-
-
 function load_graph() {
   load_file((content) => {
     story = JSON.parse(content);
@@ -843,12 +849,11 @@ function add_or_remove_media() {
     active_element.media = {};
     text_editor_load(active_element);
   } else {
+    if (!active_element || !story?.sections?.[active_element.id]) {
+      alert("Please select section to add media to.");
+      return;
+    }
     load_file((content) => {
-      if (!active_element || !story?.sections?.[active_element.id]) {
-        alert("Please select section to add media to.");
-        return;
-      }
-
       active_element.media = {
         type: "image",
         src: content,
@@ -1196,10 +1201,30 @@ async function init() {
   set_save_interval();
 }
 
+function handle_media_src_change(event) {
+  if (!active_element) {
+    console.error("No active element to update media source.");
+    return;
+  }
+
+  const newSrc = media_src.value.trim();
+  if (!newSrc) {
+    console.warn("Empty media source provided.");
+    return;
+  }
+
+  active_element.media = {
+    type: "image",
+    src: newSrc,
+  };
+  console.debug("Media source updated for active element:", active_element);
+  text_editor_load(active_element);
+}
+
 function add_listeners() {
   text_area.addEventListener("change", handle_text_change);
-
   text_area.addEventListener("paste", paste_image);
+  media_src.addEventListener("change", handle_media_src_change);
 
   delete_button.addEventListener("click", handle_delete);
   add_node_button.addEventListener("click", handle_add_node);

@@ -14,8 +14,8 @@ body {
 }
 
 #background > img {
-  max-width: 100vw;
-  max-height: 100vh;
+  max-width: 99vw;
+  max-height: 99vh;
   margin: 0;
   z-index: -1;
 }
@@ -32,13 +32,13 @@ body {
 }
 
 .container {
-  max-width: 100vw;
+  max-width: 99vw;
 }
 
 @media screen and (min-width: 780px) {
   #background {
-    width: 100vw;
-    height: 100vh;
+    width: 99vw;
+    height: 99vh;
     position: absolute;
     top: 0;
     left: 0;
