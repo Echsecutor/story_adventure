@@ -23,6 +23,12 @@ const hot_keys = {
   b: {
     description: "One step back",
     action: one_step_back,
+    aliases: ["ArrowLeft", "ArrowUp"],
+  },
+  n: {
+    description: "Proceed to next story section (if there is only one choice)",
+    action: one_step_forward,
+    aliases: ["ArrowRight", "ArrowDown", "Spacebar", " "],
   },
   s: {
     description: "Save your progress for the current adventure",
@@ -95,6 +101,12 @@ const hot_keys = {
       }
     },
   },
+  "?": {
+    description: "Show help",
+    action: () => {
+      help_modal.show();
+    },
+  },
 };
 
 let current_viewer_state = viewer_states.MENU;
@@ -104,6 +116,18 @@ const story_text = document.getElementById("story_text");
 const choices_row = document.getElementById("choices_row");
 const background_image = document.getElementById("background_image");
 const spinner = document.getElementById("spinner");
+const help_modal = new bootstrap.Modal(document.getElementById("help_modal"));
+
+function one_step_forward() {
+  const section = story.sections[story.state.current_section];
+  if (!section?.next) {
+    return;
+  }
+  if (section.next.length != 1) {
+    return;
+  }
+  load_section(section.next[0].next);
+}
 
 function one_step_back() {
   if (!story?.state?.history || story.state.history.length < 1) {
@@ -114,6 +138,7 @@ function one_step_back() {
 
 function load_graph_from_file() {
   load_file((content) => {
+    show_spinner();
     try {
       story = JSON.parse(content);
     } catch (error) {
@@ -170,6 +195,8 @@ function start_playing() {
   toast_ok("Story Adventure Loaded");
   current_viewer_state = viewer_states.PLAYING;
   show_ui_components_according_to_state();
+  toast_ok("Press '?' to display the viewer help.");
+  hide_spinner();
 }
 
 function execute_actions(script) {
@@ -197,6 +224,8 @@ function load_section(id, add_current_section_to_history = true) {
     toast_alert(`Section ${id} is missing from the story`);
     return;
   }
+
+  story_container.classList.remove("d-none");
 
   const section = story.sections[id];
 
@@ -284,12 +313,17 @@ function display_hotkeys() {
 
   for (const key in hot_keys) {
     const description = hot_keys[key]?.description;
+    var keys = [key];
+    if (hot_keys[key]?.aliases) {
+      keys.push(...hot_keys[key]?.aliases);
+    }
+
     table_body.appendChild(
       create_element_with_classes_and_attributes(
         "tr",
         {},
         create_element_with_classes_and_attributes("td", {
-          innerHTML: `<strong>${key}</strong>`,
+          innerHTML: `<strong>${keys.join(", ")}</strong>`,
         }),
         create_element_with_classes_and_attributes("td", {
           innerHTML: description,
@@ -334,14 +368,7 @@ function handle_global_click() {
   ) {
     return;
   }
-  const section = story.sections[story.state.current_section];
-  if (!section?.next) {
-    return;
-  }
-  if (section.next.length != 1) {
-    return;
-  }
-  load_section(section.next[0].next);
+  one_step_forward();
 }
 
 function handle_global_key_down(event) {
@@ -352,11 +379,14 @@ function handle_global_key_down(event) {
     return;
   }
   for (const key of Object.keys(hot_keys)) {
-    if (event.key === key) {
+    if (event.key === key || hot_keys[key]?.aliases?.includes(event.key)) {
+      console.debug("Hotkey pressed", event.key, hot_keys[key]);
       hot_keys[key].action();
       event.stopPropagation();
+      break;
     }
   }
+  console.debug(`No hot key for '${event.key}'`);
 }
 
 function show_spinner() {

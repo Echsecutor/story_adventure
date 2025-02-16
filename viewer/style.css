@@ -5,6 +5,10 @@ body {
   font-size: x-large;
 }
 
+.modal-dialog {
+  color: black;
+}
+
 #background {
   background-color: black;
   margin: 0;
@@ -26,7 +30,7 @@ body {
 }
 
 #spinner {
-  position:fixed;
+  position: fixed;
   top: 50vh;
   width: 100vw;
 }
@@ -70,6 +74,13 @@ body {
   margin-top: 5px;
 }
 
-:link { color: greenyellow; }
-:visited { color: greenyellow; }
-:link:active, :visited:active { color: greenyellow; }
+:link {
+  color: greenyellow;
+}
+:visited {
+  color: greenyellow;
+}
+:link:active,
+:visited:active {
+  color: greenyellow;
+}

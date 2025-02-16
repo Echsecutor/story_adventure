@@ -14,6 +14,21 @@
 </head>
 
 <body>
+  <div class="modal fade modal-xl" id="help_modal" tabindex="-1" aria-labelledby="help_modal_label" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="help_modal_label">Help</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="col" id="explain_hotkeys">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="background">
     <img id="background_image" />
   </div>
@@ -31,14 +46,15 @@
       </div>
     </div>
     <div class="row">
-      <div class="col" id="explain_hotkeys">
-      </div>
-    </div>
-    <div class="row">
       <div class="col">
         <button type="button" id="load_button" class="btn btn-success">
           Load a Story Adventure
         </button>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col">
+        Press "?" to display the viewer help.
       </div>
     </div>
   </div>
