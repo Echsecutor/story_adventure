@@ -954,7 +954,7 @@ function handle_global_key_down(event) {
     return;
   }
 
-  if (event.key === "ArrowDown") {
+  if (event.key === "ArrowRight") {
     event.stopPropagation();
     if (!active_section?.next || active_section.next.length < 1) {
       return;
@@ -974,13 +974,13 @@ function handle_global_key_down(event) {
     return;
   }
 
-  if (event.key === "ArrowUp") {
+  if (event.key === "ArrowLeft") {
     event.stopPropagation();
     text_editor_load(parent_section);
     return;
   }
 
-  if (event.key === "ArrowLeft") {
+  if (event.key === "ArrowUp") {
     event.stopPropagation();
     if (sibbling_index > 0) {
       text_editor_load(
@@ -993,7 +993,7 @@ function handle_global_key_down(event) {
     );
     return;
   }
-  if (event.key === "ArrowRight") {
+  if (event.key === "ArrowDown") {
     event.stopPropagation();
     if (sibbling_index < parent_section.next.length - 1) {
       text_editor_load(
