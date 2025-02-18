@@ -590,7 +590,7 @@ function handle_add_node() {
   if (!story.sections) {
     story.sections = {};
   } else {
-    next_id = Math.max(...Object.keys(story.sections)) + 1;
+    next_id = Math.max(0, ...Object.keys(story.sections).map(key => parseInt(key)).filter(Number.isInteger)) + 1;
   }
   story.sections[next_id] = {
     id: next_id,
@@ -838,9 +838,13 @@ async function add_stroy_adventure_files(zip) {
 
 function load_graph() {
   load_file((content) => {
-    story = JSON.parse(content);
-    redraw_adventure_graph();
-    load_variables_menu();
+    try {
+        story = JSON.parse(content);
+        redraw_adventure_graph();
+        load_variables_menu();
+    } catch (error) {
+        toast_alert("Error loading graph: " + error.message);
+    }
   });
 }
 
