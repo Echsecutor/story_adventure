@@ -110,6 +110,8 @@ export const tools_files = {
         "common.js",
         "favicon.ico",
         "favicon.png",
+        "file-saver.js",
+        "file-saver.mjs",
         "index.html",
         "marked.esm.js",
         "purify.es.mjs",
