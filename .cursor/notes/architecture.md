@@ -39,7 +39,7 @@ The Story Adventure Tools follows a modular client-side architecture with three 
 - **Purpose**: Shared utilities and business logic
 - **Key Files**:
   - `common.js` - Action system implementation and story execution logic
-  - `utils.js` - File handling, text processing, DOM manipulation helpers
+  - `utils.js` - File handling, text processing, DOM manipulation helpers, and `tools_files` definition for bundle creation
   - `storage.js` - LocalStorage abstraction for story and progress persistence
   - `toast.js` - Notification system for user feedback
 
