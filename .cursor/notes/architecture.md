@@ -106,3 +106,10 @@ supported_actions = {
 - **HTML sanitization**: DOMPurify prevents XSS in user-generated content
 - **File type validation**: Restricted to supported media formats
 - **Data URLs**: Base64 encoding for embedded media prevents external resource loading
+
+## Input Handling Best Practices
+
+- **Prompt Cancellation**: All `prompt()` calls properly handle `null` return values when user cancels
+  - Editor variable editing (`edit_variable`, `add_variable`) and story creation functions
+  - Viewer INPUT action - cancellation does not modify variables
+- **Empty vs Null**: Distinguish between empty string input (valid) and cancelled input (null)

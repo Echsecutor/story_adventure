@@ -216,12 +216,15 @@ function edit_variable(variable) {
   let new_value = prompt(
     `Set variable ${variable} with current value '${story?.state?.variables?.[variable]}'`
   );
-  if (new_value) {
+  if (new_value !== null) {
     story.state.variables[variable] = new_value;
   }
 }
 function add_variable() {
   let new_var = prompt("Name of the new variable:");
+  if (new_var === null) {
+    return;
+  }
   if (!story.state) {
     story.state = {};
   }
@@ -1059,22 +1062,25 @@ async function load_last_story_or_example() {
 
 async function create_linear_story() {
   const start_at = prompt("Start at section:", "1");
-  if (!start_at) {
+  if (start_at === null) {
     return;
   }
   const end_at = prompt("Finish at section:");
-  if (!end_at) {
+  if (end_at === null) {
     return;
   }
   const passing_through = [];
   var passing = prompt(
     "Add section to pass through list (leave empty to finish):"
   );
-  while (passing) {
+  while (passing !== null && passing !== "") {
     passing_through.push(passing);
     passing = prompt(
       "Add section to pass through list (leave empty to finish):"
     );
+  }
+  if (passing === null) {
+    return;
   }
   toast_ok("Generating linear story...");
   console.debug(

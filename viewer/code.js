@@ -1,13 +1,13 @@
-import { toast_alert, toast_ok } from "./toast.js";
+import { supported_actions } from "./common.js";
 import { marked } from "./marked.esm.js";
 import DOMPurify from "./purify.es.mjs";
-import { supported_actions } from "./common.js";
+import { toast_alert, toast_ok } from "./toast.js";
 import {
-  replace_variables,
-  get_text_from_section,
   create_element_with_classes_and_attributes,
-  load_file,
   get_file_safe_title,
+  get_text_from_section,
+  load_file,
+  replace_variables,
 } from "./utils.js";
 
 import saveAs from "./file-saver.js";
@@ -406,7 +406,9 @@ function overwrite_actions() {
       return;
     }
     const user_input = prompt(parameters[1]);
-    supported_actions["SET"].action(st, [parameters[0], user_input]);
+    if (user_input !== null) {
+      supported_actions["SET"].action(st, [parameters[0], user_input]);
+    }
   };
 }
 
