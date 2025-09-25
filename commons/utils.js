@@ -144,7 +144,7 @@ export function load_file(content_handler, read_as_data) {
   input.click();
 }
 
-function read_blob_and_handle(blob, content_handler, read_as_data) {
+export function read_blob_and_handle(blob, content_handler, read_as_data) {
   const reader = new FileReader();
   if (read_as_data) {
     reader.readAsDataURL(blob);

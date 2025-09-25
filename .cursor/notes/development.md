@@ -158,6 +158,7 @@ viewer/
 - **Variable interpolation**: Verify ${variable} syntax
 - **Graph layout**: Clear cache and reload
 - **Story validation**: Check JSON syntax and structure
+- **Function exports**: Ensure all functions called across modules are properly exported
 
 ### Browser DevTools
 

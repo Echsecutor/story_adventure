@@ -1,21 +1,22 @@
-import cytoscape from "./cytoscape.esm.min.js";
 import cytoscapeKlay from "./cytoscape-klay.js";
-import JSZip from "./jszip.js";
+import cytoscape from "./cytoscape.esm.min.js";
 import saveAs from "./file-saver.js";
+import JSZip from "./jszip.js";
 
 cytoscape.use(cytoscapeKlay);
 
-import { toast_alert, toast_ok } from "./toast.js";
 import { supported_actions } from "./common.js";
+import { toast_alert, toast_ok } from "./toast.js";
 import {
   create_element_with_classes_and_attributes,
-  get_text_from_section,
-  tools_files,
   get_file_safe_title,
+  get_text_from_section,
   load_file,
+  read_blob_and_handle,
+  tools_files,
 } from "./utils.js";
 
-import { save_story, get_story } from "./storage.js";
+import { get_story, save_story } from "./storage.js";
 
 const data_url_regexp = /^data:image\/([a-z]*);base64,(.*)$/;
 
@@ -590,7 +591,13 @@ function handle_add_node() {
   if (!story.sections) {
     story.sections = {};
   } else {
-    next_id = Math.max(0, ...Object.keys(story.sections).map(key => parseInt(key)).filter(Number.isInteger)) + 1;
+    next_id =
+      Math.max(
+        0,
+        ...Object.keys(story.sections)
+          .map((key) => parseInt(key))
+          .filter(Number.isInteger)
+      ) + 1;
   }
   story.sections[next_id] = {
     id: next_id,
@@ -839,11 +846,11 @@ async function add_stroy_adventure_files(zip) {
 function load_graph() {
   load_file((content) => {
     try {
-        story = JSON.parse(content);
-        redraw_adventure_graph();
-        load_variables_menu();
+      story = JSON.parse(content);
+      redraw_adventure_graph();
+      load_variables_menu();
     } catch (error) {
-        toast_alert("Error loading graph: " + error.message);
+      toast_alert("Error loading graph: " + error.message);
     }
   });
 }
