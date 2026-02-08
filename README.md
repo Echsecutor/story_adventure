@@ -8,27 +8,76 @@ If you like this, consider supporting further development!
 
 ## Project Structure
 
-- [`editor/`](./editor/) -- Web-based story creation tool (graph editor using Cytoscape.js)
-- [`viewer/`](./viewer/) -- Web-based story player (Markdown rendering, save/load progress)
-- [`commons/`](./commons/) -- Shared resources (Bootstrap UI, utilities, storage, notifications)
+This project is a pnpm monorepo with three packages:
+
+- [`packages/shared/`](./packages/shared/) -- Shared TypeScript types, utilities, and action system
+- [`packages/editor/`](./packages/editor/) -- Web-based story creation tool (React Flow graph editor)
+- [`packages/viewer/`](./packages/viewer/) -- Web-based story player (Markdown rendering, save/load progress)
 - [`stories/`](./stories/) -- Example stories and story collection
+- [`scripts/`](./scripts/) -- Build scripts for bundle generation
 
-## Usage
+## Technology Stack
 
-### Deployed Version
+- **React 19** + **TypeScript** -- Modern UI framework with type safety
+- **React Flow** (`@xyflow/react`) -- Graph editor (replaces Cytoscape.js)
+- **Vite** -- Fast build tool with HMR
+- **pnpm workspaces** -- Monorepo dependency management
+- **Vitest** + **Playwright** -- Comprehensive testing suite
 
-- [Editor](https://echsecutor.github.io/story_adventure/editor)
-- [Viewer](https://echsecutor.github.io/story_adventure/viewer)
+## Getting Started
 
-### Local Development
+### Prerequisites
 
-No build step required. Serve the repository root with any static HTTP server:
+- Node.js >= 18.0.0
+- pnpm >= 9.0.0
+
+### Installation
 
 ```bash
-python3 -m http.server
+# Install dependencies
+pnpm install
 ```
 
-Then open `http://localhost:8000/editor/` or `http://localhost:8000/viewer/` in your browser.
+### Development
+
+```bash
+# Run viewer in dev mode (http://localhost:5174)
+pnpm --filter viewer dev
+
+# Run editor in dev mode (http://localhost:5173)
+pnpm --filter editor dev
+
+# Run all packages in dev mode
+pnpm dev
+```
+
+### Testing
+
+```bash
+# Run unit tests
+pnpm test
+
+# Run E2E tests
+pnpm test:e2e
+
+# Type check
+pnpm typecheck
+
+# Full verification (typecheck + test + test:e2e)
+pnpm verify
+```
+
+### Building for Production
+
+```bash
+# Build all packages
+pnpm build
+
+# Build viewer bundle for ZIP export (copies viewer dist to editor public)
+pnpm build:viewer-for-bundle
+```
+
+Note: The editor's bundle generation feature requires the viewer bundle to be built first. Run `pnpm build:viewer-for-bundle` before generating playable adventure bundles.
 
 ## Story Format
 
@@ -45,14 +94,16 @@ Choices may have a description (displayed as a clickable option) or be empty (ac
 
 This project uses the following open source components:
 
+- [React](https://github.com/facebook/react) -- UI framework
+- [React Flow](https://github.com/xyflow/xyflow) -- Graph editor (replaces Cytoscape.js)
 - [Bootstrap 5](https://github.com/twbs/bootstrap) -- UI components
-- [Cytoscape.js](https://github.com/cytoscape/cytoscape.js) -- Story graph visualization in the editor
-  - [cytoscape-klay](https://github.com/cytoscape/cytoscape.js-klay) -- Graph layout
 - [marked](https://github.com/markedjs/marked) -- Markdown rendering in the viewer
 - [DOMPurify](https://github.com/cure53/DOMPurify) -- HTML sanitization in the viewer
 - [JSZip](https://github.com/Stuk/jszip) -- Bundle export (zipping)
 - [file-saver](https://github.com/eligrey/FileSaver.js/tree/master) -- Large file downloads from browser memory
-- [esm.sh](https://github.com/esm-dev/esm.sh) -- ESM module conversion
+- [Vite](https://github.com/vitejs/vite) -- Build tool
+- [Vitest](https://github.com/vitest-dev/vitest) -- Test runner
+- [Playwright](https://github.com/microsoft/playwright) -- E2E testing
 
 See the respective project pages for licenses and meta-dependencies.
 

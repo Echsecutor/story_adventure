@@ -4,106 +4,140 @@
 
 ### Development Environment
 
-- **No build process**: Pure JavaScript ES6 modules
-- **Local development**: Use local HTTP server for file:// protocol limitations
-- **Testing**: Manual testing in browser, both editor and viewer
+- **Monorepo**: pnpm workspaces with three packages (`shared`, `editor`, `viewer`)
+- **Build tool**: Vite with HMR (Hot Module Replacement)
+- **Type system**: TypeScript with strict mode
+- **Testing**: Vitest (unit/component) + Playwright (E2E)
 - **Deployment**: Static file hosting (GitHub Pages)
 
 ### Code Organization Patterns
 
+#### Monorepo Structure
+
+```
+story_adventure/
+├── packages/
+│   ├── shared/          → Shared types, utilities, action system
+│   ├── editor/          → React Flow graph editor
+│   └── viewer/          → React story player
+├── scripts/             → Build scripts
+└── stories/             → Example stories
+```
+
 #### Module Structure
 
-- ES6 imports/exports throughout
-- Shared utilities in `/commons/`
-- Tool-specific code in respective directories
-- No bundling or transpilation required
+- TypeScript modules with ES6 imports/exports
+- Shared code in `packages/shared/` (imported by editor/viewer)
+- Package-specific code in respective `packages/*/src/` directories
+- Vite handles bundling and transpilation
 
 #### Naming Conventions
 
-- **Files**: kebab-case (e.g., `file-saver.js`)
-- **Variables**: snake_case (e.g., `current_section`)
-- **Functions**: snake_case (e.g., `get_story`)
+- **Files**: kebab-case (e.g., `use-story-state.ts`)
+- **Variables**: camelCase (TypeScript convention, e.g., `currentSection`)
+- **Functions**: camelCase (e.g., `getStory`)
 - **CSS Classes**: kebab-case (e.g., `text-editor-container`)
+- **Components**: PascalCase (e.g., `StoryPlayer.tsx`)
 
-#### File Dependencies
+#### Package Dependencies
 
 ```
-commons/
-├── common.js       → Action system (core logic)
-├── utils.js        → Utility functions
-├── storage.js      → LocalStorage abstraction
-└── toast.js        → Notification system
-
-editor/
-├── code.js         → Imports commons + Cytoscape
-└── index.html      → Bootstrap UI + editor layout
-
-viewer/
-├── code.js         → Imports commons + marked/DOMPurify
-└── index.html      → Bootstrap UI + viewer layout
+packages/shared/         → No dependencies (pure TypeScript)
+packages/viewer/         → Depends on @story-adventure/shared
+packages/editor/         → Depends on @story-adventure/shared
 ```
 
 ## Contributing Guidelines
 
 ### Code Style
 
+- TypeScript strict mode enabled
 - Use semicolons consistently
 - Prefer `const`/`let` over `var`
 - Use template literals for string interpolation
 - Keep functions focused and small
 - Comment complex logic blocks
+- Use TypeScript types/interfaces for all data structures
 
 ### Testing Strategy
 
-- **Manual testing**: Load stories in both editor and viewer
-- **Cross-browser testing**: Chrome, Firefox, Safari, Edge
-- **Mobile testing**: Responsive design verification
-- **Story validation**: Test all action types and edge cases
+**Unit Tests (Vitest)**:
+- Shared package: Action system, variable interpolation, utilities
+- Editor: Story-to-Flow conversion, bundle generation, layout algorithms
+- Viewer: Component rendering, markdown sanitization
+
+**E2E Tests (Playwright)**:
+- Story loading: All 5 example stories load correctly
+- Viewer navigation: Choices, hotkeys, save/load progress
+- Editor editing: Graph manipulation, text editing, actions, variables, bundle generation
+
+**Manual Testing**:
+- Cross-browser testing: Chrome, Firefox, Safari, Edge
+- Mobile testing: Responsive design verification
+- Story validation: Test all action types and edge cases
 
 ### Adding New Features
 
 #### New Action Types
 
-1. Add to `supported_actions` in `commons/common.js`
-2. Define parameters and validation
-3. Implement action function
-4. Test in `stories/test.json`
-5. Update documentation
+1. Add to `supported_actions` in `packages/shared/src/actions.ts`
+2. Define TypeScript types for parameters
+3. Implement action function with proper typing
+4. Add unit tests in `packages/shared/src/__tests__/actions.test.ts`
+5. Test in `stories/test.json`
+6. Update documentation
 
 #### UI Enhancements
 
-1. Modify HTML structure in `index.html`
-2. Add CSS styling in `style.css`
-3. Update JavaScript event handlers
-4. Test responsive behavior
-5. Verify accessibility
+1. Create/modify React components in `packages/*/src/components/`
+2. Add CSS styling in `packages/*/src/index.css`
+3. Update TypeScript event handlers
+4. Add component tests (Vitest) and E2E tests (Playwright)
+5. Test responsive behavior
+6. Verify accessibility
 
 ### Library Management
 
 #### Current Dependencies
 
-- Bootstrap 5.3.x (CSS framework)
-- Cytoscape.js (graph visualization)
+- React 19 + React DOM (UI framework)
+- React Flow (`@xyflow/react`) (graph editor)
+- Bootstrap 5.3.x + react-bootstrap (CSS framework)
 - marked.js (Markdown rendering)
 - DOMPurify (HTML sanitization)
 - JSZip (file compression)
 - FileSaver.js (file downloads)
+- @dagrejs/dagre (graph layout)
 
 #### Adding Dependencies
 
-1. Prefer CDN or esm.sh for ES modules
-2. Download and vendor for offline capability
+1. Add to appropriate package's `package.json`:
+   ```bash
+   pnpm --filter <package-name> add <dependency>
+   ```
+2. For dev dependencies:
+   ```bash
+   pnpm --filter <package-name> add -D <dependency>
+   ```
 3. Update acknowledgments in README
 4. Test browser compatibility
 
 ## Architecture Decisions
 
-### Why No Build Process?
+### Why React + TypeScript?
 
-- **Simplicity**: Direct browser development
-- **Transparency**: No hidden transformations
-- **Accessibility**: Easy contribution without tooling
-- **Performance**: Modern browsers handle ES6 efficiently
+- **Type safety**: Catch errors at compile time
+- **Component reusability**: Shared components between editor/viewer
+- **Modern tooling**: Vite HMR for fast development
+- **Ecosystem**: Rich library ecosystem (React Flow, react-bootstrap)
+
+### Why React Flow over Cytoscape.js?
+
+- **Built for editing**: React Flow is designed for node editors, not just visualization
+- **React integration**: Native React components for nodes/edges
+- **TypeScript support**: Full type definitions
+- **Active maintenance**: Regularly updated, better documentation
+- **Layout algorithms**: Supports dagre (hierarchical) and d3-hierarchy layouts
 
 ### Client-Side Only Design
 
@@ -117,7 +151,7 @@ viewer/
 - **Visual clarity**: See story structure at a glance
 - **Navigation**: Quick section jumping
 - **Validation**: Spot broken links visually
-- **Layout**: Automatic graph organization
+- **Layout**: Automatic graph organization with dagre
 
 ## Common Development Tasks
 
@@ -126,51 +160,75 @@ viewer/
 1. Create JSON file in `/stories/`
 2. Include required `meta` section
 3. Add image assets to story subfolder
-4. Test in viewer
+4. Test in viewer: `pnpm --filter viewer dev`
 5. Update `/stories/README.md`
 
 ### Modifying Action System
 
-1. Edit `commons/common.js`
-2. Update parameter validation
-3. Test with `/stories/test.json`
-4. Update story format documentation
+1. Edit `packages/shared/src/actions.ts`
+2. Update TypeScript types in `packages/shared/src/types.ts`
+3. Update unit tests in `packages/shared/src/__tests__/actions.test.ts`
+4. Test with `/stories/test.json`
+5. Update story format documentation
 
 ### UI Changes
 
-1. Modify Bootstrap HTML structure
-2. Add custom CSS sparingly
-3. Test mobile responsiveness
-4. Verify keyboard navigation
+1. Modify React components in `packages/*/src/components/`
+2. Add custom CSS in `packages/*/src/index.css`
+3. Add component tests (Vitest) and E2E tests (Playwright)
+4. Test mobile responsiveness
+5. Verify keyboard navigation
+
+### Running Tests
+
+```bash
+# Unit tests (all packages)
+pnpm test
+
+# E2E tests (all packages)
+pnpm test:e2e
+
+# Type check (all packages)
+pnpm typecheck
+
+# Full verification
+pnpm verify
+```
 
 ### Performance Optimization
 
-- Minimize DOM manipulations
+- Minimize React re-renders (use `useMemo`, `useCallback`)
 - Lazy load large images
-- Use efficient Cytoscape layouts
+- Use efficient dagre layouts for graph
 - Optimize JSON file sizes
+- Code splitting with Vite (automatic)
 
 ## Debugging Tips
 
 ### Common Issues
 
-- **Module loading**: Check file paths and CORS
+- **Type errors**: Run `pnpm typecheck` to see TypeScript errors
+- **Module loading**: Check import paths and package.json dependencies
 - **Variable interpolation**: Verify ${variable} syntax
-- **Graph layout**: Clear cache and reload
-- **Story validation**: Check JSON syntax and structure
-- **Function exports**: Ensure all functions called across modules are properly exported
+- **Graph layout**: Clear cache and reload, check dagre layout parameters
+- **Story validation**: Check JSON syntax and structure against TypeScript types
+- **React Flow errors**: Check node/edge data structure matches React Flow types
 
 ### Browser DevTools
 
 - Console for action execution debugging
 - Network tab for file loading issues
-- Sources for JavaScript debugging
-- Application tab for LocalStorage inspection
+- Sources for TypeScript debugging (source maps enabled)
+- Application tab for IndexedDB inspection
+- React DevTools for component inspection
 
 ### Testing Workflow
 
-1. Create minimal test case
-2. Test in clean browser session
-3. Verify across different browsers
-4. Check mobile device behavior
-5. Test with large/complex stories
+1. Write unit tests first (TDD approach)
+2. Run `pnpm test` to verify unit tests pass
+3. Write E2E tests for user flows
+4. Run `pnpm test:e2e` to verify E2E tests pass
+5. Test manually in browser with `pnpm dev`
+6. Verify across different browsers
+7. Check mobile device behavior
+8. Test with large/complex stories

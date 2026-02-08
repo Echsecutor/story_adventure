@@ -1,0 +1,28 @@
+{
+  "name": "story-adventure",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm --filter './packages/*' dev",
+    "build": "pnpm --filter './packages/*' build",
+    "build:viewer-for-bundle": "node scripts/build-viewer-for-bundle.mjs",
+    "test": "pnpm --filter './packages/*' test",
+    "test:e2e": "pnpm --filter './packages/*' test:e2e",
+    "typecheck": "pnpm --filter './packages/*' typecheck",
+    "lint": "pnpm --filter './packages/*' lint",
+    "verify": "pnpm typecheck && pnpm test && pnpm test:e2e"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.0",
+    "@types/node": "^22.10.1",
+    "eslint": "^9.15.0",
+    "pnpm": "^9.15.0",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=9.0.0"
+  }
+}

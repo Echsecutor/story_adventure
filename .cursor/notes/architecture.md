@@ -2,68 +2,84 @@
 
 ## Component Overview
 
-The Story Adventure Tools follows a modular client-side architecture with three main components:
+The Story Adventure Tools follows a modular client-side architecture with three main packages in a pnpm monorepo:
 
-### 1. Editor (`/editor/`)
+### 1. Editor (`packages/editor/`)
 
 - **Purpose**: Visual story creation and editing tool
+- **Technology**: React 19 + TypeScript + Vite + React Flow
 - **Key Files**:
-  - `code.js` - Main application logic, graph manipulation, UI event handling
-  - `index.html` - Bootstrap-based UI with modal dialogs and navigation
-  - `style.css` - Custom styling for graph visualization and editor UI
+  - `src/main.tsx` - Application entry point
+  - `src/App.tsx` - Main app component managing story state
+  - `src/components/GraphEditor.tsx` - React Flow canvas wrapper
+  - `src/components/nodes/SectionNode.tsx` - Custom node component
+  - `src/components/edges/ChoiceEdge.tsx` - Custom edge component
+  - `src/components/panels/SectionPanel.tsx` - Section editing sidebar
+  - `src/components/panels/ActionEditor.tsx` - Action script editor
+  - `src/utils/bundle.ts` - Bundle generation (ZIP export)
 
 **Core Features**:
 
-- Graph-based story visualization using Cytoscape.js with Klay layout algorithm
+- Graph-based story visualization using React Flow with dagre layout algorithm
 - Section editing with rich text, media embedding, and action scripting
 - Real-time story validation and JSON export/import
-- Bundle creation for distributable story packages
+- Bundle creation for distributable story packages (includes viewer)
 
-### 2. Viewer (`/viewer/`)
+### 2. Viewer (`packages/viewer/`)
 
 - **Purpose**: Story playback and user interaction
+- **Technology**: React 19 + TypeScript + Vite
 - **Key Files**:
-  - `code.js` - Story state management, choice handling, progress tracking
-  - `index.html` - Responsive UI for story display and navigation
-  - `style.css` - Story presentation styling and mobile optimization
+  - `src/main.tsx` - Application entry point
+  - `src/App.tsx` - Main app component coordinating viewer state
+  - `src/components/StoryPlayer.tsx` - Story text display with markdown
+  - `src/components/ChoiceButtons.tsx` - Choice navigation buttons
+  - `src/hooks/useStoryPlayer.ts` - Story state management hook
+  - `src/hooks/useHotkeys.ts` - Keyboard hotkey handling
 
 **Core Features**:
 
 - Markdown rendering with DOMPurify sanitization
-- State persistence and save/load functionality
+- State persistence and save/load functionality (IndexedDB)
 - Media display (images, videos) with responsive design
 - Keyboard navigation and hotkey support
 
-### 3. Commons (`/commons/`)
+### 3. Shared (`packages/shared/`)
 
-- **Purpose**: Shared utilities and business logic
+- **Purpose**: Shared TypeScript types, utilities, and business logic
+- **Technology**: TypeScript (no React dependencies)
 - **Key Files**:
-  - `common.js` - Action system implementation and story execution logic
-  - `utils.js` - File handling, text processing, DOM manipulation helpers, and `tools_files` definition for bundle creation
-  - `storage.js` - LocalStorage abstraction for story and progress persistence
-  - `toast.js` - Notification system for user feedback
+  - `src/types.ts` - TypeScript interfaces for Story, Section, Choice, Action, etc.
+  - `src/actions.ts` - Action system implementation and story execution logic
+  - `src/utils.ts` - File handling, text processing helpers
+  - `src/variables.ts` - Variable interpolation logic
+  - `src/storage.ts` - IndexedDB abstraction for story and progress persistence
 
 ## Action System Architecture
 
-The action system (`common.js`) provides dynamic story behavior through a plugin-like architecture:
+The action system (`packages/shared/src/actions.ts`) provides dynamic story behavior through a plugin-like architecture:
 
-```javascript
-supported_actions = {
+```typescript
+export const supported_actions: SupportedActions = {
   INPUT: { parameters: ["VARIABLE", "STRING"], action: set_variable },
   SET: { parameters: ["VARIABLE", "STRING"], action: set_variable },
   COMPARE_DO: {
     parameters: ["VARIABLE", "ENUM", "STRING", "ACTION"],
     action: conditional_execution,
   },
+  // ... 8 more action types
 };
 ```
 
 **Key Actions**:
 
-- `INPUT` - Prompt user for variable input
+- `INPUT` - Prompt user for variable input (overridden in viewer with `prompt()`)
 - `SET` - Assign values to story variables
-- `ADD_TO_VARIABLE` - Append to existing variables
-- `COMPARE_DO` - Conditional logic execution
+- `ADD_TO_VARIABLE` - Append numeric value to existing variables
+- `COMPARE_DO` - Conditional logic execution based on comparison
+- `IF_SET_DO` / `IF_NOT_SET_DO` - Conditional execution based on variable state
+- `ADD_CHOICE` / `REMOVE_CHOICE` - Dynamic choice manipulation
+- `IF_SET_ADD_CHOICE` / `IF_SET_REMOVE_CHOICE` - Conditional choice manipulation
 
 ## Data Flow
 
@@ -83,8 +99,11 @@ supported_actions = {
 
 ### Core Libraries
 
-- **Bootstrap 5** - UI framework and responsive design
-- **Cytoscape.js** - Graph visualization (editor only)
+- **React 19** - UI framework
+- **TypeScript** - Type safety across codebase
+- **Vite** - Build tool with HMR
+- **React Flow** (`@xyflow/react`) - Graph editor (replaces Cytoscape.js)
+- **Bootstrap 5** (via `react-bootstrap`) - UI framework and responsive design
 - **marked.js** - Markdown to HTML conversion (viewer only)
 - **DOMPurify** - HTML sanitization for security
 
@@ -92,13 +111,25 @@ supported_actions = {
 
 - **JSZip** - Story bundle creation and extraction
 - **FileSaver.js** - Client-side file download
-- **esm.sh** - ES module conversion for legacy packages
+- **@dagrejs/dagre** - Graph layout algorithm (hierarchical left-to-right)
+
+### Testing Libraries
+
+- **Vitest** - Unit and component test runner
+- **Playwright** - E2E testing framework
+- **React Testing Library** - Component testing utilities
 
 ## Build and Deployment
 
-**No Build Process**: Project uses native ES6 modules and runs directly in browsers
+**Build Process**: Vite-based build system
+- Editor: `pnpm --filter editor build` → `packages/editor/dist/`
+- Viewer: `pnpm --filter viewer build` → `packages/viewer/dist/`
+- Bundle generation: `pnpm build:viewer-for-bundle` → copies viewer dist to editor public
+
 **Deployment**: Static hosting (GitHub Pages) with CORS-enabled file access
-**Development**: Local file serving required for module imports and file operations
+**Development**: Vite dev servers with HMR
+- Editor: `http://localhost:5173`
+- Viewer: `http://localhost:5174`
 
 ## Security Considerations
 
@@ -107,9 +138,20 @@ supported_actions = {
 - **File type validation**: Restricted to supported media formats
 - **Data URLs**: Base64 encoding for embedded media prevents external resource loading
 
+## Bundle Generation Strategy
+
+The editor generates playable adventure bundles (ZIP files) that include:
+
+1. **Viewer bundle** - Pre-built viewer dist files (copied from `packages/viewer/dist/` to `packages/editor/public/viewer-dist/`)
+2. **Story JSON** - The story file
+3. **Media files** - Extracted images from story sections
+4. **Manifest** - `viewer-bundle-manifest.json` maps viewer file paths to content (for offline ZIP generation)
+
+The build script (`scripts/build-viewer-for-bundle.mjs`) generates the manifest at build time, allowing the editor to create ZIP files without fetching viewer files at runtime.
+
 ## Input Handling Best Practices
 
 - **Prompt Cancellation**: All `prompt()` calls properly handle `null` return values when user cancels
-  - Editor variable editing (`edit_variable`, `add_variable`) and story creation functions
+  - Editor variable editing and story creation functions
   - Viewer INPUT action - cancellation does not modify variables
 - **Empty vs Null**: Distinguish between empty string input (valid) and cancelled input (null)

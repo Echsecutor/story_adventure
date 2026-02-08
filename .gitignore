@@ -1,1 +1,3 @@
 .cursor/rules
+.pnpm-store/
+node_modules/

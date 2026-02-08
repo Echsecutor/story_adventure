@@ -4,36 +4,44 @@
 
 Story Adventure Tools is a minimalist framework for creating and playing through non-linear interactive stories. The project consists of:
 
-1. **Web-based tools** (Editor & Viewer) running pure client-side JavaScript
+1. **Web-based tools** (Editor & Viewer) built with React + TypeScript
 2. **Story format specification** and example stories
-3. **Shared components** and utilities
+3. **Shared package** with core types and utilities
 
 ## Project Structure
 
-### Core Components
+This is a pnpm monorepo with three packages:
 
-- **`/editor/`** - Web-based story creation tool
-  - Graph-based visual editor using Cytoscape.js
-  - Story structure editing, media embedding, action system
-  - Entry point: `index.html`, main logic: `code.js`
-- **`/viewer/`** - Web-based story player
+### Core Packages
 
+- **`packages/shared/`** - Shared TypeScript types, utilities, and action system
+  - `types.ts` - Story, Section, Choice, Action type definitions
+  - `actions.ts` - Action execution engine (all 11 action types)
+  - `utils.ts` - Utility functions (text extraction, file naming)
+  - `variables.ts` - Variable interpolation logic
+  - `storage.ts` - IndexedDB storage utilities
+
+- **`packages/editor/`** - Web-based story creation tool
+  - React Flow graph editor (replaces Cytoscape.js)
+  - Story structure editing, media embedding, action system UI
+  - Bundle generation (ZIP export with viewer)
+  - Entry point: `src/main.tsx`, main component: `App.tsx`
+
+- **`packages/viewer/`** - Web-based story player
   - Story playback with state management
   - Markdown rendering, media display, save/load progress
-  - Entry point: `index.html`, main logic: `code.js`
+  - Keyboard hotkeys for navigation
+  - Entry point: `src/main.tsx`, main component: `App.tsx`
 
-- **`/commons/`** - Shared resources and utilities
+### Other Directories
 
-  - `common.js` - Core action system and story logic
-  - `utils.js` - Utility functions
-  - `storage.js` - Local storage management
-  - `toast.js` - Notification system
-  - Bootstrap CSS/JS and other vendor libraries
-
-- **`/stories/`** - Example stories and story collection
+- **`stories/`** - Example stories and story collection
   - `example_story.json` - Main example demonstrating format
   - `test.json` - Action and variable testing story
   - Story-specific directories with JSON and image assets
+
+- **`scripts/`** - Build scripts
+  - `build-viewer-for-bundle.mjs` - Builds viewer and generates bundle manifest
 
 ### Story Format
 
@@ -46,16 +54,21 @@ Stories are JSON files with the following structure:
 
 ### Key Technologies
 
-- **Frontend**: Pure JavaScript (ES6 modules), Bootstrap 5 UI
-- **Graph Visualization**: Cytoscape.js with Klay layout
+- **Frontend**: React 19 + TypeScript + Vite
+- **Graph Editor**: React Flow (`@xyflow/react`) with dagre layout
+- **UI Framework**: Bootstrap 5 via `react-bootstrap`
 - **Markdown**: marked.js for text rendering
 - **File Handling**: JSZip, FileSaver.js for import/export
 - **Security**: DOMPurify for HTML sanitization
+- **Testing**: Vitest (unit tests) + Playwright (E2E tests)
+- **Monorepo**: pnpm workspaces
 
 ## Project Documentation
 
 - `Changelog.md` - Project changelog following Keep a Changelog format (root level)
-- README files in root, `editor/`, `viewer/`, `stories/` -- all cross-reference each other; sub-READMEs point back to root for license/contribution
+- `README.md` - Root README with project overview and getting started
+- `packages/*/README.md` - Package-specific documentation
+- `stories/README.md` - Story collection documentation
 
 ## Related Notes Files
 
@@ -66,7 +79,9 @@ Stories are JSON files with the following structure:
 ## Key Features
 
 - **Client-side only**: No server required, files never leave user's computer
-- **Visual editing**: Graph-based story structure editing
+- **Visual editing**: Graph-based story structure editing with React Flow
 - **Rich content**: Support for images, videos, embedded media
 - **Interactive elements**: Variable system, conditional logic, actions
 - **Export/Import**: JSON format with optional bundled media
+- **Type safety**: Full TypeScript coverage across codebase
+- **Modern tooling**: Vite HMR, comprehensive test suite
