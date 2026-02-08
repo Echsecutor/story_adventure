@@ -5,7 +5,7 @@
 import { useState, useCallback } from 'react';
 import type { Story, Section } from '@story-adventure/shared';
 import { execute_actions, get_text_from_section, replace_variables } from '@story-adventure/shared';
-import { toastAlert } from '../utils/toast';
+import { useToast } from '../components/modals/ToastContainer';
 
 type ViewerState = 'MENU' | 'PLAYING';
 
@@ -21,6 +21,7 @@ interface StoryPlayerState {
  * Custom hook for managing story player state and navigation.
  */
 export function useStoryPlayer() {
+  const toast = useToast();
   const [state, setState] = useState<StoryPlayerState>({
     story: null,
     currentSectionId: null,
@@ -34,7 +35,7 @@ export function useStoryPlayer() {
    */
   const loadStory = useCallback((story: Story) => {
     if (!story?.sections) {
-      toastAlert('No Story loaded');
+      toast.toastAlert('No Story loaded');
       setState((prev) => ({ ...prev, viewerState: 'MENU' }));
       return;
     }
@@ -50,7 +51,7 @@ export function useStoryPlayer() {
     ) {
       const sectionKeys = Object.keys(story.sections);
       if (sectionKeys.length === 0) {
-        toastAlert('This story has no sections. Please load a different one.');
+        toast.toastAlert('This story has no sections. Please load a different one.');
         return;
       }
       story.state.current_section = sectionKeys[0];
@@ -68,7 +69,7 @@ export function useStoryPlayer() {
       viewerState: 'PLAYING',
       isLoading: false,
     });
-  }, []);
+  }, [toast]);
 
   /**
    * Navigates to a specific section.
@@ -82,7 +83,7 @@ export function useStoryPlayer() {
 
         const section = prev.story.sections[sectionId];
         if (!section) {
-          toastAlert(`Section ${sectionId} is missing from the story`);
+          toast.toastAlert(`Section ${sectionId} is missing from the story`);
           return prev;
         }
 
@@ -110,7 +111,7 @@ export function useStoryPlayer() {
         };
       });
     },
-    []
+    [toast]
   );
 
   /**

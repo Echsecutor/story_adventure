@@ -100,10 +100,13 @@ The editor can export stories as standalone ZIP bundles that include:
 - Story JSON and media files
 - Self-contained web server binaries (Windows + Linux)
 - Launch scripts for easy startup
+- README with usage instructions
+
+All launcher files are placed at the top level of the bundle for easy access.
 
 Users can run bundles by:
-- **Linux/macOS:** Double-click `launcher/run_story_adventure.sh` or run from terminal
-- **Windows:** Double-click `launcher/run_story_adventure.bat` or use PowerShell script
+- **Linux/macOS:** Double-click `run_story_adventure.sh` or run from terminal
+- **Windows:** Double-click `run_story_adventure.bat` or use PowerShell script
 
 The launcher automatically starts the web server and opens the story in the default browser. No installation or configuration required.
 

@@ -5,7 +5,7 @@
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Path to the webserver binary
+# Path to the webserver binary (in same directory as script)
 WEBSERVER="$SCRIPT_DIR/tVeb-linux-x86_64"
 
 # Check if the webserver binary exists
@@ -43,6 +43,6 @@ else
     echo "Could not automatically open browser. Please open http://localhost:$PORT manually."
 fi
 
-# Start the webserver (this will block until Ctrl+C)
-cd "$SCRIPT_DIR/.."
+# Start the webserver from the bundle root directory (this will block until Ctrl+C)
+cd "$SCRIPT_DIR"
 exec "$WEBSERVER" . "$PORT"

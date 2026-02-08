@@ -8,7 +8,7 @@ REM Get the directory where this script is located
 set "SCRIPT_DIR=%~dp0"
 set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
-REM Path to the webserver binary
+REM Path to the webserver binary (in same directory as script)
 set "WEBSERVER=%SCRIPT_DIR%\tVeb-windows-x86_64.exe"
 
 REM Check if the webserver binary exists
@@ -34,6 +34,6 @@ echo.
 REM Open the browser
 start http://localhost:%PORT%
 
-REM Start the webserver (this will block until Ctrl+C)
-cd "%SCRIPT_DIR%\.."
+REM Start the webserver from the bundle root directory (this will block until Ctrl+C)
+cd "%SCRIPT_DIR%"
 "%WEBSERVER%" . %PORT%

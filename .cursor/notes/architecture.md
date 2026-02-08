@@ -16,6 +16,8 @@ The Story Adventure Tools follows a modular client-side architecture with three 
   - `src/components/edges/ChoiceEdge.tsx` - Custom edge component
   - `src/components/panels/SectionPanel.tsx` - Section editing sidebar
   - `src/components/panels/ActionEditor.tsx` - Action script editor
+  - `src/components/modals/DialogContext.tsx` - Modal dialog system (alert/confirm/prompt)
+  - `src/components/modals/ToastContainer.tsx` - Toast notification system
   - `src/utils/bundle.ts` - Bundle generation (ZIP export)
   - `public/launcher/` - Self-contained launcher infrastructure
     - `tVeb-linux-x86_64` - Web server binary for Linux (1.2 MB)
@@ -32,6 +34,7 @@ The Story Adventure Tools follows a modular client-side architecture with three 
 - Real-time story validation and JSON export/import
 - Bundle creation for distributable story packages (includes viewer + launcher)
 - Self-contained launcher with embedded web server (tVeb v0.2.0) for instant playability
+- Modern modal dialogs and toast notifications (React Bootstrap)
 
 ### 2. Viewer (`packages/viewer/`)
 
@@ -42,6 +45,8 @@ The Story Adventure Tools follows a modular client-side architecture with three 
   - `src/App.tsx` - Main app component coordinating viewer state
   - `src/components/StoryPlayer.tsx` - Story text display with markdown
   - `src/components/ChoiceButtons.tsx` - Choice navigation buttons
+  - `src/components/modals/DialogContext.tsx` - Modal dialog system (alert/confirm/prompt)
+  - `src/components/modals/ToastContainer.tsx` - Toast notification system
   - `src/hooks/useStoryPlayer.ts` - Story state management hook
   - `src/hooks/useHotkeys.ts` - Keyboard hotkey handling
 
@@ -51,6 +56,7 @@ The Story Adventure Tools follows a modular client-side architecture with three 
 - State persistence and save/load functionality (IndexedDB)
 - Media display (images, videos) with responsive design
 - Keyboard navigation and hotkey support
+- Modern modal dialogs and toast notifications (React Bootstrap)
 
 ### 3. Shared (`packages/shared/`)
 
@@ -81,13 +87,60 @@ export const supported_actions: SupportedActions = {
 
 **Key Actions**:
 
-- `INPUT` - Prompt user for variable input (overridden in viewer with `prompt()`)
+- `INPUT` - Prompt user for variable input (overridden in viewer with modal prompt dialog)
 - `SET` - Assign values to story variables
 - `ADD_TO_VARIABLE` - Append numeric value to existing variables
 - `COMPARE_DO` - Conditional logic execution based on comparison
 - `IF_SET_DO` / `IF_NOT_SET_DO` - Conditional execution based on variable state
 - `ADD_CHOICE` / `REMOVE_CHOICE` - Dynamic choice manipulation
 - `IF_SET_ADD_CHOICE` / `IF_SET_REMOVE_CHOICE` - Conditional choice manipulation
+
+## UI/UX Components
+
+### Modal Dialog System
+
+Both editor and viewer packages include a modern modal system built with React Bootstrap:
+
+**DialogContext (`components/modals/DialogContext.tsx`)**:
+- Context provider wrapping the entire app (in `main.tsx`)
+- `useDialog()` hook provides programmatic API for modals
+- Methods: `alert(message, title?)`, `confirm(message, title?)`, `prompt(message, defaultValue?, title?)`
+- All methods return promises for clean async/await patterns
+- Replaces primitive browser `alert()`, `confirm()`, and `prompt()`
+
+**ToastContainer (`components/modals/ToastContainer.tsx`)**:
+- Context provider for non-blocking notifications
+- `useToast()` hook provides notification API
+- Methods: `toastOk(message)`, `toastAlert(message)`, `toastInfo(message)`
+- Auto-dismissing toasts with 5-second timeout
+- Positioned in top-right corner with color-coded variants (success, danger, info)
+
+**Usage Example**:
+```typescript
+const dialog = useDialog();
+const toast = useToast();
+
+// Alert modal
+await dialog.alert('Story saved successfully!');
+
+// Confirm modal
+const confirmed = await dialog.confirm('Delete this section?');
+if (confirmed) { /* ... */ }
+
+// Prompt modal
+const userInput = await dialog.prompt('Enter variable value:', 'default');
+if (userInput !== null) { /* ... */ }
+
+// Toast notifications
+toast.toastOk('Story loaded');
+toast.toastAlert('Invalid JSON format');
+toast.toastInfo('Press ? for help');
+```
+
+**Special Integration**:
+- Viewer's INPUT action overrides `supported_actions.INPUT.action` to use modal prompt
+- Replaces blocking browser `prompt()` with async React Bootstrap modal
+- Provides better UX with consistent styling and keyboard navigation
 
 ## Data Flow
 
@@ -150,18 +203,18 @@ export const supported_actions: SupportedActions = {
 
 The editor generates playable adventure bundles (ZIP files) that include:
 
-1. **Viewer bundle** - Pre-built viewer dist files (copied from `packages/viewer/dist/` to `packages/editor/public/viewer-dist/`)
-2. **Launcher infrastructure** - Self-contained web server and launch scripts
-   - `launcher/tVeb-linux-x86_64` - Web server binary for Linux (~1.2 MB)
-   - `launcher/tVeb-windows-x86_64.exe` - Web server binary for Windows (~1.4 MB)
-   - `launcher/run_story_adventure.sh` - Bash launcher script for Linux/macOS
-   - `launcher/run_story_adventure.bat` - Batch launcher script for Windows
-   - `launcher/run_story_adventure.ps1` - PowerShell launcher script for Windows
-   - `launcher/README.md` - Usage documentation
-3. **Story JSON** - The story file in `stories/<story-name>/<story-name>.json`
-4. **Media files** - Extracted images from story sections in `stories/<story-name>/`
-5. **Manifest** - `viewer-bundle-manifest.json` maps viewer and launcher file paths to content (for offline ZIP generation)
-6. **Root index.html** - Redirect to viewer with auto-load of story
+1. **Launcher infrastructure** - Self-contained web server and launch scripts (at root level)
+   - `README.md` - Usage documentation
+   - `run_story_adventure.sh` - Bash launcher script for Linux/macOS
+   - `run_story_adventure.bat` - Batch launcher script for Windows
+   - `run_story_adventure.ps1` - PowerShell launcher script for Windows
+   - `tVeb-linux-x86_64` - Web server binary for Linux (~1.2 MB)
+   - `tVeb-windows-x86_64.exe` - Web server binary for Windows (~1.4 MB)
+2. **Root index.html** - Redirect to viewer with auto-load of story
+3. **Viewer bundle** - Pre-built viewer dist files in `viewer/` subdirectory
+4. **Story JSON** - The story file in `stories/<story-name>/<story-name>.json`
+5. **Media files** - Extracted images from story sections in `stories/<story-name>/`
+6. **Manifest** - `viewer-bundle-manifest.json` maps viewer and launcher file paths to content (for offline ZIP generation)
 
 The build script (`scripts/build-viewer-for-bundle.mjs`) generates the manifest at build time, including both viewer files (as text) and launcher binaries (as base64), allowing the editor to create ZIP files without fetching files at runtime.
 

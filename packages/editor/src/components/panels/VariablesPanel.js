@@ -4,10 +4,12 @@ import { jsx as _jsx, Fragment as _Fragment, jsxs as _jsxs } from "react/jsx-run
  */
 import { useState, useEffect } from 'react';
 import { Modal, Button, Form, ListGroup } from 'react-bootstrap';
+import { useDialog } from '../modals/DialogContext';
 /**
  * Variables panel modal for managing story variables.
  */
 export function VariablesPanel({ variables, onChange, show, onHide, }) {
+    const dialog = useDialog();
     const [variableName, setVariableName] = useState('');
     const [variableValue, setVariableValue] = useState('');
     const [editingVariable, setEditingVariable] = useState(null);
@@ -19,9 +21,9 @@ export function VariablesPanel({ variables, onChange, show, onHide, }) {
             setEditingVariable(null);
         }
     }, [show]);
-    const handleAddVariable = () => {
+    const handleAddVariable = async () => {
         if (!variableName.trim()) {
-            alert('Please enter a variable name');
+            await dialog.alert('Please enter a variable name');
             return;
         }
         const newVariables = { ...variables };
@@ -35,9 +37,9 @@ export function VariablesPanel({ variables, onChange, show, onHide, }) {
         setVariableName(varName);
         setVariableValue(variables[varName] || '');
     };
-    const handleUpdateVariable = () => {
+    const handleUpdateVariable = async () => {
         if (!variableName.trim()) {
-            alert('Please enter a variable name');
+            await dialog.alert('Please enter a variable name');
             return;
         }
         const newVariables = { ...variables };
@@ -51,8 +53,9 @@ export function VariablesPanel({ variables, onChange, show, onHide, }) {
         setVariableValue('');
         setEditingVariable(null);
     };
-    const handleDeleteVariable = (varName) => {
-        if (confirm(`Delete variable "${varName}"?`)) {
+    const handleDeleteVariable = async (varName) => {
+        const confirmed = await dialog.confirm(`Delete variable "${varName}"?`);
+        if (confirmed) {
             const newVariables = { ...variables };
             delete newVariables[varName];
             onChange(newVariables);

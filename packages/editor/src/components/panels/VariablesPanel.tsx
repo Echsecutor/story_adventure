@@ -4,6 +4,7 @@
 
 import { useState, useEffect } from 'react';
 import { Modal, Button, Form, ListGroup } from 'react-bootstrap';
+import { useDialog } from '../modals/DialogContext';
 
 export interface VariablesPanelProps {
   /** Current story variables */
@@ -25,6 +26,7 @@ export function VariablesPanel({
   show,
   onHide,
 }: VariablesPanelProps) {
+  const dialog = useDialog();
   const [variableName, setVariableName] = useState('');
   const [variableValue, setVariableValue] = useState('');
   const [editingVariable, setEditingVariable] = useState<string | null>(null);
@@ -38,9 +40,9 @@ export function VariablesPanel({
     }
   }, [show]);
 
-  const handleAddVariable = () => {
+  const handleAddVariable = async () => {
     if (!variableName.trim()) {
-      alert('Please enter a variable name');
+      await dialog.alert('Please enter a variable name');
       return;
     }
     const newVariables = { ...variables };
@@ -56,9 +58,9 @@ export function VariablesPanel({
     setVariableValue(variables[varName] || '');
   };
 
-  const handleUpdateVariable = () => {
+  const handleUpdateVariable = async () => {
     if (!variableName.trim()) {
-      alert('Please enter a variable name');
+      await dialog.alert('Please enter a variable name');
       return;
     }
     const newVariables = { ...variables };
@@ -73,8 +75,9 @@ export function VariablesPanel({
     setEditingVariable(null);
   };
 
-  const handleDeleteVariable = (varName: string) => {
-    if (confirm(`Delete variable "${varName}"?`)) {
+  const handleDeleteVariable = async (varName: string) => {
+    const confirmed = await dialog.confirm(`Delete variable "${varName}"?`);
+    if (confirmed) {
       const newVariables = { ...variables };
       delete newVariables[varName];
       onChange(newVariables);

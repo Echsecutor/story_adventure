@@ -7,4 +7,6 @@ import ReactDOM from 'react-dom/client';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './index.css';
 import App from './App';
-ReactDOM.createRoot(document.getElementById('root')).render(_jsx(React.StrictMode, { children: _jsx(App, {}) }));
+import { DialogProvider } from './components/modals/DialogContext';
+import { ToastProvider } from './components/modals/ToastContainer';
+ReactDOM.createRoot(document.getElementById('root')).render(_jsx(React.StrictMode, { children: _jsx(DialogProvider, { children: _jsx(ToastProvider, { children: _jsx(App, {}) }) }) }));

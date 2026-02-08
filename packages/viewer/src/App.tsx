@@ -14,28 +14,33 @@ import { useStoryPlayer } from './hooks/useStoryPlayer';
 import { useHotkeys } from './hooks/useHotkeys';
 import { loadFile } from './utils/fileLoader';
 import { saveAs } from './utils/fileSaver';
-import { toastAlert, toastOk } from './utils/toast';
+import { useToast } from './components/modals/ToastContainer';
+import { useDialog } from './components/modals/DialogContext';
 import { get_file_safe_title } from '@story-adventure/shared';
 
-// Override INPUT action to use prompt()
+// Override INPUT action to use modal prompt()
 import { supported_actions } from '@story-adventure/shared';
 
-  // Override INPUT action handler
-  supported_actions.INPUT.action = (story, parameters) => {
-    if (!parameters || parameters.length < 2 || !parameters[1]) {
-      console.error('Need two parameters to ask for input', parameters);
-      return;
-    }
-    const userInput = prompt(parameters[1]);
-    if (userInput !== null && parameters[0]) {
-      supported_actions.SET.action(story, [parameters[0], userInput]);
-    }
-  };
-
 function App() {
+  const toast = useToast();
+  const dialog = useDialog();
   const [showHelp, setShowHelp] = useState(false);
   const [textVisible, setTextVisible] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Override INPUT action handler to use modal prompt
+  useEffect(() => {
+    supported_actions.INPUT.action = async (story, parameters) => {
+      if (!parameters || parameters.length < 2 || !parameters[1]) {
+        console.error('Need two parameters to ask for input', parameters);
+        return;
+      }
+      const userInput = await dialog.prompt(parameters[1]);
+      if (userInput !== null && parameters[0]) {
+        supported_actions.SET.action(story, [parameters[0], userInput]);
+      }
+    };
+  }, [dialog]);
 
   const {
     story,
@@ -59,19 +64,19 @@ function App() {
       try {
         const storyData = JSON.parse(content) as Story;
         loadStory(storyData);
-        toastOk('Story Adventure Loaded');
-        toastOk("Press '?' to display the viewer help.");
+        toast.toastOk('Story Adventure Loaded');
+        toast.toastInfo("Press '?' to display the viewer help.");
       } catch (error) {
-        toastAlert('Not a valid json');
+        toast.toastAlert('Not a valid json');
         console.error(error);
       }
     } catch (error) {
-      toastAlert('Failed to load file');
+      toast.toastAlert('Failed to load file');
       console.error(error);
     } finally {
       setIsLoading(false);
     }
-  }, [loadStory]);
+  }, [loadStory, toast]);
 
   // Load story from URL query parameter
   useEffect(() => {
@@ -79,7 +84,7 @@ function App() {
     const loadParam = params.get('load');
     if (loadParam) {
       setIsLoading(true);
-      toastOk('Loading story from ' + loadParam);
+      toast.toastInfo('Loading story from ' + loadParam);
       fetch(loadParam)
         .then((response) => {
           if (response.ok) {
@@ -89,23 +94,23 @@ function App() {
         })
         .then((json: Story) => {
           loadStory(json);
-          toastOk('Story Adventure Loaded');
-          toastOk("Press '?' to display the viewer help.");
+          toast.toastOk('Story Adventure Loaded');
+          toast.toastInfo("Press '?' to display the viewer help.");
         })
         .catch((error) => {
-          toastAlert('Error loading story from ' + loadParam);
+          toast.toastAlert('Error loading story from ' + loadParam);
           console.error('error loading url:', loadParam, error);
         })
         .finally(() => {
           setIsLoading(false);
         });
     }
-  }, [loadStory]);
+  }, [loadStory, toast]);
 
   // Save progress
   const handleSaveProgress = useCallback(() => {
     if (!story) {
-      toastAlert('No story loaded');
+      toast.toastAlert('No story loaded');
       return;
     }
     const blob = new Blob(
@@ -124,19 +129,19 @@ function App() {
       }
     );
     saveAs(blob, get_file_safe_title(story) + '_save.json');
-  }, [story]);
+  }, [story, toast]);
 
   // Load progress
   const handleLoadProgress = useCallback(async () => {
     if (!story?.meta?.title) {
-      toastAlert('Please load the story first!');
+      toast.toastAlert('Please load the story first!');
       return;
     }
     try {
       const content = await loadFile();
       const saved = JSON.parse(content) as { meta?: { title?: string }; state?: StoryState };
       if (story.meta.title !== saved.meta?.title) {
-        toastAlert(
+        toast.toastAlert(
           `The loaded story is '${story.meta.title}' but the save game is for '${saved.meta?.title}'`
         );
         return;
@@ -144,10 +149,10 @@ function App() {
       story.state = saved.state;
       loadStory(story);
     } catch (error) {
-      toastAlert('Failed to load save file');
+      toast.toastAlert('Failed to load save file');
       console.error(error);
     }
-  }, [story, loadStory]);
+  }, [story, loadStory, toast]);
 
   // Toggle fullscreen
   const handleFullscreen = useCallback(() => {

@@ -5,7 +5,7 @@
 # Get the directory where this script is located
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 
-# Path to the webserver binary
+# Path to the webserver binary (in same directory as script)
 $Webserver = Join-Path $ScriptDir "tVeb-windows-x86_64.exe"
 
 # Check if the webserver binary exists
@@ -33,6 +33,6 @@ Write-Host ""
 # Open the browser
 Start-Process "http://localhost:$Port"
 
-# Start the webserver (this will block until Ctrl+C)
-Set-Location (Join-Path $ScriptDir "..")
+# Start the webserver from the bundle root directory (this will block until Ctrl+C)
+Set-Location $ScriptDir
 & $Webserver "." $Port

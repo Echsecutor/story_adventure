@@ -162,7 +162,6 @@ export async function downloadGraphSplit(story: Story): Promise<void> {
 
   // Add viewer and launcher files from manifest
   const viewerFolder = zip.folder('viewer')!;
-  const launcherFolder = zip.folder('launcher')!;
   const manifest = viewerBundleManifest as ViewerBundleManifest;
   
   // Validate manifest is not empty
@@ -174,13 +173,13 @@ export async function downloadGraphSplit(story: Story): Promise<void> {
   
   for (const [filePath, content] of Object.entries(manifest.files)) {
     if (filePath.startsWith('launcher/')) {
-      // Add launcher files to launcher folder
+      // Add launcher files to root level (not in subfolder)
       const relativePath = filePath.replace(/^launcher\//, '');
       if (typeof content === 'string') {
-        launcherFolder.file(relativePath, content);
+        zip.file(relativePath, content);
       } else if (content && typeof content === 'object' && 'base64' in content) {
         // Handle binary files stored as base64
-        launcherFolder.file(relativePath, content.base64, { base64: true });
+        zip.file(relativePath, content.base64, { base64: true });
       }
     } else if (filePath.startsWith('viewer/')) {
       // Add viewer files to viewer folder

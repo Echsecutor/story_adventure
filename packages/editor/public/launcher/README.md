@@ -1,31 +1,25 @@
 # Story Adventure Launcher
 
-This folder contains everything needed to run your Story Adventure bundle locally without installing a web browser or separate web server.
-
-## Contents
-
-- **tVeb-linux-x86_64** - Lightweight web server for Linux (1.2 MB)
-- **tVeb-windows-x86_64.exe** - Lightweight web server for Windows (1.4 MB)
-- **run_story_adventure.sh** - Launch script for Linux/macOS (Bash)
-- **run_story_adventure.bat** - Launch script for Windows (Batch)
-- **run_story_adventure.ps1** - Launch script for Windows (PowerShell)
+This bundle contains everything needed to run your Story Adventure locally without installing any additional software or web server.
 
 ## Quick Start
 
 ### Linux / macOS
 
-Open a terminal in the bundle directory and run:
+**Option 1: Double-click (if supported)**
+- Simply double-click `run_story_adventure.sh` if your file manager supports executing shell scripts
+
+**Option 2: Terminal**
+Open a terminal in this directory and run:
 
 ```bash
-./launcher/run_story_adventure.sh
+./run_story_adventure.sh
 ```
-
-Or simply double-click `run_story_adventure.sh` if your file manager supports executing shell scripts.
 
 ### Windows
 
 **Option 1: Batch Script (Recommended)**
-- Double-click `run_story_adventure.bat` in the launcher folder
+- Double-click `run_story_adventure.bat`
 
 **Option 2: PowerShell Script**
 - Right-click `run_story_adventure.ps1`
@@ -42,17 +36,17 @@ If port 8080 is already in use, you can specify a custom port:
 
 **Linux/macOS:**
 ```bash
-./launcher/run_story_adventure.sh 3000
+./run_story_adventure.sh 3000
 ```
 
 **Windows (Batch):**
 ```batch
-launcher\run_story_adventure.bat 3000
+run_story_adventure.bat 3000
 ```
 
 **Windows (PowerShell):**
 ```powershell
-.\launcher\run_story_adventure.ps1 3000
+.\run_story_adventure.ps1 3000
 ```
 
 ## Stopping the Server
@@ -71,10 +65,10 @@ The web server included is [tVeb (Tiniest Veb Server)](https://github.com/davlgd
 
 ### "Permission denied" on Linux/macOS
 
-Make the script executable:
+Make the script and binary executable:
 ```bash
-chmod +x launcher/run_story_adventure.sh
-chmod +x launcher/tVeb-linux-x86_64
+chmod +x run_story_adventure.sh
+chmod +x tVeb-linux-x86_64
 ```
 
 ### "Windows protected your PC" on Windows
@@ -100,12 +94,24 @@ You can also run the web server directly:
 
 **Linux/macOS:**
 ```bash
-./launcher/tVeb-linux-x86_64 . 8080
+./tVeb-linux-x86_64 . 8080
 ```
 
 **Windows:**
 ```batch
-launcher\tVeb-windows-x86_64.exe . 8080
+tVeb-windows-x86_64.exe . 8080
 ```
 
 The first argument (`.`) is the directory to serve, and the second (8080) is the port number.
+
+## Bundle Contents
+
+This bundle includes:
+- **README.md** - This file (usage documentation)
+- **run_story_adventure.sh** - Linux/macOS launcher script
+- **run_story_adventure.bat** - Windows batch launcher script
+- **run_story_adventure.ps1** - Windows PowerShell launcher script
+- **tVeb-linux-x86_64** - Web server for Linux (~1.2 MB)
+- **tVeb-windows-x86_64.exe** - Web server for Windows (~1.4 MB)
+- **viewer/** - Story viewer web application
+- **stories/** - Your story content and media files

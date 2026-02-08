@@ -17,10 +17,11 @@ import { useHotkeys } from './hooks/useHotkeys.js';
 import { storyToFlow } from './utils/storyToFlow.js';
 // import { syncEdgesToStory } from './utils/flowToStory.js'; // Not used in Phase 3
 import { loadFile, loadImageFile } from './utils/fileLoader.js';
-import { toastAlert, toastOk } from './utils/toast.js';
+import { useToast } from './components/modals/ToastContainer';
 import { downloadAsIs, downloadGraphInOne, downloadGraphSplit, } from './utils/bundle.js';
 const CURRENT_EDITOR_STORY_KEY = 'current_editor_story';
 function App() {
+    const toast = useToast();
     const { story, loadStory, newStory, addSection, updateSection, deleteSection, addChoice, deleteChoice, updateChoice, setVariables, } = useStoryState();
     const [selectedNode, setSelectedNode] = useState(null);
     const [selectedEdge, setSelectedEdge] = useState(null);
@@ -40,13 +41,13 @@ function App() {
             .then((savedStory) => {
             if (savedStory) {
                 loadStory(savedStory);
-                toastOk('Loaded saved story');
+                toast.toastOk('Loaded saved story');
             }
         })
             .catch((error) => {
             console.error('Failed to load saved story:', error);
         });
-    }, [loadStory]);
+    }, [loadStory, toast]);
     // Handle node click
     const handleNodeClick = useCallback((_event, node) => {
         setSelectedNode(node);
@@ -63,8 +64,8 @@ function App() {
         setSelectedNode(null);
         setSelectedEdge(null);
         setNeedsRedraw((n) => n + 1);
-        toastOk('Created new story');
-    }, [newStory]);
+        toast.toastOk('Created new story');
+    }, [newStory, toast]);
     // Handle load story
     const handleLoadStory = useCallback(async () => {
         try {
@@ -74,52 +75,52 @@ function App() {
             setSelectedNode(null);
             setSelectedEdge(null);
             setNeedsRedraw((n) => n + 1);
-            toastOk('Story loaded');
+            toast.toastOk('Story loaded');
         }
         catch (error) {
-            toastAlert(`Error loading story: ${error instanceof Error ? error.message : String(error)}`);
+            toast.toastAlert(`Error loading story: ${error instanceof Error ? error.message : String(error)}`);
         }
-    }, [loadStory]);
+    }, [loadStory, toast]);
     // Handle save story
     const handleSaveStory = useCallback(async () => {
         try {
             await save_story(CURRENT_EDITOR_STORY_KEY, story);
             await downloadAsIs(story);
-            toastOk('Story saved');
+            toast.toastOk('Story saved');
         }
         catch (error) {
-            toastAlert(`Error saving story: ${error instanceof Error ? error.message : String(error)}`);
+            toast.toastAlert(`Error saving story: ${error instanceof Error ? error.message : String(error)}`);
         }
-    }, [story]);
+    }, [story, toast]);
     // Handle save story with embedded images
     const handleSaveStoryWithImages = useCallback(async () => {
         try {
-            toastOk('Downloading all external picture references...');
+            toast.toastInfo('Downloading all external picture references...');
             await downloadGraphInOne(story);
-            toastOk('All pictures embedded. Story downloaded.');
+            toast.toastOk('All pictures embedded. Story downloaded.');
         }
         catch (error) {
-            toastAlert(`Error saving story with images: ${error instanceof Error ? error.message : String(error)}`);
+            toast.toastAlert(`Error saving story with images: ${error instanceof Error ? error.message : String(error)}`);
         }
-    }, [story]);
+    }, [story, toast]);
     // Handle generate bundle
     const handleGenerateBundle = useCallback(async () => {
         try {
-            toastOk('Extracting images into separate files');
+            toast.toastInfo('Extracting images into separate files');
             await downloadGraphSplit(story);
-            toastOk('Bundle generated');
+            toast.toastOk('Bundle generated');
         }
         catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Error generating bundle';
-            toastAlert(errorMessage);
+            toast.toastAlert(errorMessage);
         }
-    }, [story]);
+    }, [story, toast]);
     // Handle add section
     const handleAddSection = useCallback(() => {
         const newSectionId = addSection();
         setNeedsRedraw((n) => n + 1);
-        toastOk(`Added section ${newSectionId}`);
-    }, [addSection]);
+        toast.toastOk(`Added section ${newSectionId}`);
+    }, [addSection, toast]);
     // Handle redraw
     const handleRedraw = useCallback(() => {
         setNeedsRedraw((n) => n + 1);
@@ -139,15 +140,15 @@ function App() {
             deleteSection(selectedNode.id);
             setSelectedNode(null);
             setNeedsRedraw((n) => n + 1);
-            toastOk('Section deleted');
+            toast.toastOk('Section deleted');
         }
         else if (selectedEdge) {
             deleteChoice(selectedEdge.source, selectedEdge.target);
             setSelectedEdge(null);
             setNeedsRedraw((n) => n + 1);
-            toastOk('Choice deleted');
+            toast.toastOk('Choice deleted');
         }
-    }, [selectedNode, selectedEdge, deleteSection, deleteChoice]);
+    }, [selectedNode, selectedEdge, deleteSection, deleteChoice, toast]);
     // Handle add choice
     const handleAddChoice = useCallback((targetSectionId) => {
         if (selectedNode) {
@@ -157,9 +158,9 @@ function App() {
             }
             addChoice(selectedNode.id, actualTargetId, '');
             setNeedsRedraw((n) => n + 1);
-            toastOk('Choice added');
+            toast.toastOk('Choice added');
         }
-    }, [selectedNode, addSection, addChoice]);
+    }, [selectedNode, addSection, addChoice, toast]);
     // Handle connect (dragging edge)
     const handleConnect = useCallback((connection) => {
         if (connection.source && connection.target) {
@@ -170,7 +171,7 @@ function App() {
     // Handle load media
     const handleLoadMedia = useCallback(async () => {
         if (!selectedNode) {
-            toastAlert('Please select a section to add media to');
+            toast.toastAlert('Please select a section to add media to');
             return;
         }
         try {
@@ -181,12 +182,12 @@ function App() {
                     src: dataUrl,
                 },
             });
-            toastOk('Media loaded');
+            toast.toastOk('Media loaded');
         }
         catch (error) {
-            toastAlert(`Error loading media: ${error instanceof Error ? error.message : String(error)}`);
+            toast.toastAlert(`Error loading media: ${error instanceof Error ? error.message : String(error)}`);
         }
-    }, [selectedNode, updateSection]);
+    }, [selectedNode, updateSection, toast]);
     // Keyboard shortcuts
     useHotkeys({
         onAddSection: handleAddSection,

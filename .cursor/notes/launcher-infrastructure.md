@@ -120,23 +120,22 @@ interface ViewerBundleManifest {
 
 ## Bundle Structure
 
-Exported ZIP bundles contain:
+Exported ZIP bundles contain (launcher files at top level for easy access):
 
 ```
 story-name.zip
+├── README.md                     # Launcher usage documentation
 ├── index.html                    # Root redirect to viewer
+├── run_story_adventure.sh        # Linux/macOS launcher
+├── run_story_adventure.bat       # Windows batch launcher
+├── run_story_adventure.ps1       # Windows PowerShell launcher
+├── tVeb-linux-x86_64            # Linux web server binary
+├── tVeb-windows-x86_64.exe      # Windows web server binary
 ├── viewer/                       # Pre-built viewer
 │   ├── index.html
 │   └── assets/
 │       ├── index-[hash].js
 │       └── index-[hash].css
-├── launcher/                     # Self-contained launcher
-│   ├── README.md
-│   ├── run_story_adventure.sh
-│   ├── run_story_adventure.bat
-│   ├── run_story_adventure.ps1
-│   ├── tVeb-linux-x86_64
-│   └── tVeb-windows-x86_64.exe
 └── stories/
     └── story-name/
         ├── story-name.json
@@ -148,13 +147,14 @@ story-name.zip
 
 1. User exports bundle in editor
 2. User extracts ZIP
-3. User runs launcher script:
-   - Linux/macOS: `./launcher/run_story_adventure.sh`
-   - Windows: Double-click `launcher/run_story_adventure.bat`
-4. Script starts web server on port 8080
-5. Script opens browser to `http://localhost:8080`
-6. Root `index.html` redirects to viewer with story auto-loaded
-7. User enjoys story, press Ctrl+C to stop server
+3. User sees launcher files immediately in the top-level directory
+4. User runs launcher script:
+   - Linux/macOS: `./run_story_adventure.sh` (double-click or terminal)
+   - Windows: Double-click `run_story_adventure.bat`
+5. Script starts web server on port 8080 from bundle root directory
+6. Script opens browser to `http://localhost:8080`
+7. Root `index.html` redirects to viewer with story auto-loaded
+8. User enjoys story, press Ctrl+C to stop server
 
 ## Development Notes
 

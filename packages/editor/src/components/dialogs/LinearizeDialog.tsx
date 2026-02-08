@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { Modal, Button, Form, Alert } from 'react-bootstrap';
 import type { Story } from '@story-adventure/shared';
 import { downloadLinearStory } from '../../utils/bundle.js';
-import { toastAlert, toastOk } from '../../utils/toast.js';
+import { useToast } from '../modals/ToastContainer';
 
 export interface LinearizeDialogProps {
   show: boolean;
@@ -16,6 +16,7 @@ export interface LinearizeDialogProps {
 }
 
 export function LinearizeDialog({ show, onHide, story }: LinearizeDialogProps) {
+  const toast = useToast();
   const [startAt, setStartAt] = useState('');
   const [endAt, setEndAt] = useState('');
   const [passingThrough, setPassingThrough] = useState('');
@@ -57,7 +58,7 @@ export function LinearizeDialog({ show, onHide, story }: LinearizeDialogProps) {
 
     try {
       await downloadLinearStory(story, startAt, endAt, passingList);
-      toastOk('Linear story generated');
+      toast.toastOk('Linear story generated');
       onHide();
       // Reset form
       setStartAt('');
@@ -67,7 +68,7 @@ export function LinearizeDialog({ show, onHide, story }: LinearizeDialogProps) {
       const errorMessage =
         err instanceof Error ? err.message : 'Error generating linear story';
       setError(errorMessage);
-      toastAlert(errorMessage);
+      toast.toastAlert(errorMessage);
     }
   };
 

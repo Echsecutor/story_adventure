@@ -6,8 +6,9 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useState } from 'react';
 import { Modal, Button, Form, Alert } from 'react-bootstrap';
 import { downloadLinearStory } from '../../utils/bundle.js';
-import { toastAlert, toastOk } from '../../utils/toast.js';
+import { useToast } from '../modals/ToastContainer';
 export function LinearizeDialog({ show, onHide, story }) {
+    const toast = useToast();
     const [startAt, setStartAt] = useState('');
     const [endAt, setEndAt] = useState('');
     const [passingThrough, setPassingThrough] = useState('');
@@ -41,7 +42,7 @@ export function LinearizeDialog({ show, onHide, story }) {
         setError(null);
         try {
             await downloadLinearStory(story, startAt, endAt, passingList);
-            toastOk('Linear story generated');
+            toast.toastOk('Linear story generated');
             onHide();
             // Reset form
             setStartAt('');
@@ -51,7 +52,7 @@ export function LinearizeDialog({ show, onHide, story }) {
         catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Error generating linear story';
             setError(errorMessage);
-            toastAlert(errorMessage);
+            toast.toastAlert(errorMessage);
         }
     };
     const handleClose = () => {

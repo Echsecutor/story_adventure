@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Modern modal system using React Bootstrap for dialogs and notifications
+  - `DialogContext` and `useDialog` hook for programmatic alert, confirm, and prompt modals
+  - `ToastContainer` and `useToast` hook for non-blocking toast notifications
+  - Modal components in both editor and viewer packages
 - Self-contained launcher infrastructure for playable bundles
   - Downloaded tVeb web server binaries (v0.2.0) for Windows and Linux
   - Created launch scripts: `run_story_adventure.sh` (Linux/macOS), `run_story_adventure.bat` and `run_story_adventure.ps1` (Windows)
@@ -18,11 +22,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Bundles now launchable without additional software installation
 
 ### Changed
+- Replaced primitive browser `alert()`, `confirm()`, and `prompt()` with modern React Bootstrap modals
+  - Editor: Updated `App.tsx`, `VariablesPanel.tsx`, and `LinearizeDialog.tsx` to use toast and dialog hooks
+  - Viewer: Updated `App.tsx` and `useStoryPlayer.ts` to use toast and dialog hooks
+  - INPUT action in viewer now uses modal prompt instead of browser prompt
+  - Success/info messages now display as Bootstrap toasts instead of alerts
 - Updated `build-viewer-for-bundle.mjs` to include launcher files in manifest
   - Binary files (tVeb executables) stored as base64 in manifest
   - Script files included as text in manifest
-- Updated `bundle.ts` to extract launcher files to `launcher/` folder in ZIP bundles
+- Updated `bundle.ts` to place launcher files at top level of ZIP bundles (not in subfolder)
   - Binary files properly decoded from base64 when creating bundle
+  - Launcher files immediately visible when extracting bundle
+- Updated launch scripts to run from bundle root directory
+  - `run_story_adventure.sh` - Updated paths for root-level execution
+  - `run_story_adventure.bat` - Updated paths for root-level execution
+  - `run_story_adventure.ps1` - Updated paths for root-level execution
+- Updated `launcher/README.md` to reflect top-level file locations and usage
 - Updated root `README.md` with launcher documentation and bundle usage instructions
 
 ### Fixed
