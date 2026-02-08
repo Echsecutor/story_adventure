@@ -21,6 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated bundle generation code to create new directory structure
 
 ### Fixed
+- Fixed path resolution issue in bundled stories where relative paths were incorrectly resolved
+  - Changed story JSON path in root index.html redirect from `./stories/` to `/stories/`
+  - Changed media paths in story JSON from `./stories/` to `/stories/`
+  - Paths are now absolute from web root, preventing incorrect resolution when viewer is at `/viewer/`
 - Fixed infinite loop in ActionEditor when loading a story
   - Root cause: `useEffect` synced with `script` prop reference instead of content, causing update cycles
   - Fixed by adding deep equality check to only update when action content actually changes

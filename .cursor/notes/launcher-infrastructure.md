@@ -136,8 +136,8 @@ story-name.zip
 ├── run_story_adventure.ps1       # Windows PowerShell launcher
 ├── miniserve-linux              # Linux web server binary (~7-8 MB)
 ├── miniserve-win.exe            # Windows web server binary (~7-8 MB)
-└── web/                          # Web content directory (served by tVeb)
-    ├── index.html                # Entry point that loads viewer
+└── web/                          # Web content directory (served by miniserve)
+    ├── index.html                # Entry point that redirects to viewer with story
     ├── viewer/                   # Pre-built viewer
     │   ├── index.html
     │   └── assets/
@@ -149,6 +149,8 @@ story-name.zip
             ├── section1.png
             └── section2.jpg
 ```
+
+**Important Path Resolution**: All paths in the bundle use absolute paths from the web root (e.g., `/stories/...`) rather than relative paths (e.g., `./stories/...`) to ensure correct resolution when the viewer is at `/viewer/`.
 
 **Important**: The `web/` subdirectory separates web content from launcher scripts, preventing tVeb from encountering files with unknown MIME types (`.bat`, `.ps1`) which would cause a panic.
 

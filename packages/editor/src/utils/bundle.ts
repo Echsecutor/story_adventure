@@ -118,7 +118,7 @@ export async function downloadGraphSplit(story: Story): Promise<void> {
       const fileName = `${sectionId}.${type}`;
       const sectionCopy = storyDeepCopy.sections[sectionId];
       if (sectionCopy?.media) {
-        sectionCopy.media.src = `./stories/${get_file_safe_title(story)}/${fileName}`;
+        sectionCopy.media.src = `/stories/${get_file_safe_title(story)}/${fileName}`;
       }
       storyFolder.file(fileName, data, { base64: true });
     } else {
@@ -133,7 +133,7 @@ export async function downloadGraphSplit(story: Story): Promise<void> {
       const fileName = `${sectionId}.${type}`;
       const sectionCopy = storyDeepCopy.sections[sectionId];
       if (sectionCopy?.media) {
-        sectionCopy.media.src = `./stories/${get_file_safe_title(story)}/${fileName}`;
+        sectionCopy.media.src = `/stories/${get_file_safe_title(story)}/${fileName}`;
       }
 
           waitForAll.push(
@@ -203,7 +203,7 @@ export async function downloadGraphSplit(story: Story): Promise<void> {
   </head>
   <body>
     <script>
-        window.location.href="./viewer/?load=./stories/${storyName}/${storyName}.json";
+        window.location.href="./viewer/?load=/stories/${storyName}/${storyName}.json";
     </script>
   </body>
 </html>
