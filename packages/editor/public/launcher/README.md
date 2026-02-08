@@ -53,13 +53,15 @@ run_story_adventure.bat 3000
 
 Press `Ctrl+C` in the terminal/console window where the server is running.
 
-## About tVeb
+## About miniserve
 
-The web server included is [tVeb (Tiniest Veb Server)](https://github.com/davlgd/tVeb), an open-source, minimal static file server written in V. It's:
-- Lightweight: < 1.5 MB per binary
-- Fast: Optimized for static file serving
+The web server included is [miniserve](https://github.com/svenstaro/miniserve), a production-ready static file server written in Rust. It's:
+- Reliable: 7,300+ GitHub stars, actively maintained
+- Lightweight: ~7-8 MB per binary
+- Fast: Optimized for static file serving with Rust performance
 - Secure: Serves files read-only from the bundle directory
 - Cross-platform: Works on Windows, Linux, and macOS
+- Feature-rich: Proper MIME type handling, SPA support, and more
 
 ## Troubleshooting
 
@@ -68,7 +70,7 @@ The web server included is [tVeb (Tiniest Veb Server)](https://github.com/davlgd
 Make the script and binary executable:
 ```bash
 chmod +x run_story_adventure.sh
-chmod +x tVeb-linux-x86_64
+chmod +x miniserve-linux
 ```
 
 ### "Windows protected your PC" on Windows
@@ -94,15 +96,15 @@ You can also run the web server directly:
 
 **Linux/macOS:**
 ```bash
-./tVeb-linux-x86_64 . 8080
+./miniserve-linux --port 8080 --index index.html ./web
 ```
 
 **Windows:**
 ```batch
-tVeb-windows-x86_64.exe . 8080
+miniserve-win.exe --port 8080 --index index.html .\web
 ```
 
-The first argument (`.`) is the directory to serve, and the second (8080) is the port number.
+The `--port` specifies the port number, `--index` sets the default file to serve, and the last argument is the directory to serve.
 
 ## Bundle Contents
 
@@ -111,7 +113,9 @@ This bundle includes:
 - **run_story_adventure.sh** - Linux/macOS launcher script
 - **run_story_adventure.bat** - Windows batch launcher script
 - **run_story_adventure.ps1** - Windows PowerShell launcher script
-- **tVeb-linux-x86_64** - Web server for Linux (~1.2 MB)
-- **tVeb-windows-x86_64.exe** - Web server for Windows (~1.4 MB)
-- **viewer/** - Story viewer web application
-- **stories/** - Your story content and media files
+- **miniserve-linux** - Web server for Linux (~7-8 MB)
+- **miniserve-win.exe** - Web server for Windows (~7-8 MB)
+- **web/** - Web content directory
+  - **viewer/** - Story viewer web application
+  - **stories/** - Your story content and media files
+  - **index.html** - Entry point that loads the viewer

@@ -97,7 +97,9 @@ export async function downloadGraphInOne(story: Story): Promise<void> {
 export async function downloadGraphSplit(story: Story): Promise<void> {
   const storyDeepCopy = JSON.parse(JSON.stringify(story)) as Story;
   const zip = new JSZip();
-  const storyFolder = zip.folder('stories')!.folder(get_file_safe_title(story))!;
+  // Create web/ subdirectory for all web content (separate from launcher scripts)
+  const webFolder = zip.folder('web')!;
+  const storyFolder = webFolder.folder('stories')!.folder(get_file_safe_title(story))!;
 
   const waitForAll: Promise<void>[] = [];
 
@@ -116,7 +118,7 @@ export async function downloadGraphSplit(story: Story): Promise<void> {
       const fileName = `${sectionId}.${type}`;
       const sectionCopy = storyDeepCopy.sections[sectionId];
       if (sectionCopy?.media) {
-        sectionCopy.media.src = `../stories/${get_file_safe_title(story)}/${fileName}`;
+        sectionCopy.media.src = `./stories/${get_file_safe_title(story)}/${fileName}`;
       }
       storyFolder.file(fileName, data, { base64: true });
     } else {
@@ -131,7 +133,7 @@ export async function downloadGraphSplit(story: Story): Promise<void> {
       const fileName = `${sectionId}.${type}`;
       const sectionCopy = storyDeepCopy.sections[sectionId];
       if (sectionCopy?.media) {
-        sectionCopy.media.src = `../stories/${get_file_safe_title(story)}/${fileName}`;
+        sectionCopy.media.src = `./stories/${get_file_safe_title(story)}/${fileName}`;
       }
 
           waitForAll.push(
@@ -161,7 +163,7 @@ export async function downloadGraphSplit(story: Story): Promise<void> {
   );
 
   // Add viewer and launcher files from manifest
-  const viewerFolder = zip.folder('viewer')!;
+  const viewerFolder = webFolder.folder('viewer')!;
   const manifest = viewerBundleManifest as ViewerBundleManifest;
   
   // Validate manifest is not empty
@@ -173,7 +175,7 @@ export async function downloadGraphSplit(story: Story): Promise<void> {
   
   for (const [filePath, content] of Object.entries(manifest.files)) {
     if (filePath.startsWith('launcher/')) {
-      // Add launcher files to root level (not in subfolder)
+      // Add launcher files to root level (not in web subfolder)
       const relativePath = filePath.replace(/^launcher\//, '');
       if (typeof content === 'string') {
         zip.file(relativePath, content);
@@ -182,7 +184,7 @@ export async function downloadGraphSplit(story: Story): Promise<void> {
         zip.file(relativePath, content.base64, { base64: true });
       }
     } else if (filePath.startsWith('viewer/')) {
-      // Add viewer files to viewer folder
+      // Add viewer files to web/viewer folder
       const relativePath = filePath.replace(/^viewer\//, '');
       if (typeof content === 'string') {
         viewerFolder.file(relativePath, content);
@@ -190,9 +192,9 @@ export async function downloadGraphSplit(story: Story): Promise<void> {
     }
   }
 
-  // Add root index.html redirect
+  // Add index.html redirect to web/ subdirectory
   const storyName = get_file_safe_title(story);
-  zip.file(
+  webFolder.file(
     'index.html',
     `<!DOCTYPE html>
 <html>
@@ -201,7 +203,7 @@ export async function downloadGraphSplit(story: Story): Promise<void> {
   </head>
   <body>
     <script>
-        window.location.href="./viewer/?load=../stories/${storyName}/${storyName}.json";
+        window.location.href="./viewer/?load=./stories/${storyName}/${storyName}.json";
     </script>
   </body>
 </html>

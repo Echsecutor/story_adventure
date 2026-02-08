@@ -6,25 +6,29 @@ The launcher infrastructure makes story bundles self-contained and directly laun
 
 ## Components
 
-### Web Server: tVeb
+### Web Server: miniserve
 
-- **Name**: Tiniest Veb Server (tVeb)
-- **Version**: v0.2.0
-- **Source**: https://github.com/davlgd/tVeb
-- **License**: Open source (V language project)
-- **Size**: ~1.2 MB (Linux), ~1.4 MB (Windows)
-- **Technology**: Written in V language using the veb web framework
+- **Name**: miniserve
+- **Version**: v0.32.0
+- **Source**: https://github.com/svenstaro/miniserve
+- **License**: MIT
+- **Size**: ~7-8 MB per binary
+- **Technology**: Written in Rust using Actix web framework
+- **Stars**: 7,300+ on GitHub
+- **Status**: Actively maintained (last release September 2024)
 
-**Why tVeb?**
-- Minimal size (<1.5 MB per binary)
+**Why miniserve?**
+- Production-ready and actively maintained
+- Proper MIME type handling out of the box
 - Single self-contained binary with no dependencies
 - Cross-platform (Windows, Linux, macOS)
-- Fast static file serving
-- Simple command-line interface
-- No configuration files required
+- Fast and secure (Rust guarantees)
+- Feature-rich: SPA support, auth, TLS, QR codes
+- Large, active community
 
 **Alternatives Considered**:
-- Static Web Server (SWS): 4 MB, more features but larger
+- tVeb: Too small/minimal, v0.2.0 abandoned project, MIME type issues ❌
+- Static Web Server (SWS): 4 MB, good alternative but less popular
 - Caddy: Feature-rich but too heavy for simple static serving
 - Python's http.server: Requires Python installation
 - Node.js serve: Requires Node.js installation
@@ -36,6 +40,7 @@ The launcher infrastructure makes story bundles self-contained and directly laun
 - Auto-detects browser (xdg-open, gnome-open, open)
 - Makes binaries executable
 - Supports custom port via argument
+- Uses miniserve with `--port` and `--index` flags
 
 **Windows**: Two options
 1. `run_story_adventure.bat` - Batch script (recommended for most users)
@@ -45,6 +50,7 @@ Both Windows scripts:
 - Use `start` command to open browser
 - Support custom port via argument
 - Handle path spaces correctly
+- Uses miniserve with `--port` and `--index` flags
 
 ### Documentation
 
@@ -112,7 +118,7 @@ interface ViewerBundleManifest {
 }
 ```
 
-**Detection**: Files matching `tVeb-*` or `*.exe` treated as binary
+**Detection**: Files matching `miniserve-*` or `*.exe` treated as binary
 
 **Encoding**: `readFileSync(fullPath).toString('base64')`
 
@@ -125,23 +131,26 @@ Exported ZIP bundles contain (launcher files at top level for easy access):
 ```
 story-name.zip
 ├── README.md                     # Launcher usage documentation
-├── index.html                    # Root redirect to viewer
 ├── run_story_adventure.sh        # Linux/macOS launcher
 ├── run_story_adventure.bat       # Windows batch launcher
 ├── run_story_adventure.ps1       # Windows PowerShell launcher
-├── tVeb-linux-x86_64            # Linux web server binary
-├── tVeb-windows-x86_64.exe      # Windows web server binary
-├── viewer/                       # Pre-built viewer
-│   ├── index.html
-│   └── assets/
-│       ├── index-[hash].js
-│       └── index-[hash].css
-└── stories/
-    └── story-name/
-        ├── story-name.json
-        ├── section1.png
-        └── section2.jpg
+├── miniserve-linux              # Linux web server binary (~7-8 MB)
+├── miniserve-win.exe            # Windows web server binary (~7-8 MB)
+└── web/                          # Web content directory (served by tVeb)
+    ├── index.html                # Entry point that loads viewer
+    ├── viewer/                   # Pre-built viewer
+    │   ├── index.html
+    │   └── assets/
+    │       ├── index-[hash].js
+    │       └── index-[hash].css
+    └── stories/
+        └── story-name/
+            ├── story-name.json
+            ├── section1.png
+            └── section2.jpg
 ```
+
+**Important**: The `web/` subdirectory separates web content from launcher scripts, preventing tVeb from encountering files with unknown MIME types (`.bat`, `.ps1`) which would cause a panic.
 
 ## Usage Workflow
 
@@ -151,9 +160,9 @@ story-name.zip
 4. User runs launcher script:
    - Linux/macOS: `./run_story_adventure.sh` (double-click or terminal)
    - Windows: Double-click `run_story_adventure.bat`
-5. Script starts web server on port 8080 from bundle root directory
+5. Script starts web server on port 8080 serving from `web/` subdirectory
 6. Script opens browser to `http://localhost:8080`
-7. Root `index.html` redirects to viewer with story auto-loaded
+7. `web/index.html` redirects to viewer with story auto-loaded
 8. User enjoys story, press Ctrl+C to stop server
 
 ## Development Notes
@@ -165,14 +174,14 @@ story-name.zip
 - Verify web server serves files correctly
 - Check browser auto-opens to correct URL
 
-**Updating tVeb**:
+**Updating miniserve**:
 1. Update version in `scripts/download-launcher-binaries.sh`
 2. Run `pnpm download:launcher-binaries`
 3. Run `pnpm build:viewer-for-bundle`
 4. Test bundle creation and launching
 
 **Git Workflow**:
-- Binaries are gitignored via `packages/editor/public/launcher/.gitignore`
+- Binaries are gitignored via `packages/editor/public/launcher/.gitignore` (ignores `miniserve-*` and `*.exe`)
 - Contributors must run `pnpm download:launcher-binaries` after cloning
 - CI/CD should download binaries as part of build process
 
@@ -191,3 +200,47 @@ Search: "minimal self-contained static file webserver single binary Windows Linu
 - Platform support: Windows + Linux covered
 - License: Open source
 - Community: Active development
+
+## Migration History
+
+### From tVeb to miniserve (v0.2.0 → v0.32.0)
+
+**Reason for Migration**:
+- tVeb was abandoned (v0.2.0 from 2024, only 17 GitHub stars)
+- MIME type handling issues (panicked on `.bat`, `.ps1` files)
+- Minimal feature set, not production-ready
+- Small community, uncertain future maintenance
+
+**Migration Changes**:
+1. Updated `scripts/download-launcher-binaries.sh` to download miniserve binaries
+2. Updated all launcher scripts (`.sh`, `.bat`, `.ps1`) to use miniserve CLI
+3. Updated `scripts/build-viewer-for-bundle.mjs` to detect miniserve binaries
+4. Updated `.gitignore` to ignore miniserve binaries
+5. Reorganized bundle structure with `web/` subdirectory (see below)
+
+**Benefits**:
+- Production-ready server with 7,300+ stars
+- Actively maintained (last release September 2024)
+- Proper MIME type handling out of the box
+- Rust safety and performance guarantees
+- Large community and ongoing development
+
+### Bundle Structure Reorganization
+
+**Issue**: Original structure had launcher scripts mixed with web content
+- Web servers tried to serve `.bat` and `.ps1` files
+- tVeb panicked on unknown MIME types
+- Not a clean separation of concerns
+
+**Solution**: Created `web/` subdirectory
+- Launcher scripts stay at root level (for easy user access)
+- Web content (viewer, stories, index.html) moved to `web/` subdirectory
+- Web server serves only `web/` directory
+- Launcher scripts include backward compatibility for legacy bundles
+
+**Files Changed**:
+- `packages/editor/src/utils/bundle.ts` - Updated bundle generation
+- `packages/editor/public/launcher/run_story_adventure.sh` - Serves from `web/`
+- `packages/editor/public/launcher/run_story_adventure.bat` - Serves from `web/`
+- `packages/editor/public/launcher/run_story_adventure.ps1` - Serves from `web/`
+- `packages/editor/public/launcher/README.md` - Updated documentation

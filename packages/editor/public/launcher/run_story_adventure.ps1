@@ -6,7 +6,7 @@
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 
 # Path to the webserver binary (in same directory as script)
-$Webserver = Join-Path $ScriptDir "tVeb-windows-x86_64.exe"
+$Webserver = Join-Path $ScriptDir "miniserve-win.exe"
 
 # Check if the webserver binary exists
 if (-not (Test-Path $Webserver)) {
@@ -33,6 +33,12 @@ Write-Host ""
 # Open the browser
 Start-Process "http://localhost:$Port"
 
-# Start the webserver from the bundle root directory (this will block until Ctrl+C)
+# Start the webserver from the web content directory
 Set-Location $ScriptDir
-& $Webserver "." $Port
+if (Test-Path (Join-Path $ScriptDir "web")) {
+    # New bundle structure with web/ subdirectory
+    & $Webserver --port $Port --index index.html (Join-Path $ScriptDir "web")
+} else {
+    # Legacy bundle structure - serve from root
+    & $Webserver --port $Port --index index.html $ScriptDir
+}

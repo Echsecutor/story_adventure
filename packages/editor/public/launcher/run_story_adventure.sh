@@ -1,12 +1,12 @@
 #!/bin/bash
-# Story Adventure Launcher Script for Linux
+# Story Adventure Launcher Script for Linux/macOS
 # This script starts a local webserver and opens the story in your default browser
 
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Path to the webserver binary (in same directory as script)
-WEBSERVER="$SCRIPT_DIR/tVeb-linux-x86_64"
+WEBSERVER="$SCRIPT_DIR/miniserve-linux"
 
 # Check if the webserver binary exists
 if [ ! -f "$WEBSERVER" ]; then
@@ -25,7 +25,7 @@ if [ -n "$1" ]; then
     PORT="$1"
 fi
 
-# Start the webserver in the background
+# Start the webserver
 echo "Starting Story Adventure webserver on port $PORT..."
 echo "Press Ctrl+C to stop the server"
 echo ""
@@ -43,6 +43,12 @@ else
     echo "Could not automatically open browser. Please open http://localhost:$PORT manually."
 fi
 
-# Start the webserver from the bundle root directory (this will block until Ctrl+C)
+# Start the webserver from the web content directory
 cd "$SCRIPT_DIR"
-exec "$WEBSERVER" . "$PORT"
+if [ -d "web" ]; then
+    # New bundle structure with web/ subdirectory
+    exec "$WEBSERVER" --port "$PORT" --index index.html "$SCRIPT_DIR/web"
+else
+    # Legacy bundle structure - serve from root
+    exec "$WEBSERVER" --port "$PORT" --index index.html "$SCRIPT_DIR"
+fi

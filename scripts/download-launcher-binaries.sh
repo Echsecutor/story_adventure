@@ -1,14 +1,14 @@
 #!/bin/bash
-# Download tVeb web server binaries for Story Adventure launcher
-# Run this script to fetch the latest tVeb binaries for bundle creation
+# Download miniserve web server binaries for Story Adventure launcher
+# Run this script to fetch the latest miniserve binaries for bundle creation
 
 set -e
 
-TVEB_VERSION="v0.2.0"
+MINISERVE_VERSION="v0.32.0"
 LAUNCHER_DIR="packages/editor/public/launcher"
-BASE_URL="https://github.com/davlgd/tVeb/releases/download/${TVEB_VERSION}"
+BASE_URL="https://github.com/svenstaro/miniserve/releases/download/${MINISERVE_VERSION}"
 
-echo "Downloading tVeb ${TVEB_VERSION} binaries..."
+echo "Downloading miniserve ${MINISERVE_VERSION} binaries..."
 echo ""
 
 # Create launcher directory if it doesn't exist
@@ -16,21 +16,21 @@ mkdir -p "${LAUNCHER_DIR}"
 
 # Download Linux binary
 echo "Downloading Linux x86_64 binary..."
-curl -L -o "${LAUNCHER_DIR}/tVeb-linux-x86_64" \
-  "${BASE_URL}/tVeb-linux-x86_64"
-chmod +x "${LAUNCHER_DIR}/tVeb-linux-x86_64"
+curl -L -o "${LAUNCHER_DIR}/miniserve-linux" \
+  "${BASE_URL}/miniserve-0.32.0-x86_64-unknown-linux-gnu"
+chmod +x "${LAUNCHER_DIR}/miniserve-linux"
 echo "✓ Linux binary downloaded"
 
 # Download Windows binary
 echo "Downloading Windows x86_64 binary..."
-curl -L -o "${LAUNCHER_DIR}/tVeb-windows-x86_64.exe" \
-  "${BASE_URL}/tVeb-windows-x86_64.exe"
+curl -L -o "${LAUNCHER_DIR}/miniserve-win.exe" \
+  "${BASE_URL}/miniserve-0.32.0-x86_64-pc-windows-msvc.exe"
 echo "✓ Windows binary downloaded"
 
 echo ""
 echo "All binaries downloaded successfully!"
 echo ""
 echo "File sizes:"
-ls -lh "${LAUNCHER_DIR}"/tVeb-* | awk '{print $9, ":", $5}'
+ls -lh "${LAUNCHER_DIR}"/miniserve-* | awk '{print $9, ":", $5}'
 echo ""
 echo "You can now run: pnpm build:viewer-for-bundle"

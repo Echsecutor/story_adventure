@@ -9,7 +9,7 @@ set "SCRIPT_DIR=%~dp0"
 set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 REM Path to the webserver binary (in same directory as script)
-set "WEBSERVER=%SCRIPT_DIR%\tVeb-windows-x86_64.exe"
+set "WEBSERVER=%SCRIPT_DIR%\miniserve-win.exe"
 
 REM Check if the webserver binary exists
 if not exist "%WEBSERVER%" (
@@ -34,6 +34,12 @@ echo.
 REM Open the browser
 start http://localhost:%PORT%
 
-REM Start the webserver from the bundle root directory (this will block until Ctrl+C)
+REM Start the webserver from the web content directory
 cd "%SCRIPT_DIR%"
-"%WEBSERVER%" . %PORT%
+if exist "web\" (
+    REM New bundle structure with web\ subdirectory
+    "%WEBSERVER%" --port %PORT% --index index.html "%SCRIPT_DIR%\web"
+) else (
+    REM Legacy bundle structure - serve from root
+    "%WEBSERVER%" --port %PORT% --index index.html "%SCRIPT_DIR%"
+)

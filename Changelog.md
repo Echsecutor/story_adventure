@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **BREAKING**: Upgraded web server from tVeb to miniserve
+  - Replaced tVeb v0.2.0 (17 stars, abandoned) with miniserve v0.32.0 (7,300+ stars, actively maintained)
+  - miniserve is production-ready, written in Rust, with proper MIME type handling
+  - Updated all launcher scripts to use miniserve with proper command-line arguments
+  - Binary size increased from ~1.2MB to ~7-8MB, but worth it for reliability
+  - Updated download script to fetch miniserve v0.32.0 binaries
+  - Updated build script to detect miniserve binaries instead of tVeb
+- Reorganized bundle structure to separate launcher scripts from web content
+  - Launcher scripts now serve from `web/` subdirectory containing only viewer, stories, and index.html
+  - All launcher scripts (`.sh`, `.bat`, `.ps1`) include backward compatibility for legacy bundles
+  - Updated bundle generation code to create new directory structure
+
 ### Fixed
 - Fixed infinite loop in ActionEditor when loading a story
   - Root cause: `useEffect` synced with `script` prop reference instead of content, causing update cycles

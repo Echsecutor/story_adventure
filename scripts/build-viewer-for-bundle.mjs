@@ -55,9 +55,9 @@ function readDirectoryRecursive(dir, baseDir = dir, prefix = 'viewer') {
       // Prefix with the specified prefix for the manifest
       const manifestPath = `${prefix}/${normalizedPath}`;
       // Read binary files as base64, text files as utf-8
-      // Detect binaries: .exe files, tVeb binaries (Linux), or .bin files
+      // Detect binaries: .exe files, miniserve binaries (Linux), or .bin files
       const fileName = fullPath.split('/').pop() || '';
-      const isBinary = fullPath.match(/\.(exe|bin)$/) || fileName.startsWith('tVeb-');
+      const isBinary = fullPath.match(/\.(exe|bin)$/) || fileName.startsWith('miniserve-');
       const content = isBinary 
         ? readFileSync(fullPath).toString('base64')
         : readFileSync(fullPath, 'utf-8');
