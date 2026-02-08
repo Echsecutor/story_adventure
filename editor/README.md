@@ -1,6 +1,11 @@
 # Story Adventure Editor
 
-Using this editor you can create your own stories or modify existing ones. Try it on https://echsecutor.github.io/story_adventure/editor/ .
-This is a somewhat minimalistic reference implementation. Improvements or better versions of an editor are most welcome as PRs, or just let me know and I will link your tools.
+A web-based tool for creating and editing interactive story adventures. Try it at https://echsecutor.github.io/story_adventure/editor/.
 
-This tool is part of https://github.com/Echsecutor/story_adventure . See there for license, contirbution, etc. This is also the place to open issues.
+This is a minimalistic reference implementation. Improvements or alternative editors are welcome as PRs.
+
+- Entry point: `index.html`, main logic: `code.js`
+- Uses [Cytoscape.js](https://github.com/cytoscape/cytoscape.js) for graph-based visual editing
+- Files never leave your browser
+
+Part of [Story Adventure Tools](https://github.com/Echsecutor/story_adventure). See there for license, contribution guidelines, and issue tracking.

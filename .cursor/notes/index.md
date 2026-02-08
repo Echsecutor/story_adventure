@@ -52,6 +52,11 @@ Stories are JSON files with the following structure:
 - **File Handling**: JSZip, FileSaver.js for import/export
 - **Security**: DOMPurify for HTML sanitization
 
+## Project Documentation
+
+- `Changelog.md` - Project changelog following Keep a Changelog format (root level)
+- README files in root, `editor/`, `viewer/`, `stories/` -- all cross-reference each other; sub-READMEs point back to root for license/contribution
+
 ## Related Notes Files
 
 - **`architecture.md`** - Technical architecture, component relationships, data flow, and security considerations

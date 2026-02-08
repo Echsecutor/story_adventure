@@ -1,6 +1,6 @@
 # Stories
 
-This collection of stories is shared along with the [Story Adventure Tools](https://github.com/Echsecutor/story_adventure).
+This collection of stories is shared along with the [Story Adventure Tools](https://github.com/Echsecutor/story_adventure). You can create your own stories using the [Editor](https://echsecutor.github.io/story_adventure/editor/).
 
 - Der Weihnachtsmann
   - German

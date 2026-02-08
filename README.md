@@ -1,60 +1,60 @@
 # Story Adventure Tools
 
-This is a minimalist framework for writing / playing through (non-linear) stories.
+A minimalist framework for creating and playing through non-linear interactive stories. Everything runs client-side in your browser -- files never leave your computer.
 
 If you like this, consider supporting further development!
 
 <a href="https://www.buymeacoffee.com/Echsecutor" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
 
-## TL;DR
+## Project Structure
 
-- 👉️ [Editor](https://echsecutor.github.io/story_adventure/editor)  👈️
-- 👉️ [Viewer](https://echsecutor.github.io/story_adventure/viewer)  👈️
+- [`editor/`](./editor/) -- Web-based story creation tool (graph editor using Cytoscape.js)
+- [`viewer/`](./viewer/) -- Web-based story player (Markdown rendering, save/load progress)
+- [`commons/`](./commons/) -- Shared resources (Bootstrap UI, utilities, storage, notifications)
+- [`stories/`](./stories/) -- Example stories and story collection
 
+## Usage
 
-## Introduction
+### Deployed Version
 
-Have a look at the [example story](stories/example_story.json) to see the format.
+- [Editor](https://echsecutor.github.io/story_adventure/editor)
+- [Viewer](https://echsecutor.github.io/story_adventure/viewer)
 
-A **Story Adventure** is primarily a set of **Sections** together with a **State** representing the current (initially the starting) state.
-The **State** can also hold variables that you can set initially (e.g. for consistent naming of entities) or change during the game.
+### Local Development
 
-**Sections** links to each other via **Choices** in the `.next` array of each section. Sections without choices are terminal.
-Sections can also contain **Media**, with a type (image/video) and the link to the src. This can also be embedded as a data link.
-Embedding Media has the advantage of creating an all-in-one file, but the obvious disadvantage of creating large files with inefficient encoding of binary data.
+No build step required. Serve the repository root with any static HTTP server:
 
-**Choices** may contain a description which is then actually displayed as a choice when playing through the adventure.
-If you leave the description empty, it is just a "next" type button to break long sections into readable chunks/change grafics. You likely do not want to do this if there is more then one choice.
+```bash
+python3 -m http.server
+```
 
-## Editor
+Then open `http://localhost:8000/editor/` or `http://localhost:8000/viewer/` in your browser.
 
-Using [the editor](./editor/) you can write your own story adventures by providing text and media for each section and linking the sections by choices.
+## Story Format
 
-- Files never leave your computer, the editor is pure JS running in your browser
-- Try at: https://echsecutor.github.io/story_adventure/editor 
+Stories are JSON files. See the [example story](stories/example_story.json) for the format and the [stories README](./stories/README.md) for a list of available stories.
 
-## Viewer
+A story consists of:
+- **Sections** -- Story content linked via choices in the `.next` array. Sections without choices are terminal.
+- **State** -- Current game state including variables (for consistent naming, conditional logic, etc.)
+- **Media** -- Images/videos per section, either linked or embedded as data URIs.
 
-Using [the viewer](./viewer/) you can play thtough any story adventure.
-
-- Files never leave your computer, the viewer is pure JS running in your browser
-- Try at: https://echsecutor.github.io/story_adventure/viewer 
-
+Choices may have a description (displayed as a clickable option) or be empty (acting as a simple "next" button for pagination).
 
 ## Acknowledgment
 
-We proudly acknowledge using the following open source components in this project:
+This project uses the following open source components:
 
-- [Bootstrap 5](https://github.com/twbs/bootstrap) for UI components
-- [Cytoscape.js](https://github.com/cytoscape/cytoscape.js) for drawing the story graph in the editor
-  -[cytoscape-klay](https://github.com/cytoscape/cytoscape.js-klay) for the graph layout
-- [marked](https://github.com/markedjs/marked) for Markdown rendering in the viewer
-- [DOMPurify](https://github.com/cure53/DOMPurify) for HTML sanitization in the viewer
-- [JSZip](https://github.com/Stuk/jszip) for zipping (bundle export)
-- [file-saver](https://github.com/eligrey/FileSaver.js/tree/master) for large files directly from the browsers memory
-- [esm.sh](https://github.com/esm-dev/esm.sh) for converting the old JS packages among the above into esm modules
+- [Bootstrap 5](https://github.com/twbs/bootstrap) -- UI components
+- [Cytoscape.js](https://github.com/cytoscape/cytoscape.js) -- Story graph visualization in the editor
+  - [cytoscape-klay](https://github.com/cytoscape/cytoscape.js-klay) -- Graph layout
+- [marked](https://github.com/markedjs/marked) -- Markdown rendering in the viewer
+- [DOMPurify](https://github.com/cure53/DOMPurify) -- HTML sanitization in the viewer
+- [JSZip](https://github.com/Stuk/jszip) -- Bundle export (zipping)
+- [file-saver](https://github.com/eligrey/FileSaver.js/tree/master) -- Large file downloads from browser memory
+- [esm.sh](https://github.com/esm-dev/esm.sh) -- ESM module conversion
 
-See there for the corresponding licenses and meta-dependencies.
+See the respective project pages for licenses and meta-dependencies.
 
 ## License
 
@@ -64,9 +64,6 @@ Copyright 2024-2025 Sebastian Schmittner
 <img alt="AGPLV3" style="border-width:0" src="https://www.gnu.org/graphics/agplv3-with-text-162x68.png" /><br />
 </a>
 
-All code published in this repository is free software. Everything written by me, i.e. excluding the dependencies mentioned in the Acknowledgment, can be redistributed and/or modified under the terms of the
-GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
+All code published in this repository is free software: it can be redistributed and/or modified under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. See [LICENSE](./LICENSE) for details.
 
-For the included open source projects, different licenses might be applicable. See the respective projects pages listed above for details.
-
+For included open source dependencies, different licenses may apply. See the respective project pages listed above.
