@@ -41,6 +41,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated root `README.md` with launcher documentation and bundle usage instructions
 
 ### Fixed
+- Fixed infinite toast loop in editor when loading saved story
+  - Modified `ToastContainer.tsx` in both editor and viewer to use functional state updates for toast ID generation
+  - Removed `nextId` from `showToast` dependency array to prevent context value from changing on every toast
+  - Toast functions now maintain stable references, preventing useEffect re-triggering
 - Fixed bundle export path issues by configuring viewer to use relative paths (`base: './'` in Vite config)
   - Assets now correctly resolve when viewer is in `/viewer/` subdirectory of bundle
   - Changed favicon reference from absolute to relative path

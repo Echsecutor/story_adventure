@@ -25,15 +25,18 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const [nextId, setNextId] = useState(0);
 
   const showToast = useCallback((message: string, variant: 'success' | 'danger' | 'info' | 'warning') => {
-    const id = nextId;
-    setNextId(id + 1);
-    setToasts((prev) => [...prev, { id, message, variant }]);
-    
-    // Auto-remove after 5 seconds
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((toast) => toast.id !== id));
-    }, 5000);
-  }, [nextId]);
+    setNextId((currentId) => {
+      const id = currentId;
+      setToasts((prev) => [...prev, { id, message, variant }]);
+      
+      // Auto-remove after 5 seconds
+      setTimeout(() => {
+        setToasts((prev) => prev.filter((toast) => toast.id !== id));
+      }, 5000);
+      
+      return currentId + 1;
+    });
+  }, []);
 
   const toastOk = useCallback((message: string) => {
     showToast(message, 'success');

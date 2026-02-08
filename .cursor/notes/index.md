@@ -78,6 +78,7 @@ Stories are JSON files with the following structure:
 - **`story-format.md`** - Complete JSON story format specification, action system, and variable management
 - **`development.md`** - Development workflow, coding standards, testing strategies, and contribution guidelines
 - **`launcher-infrastructure.md`** - Self-contained launcher with tVeb web server, bundle structure, and implementation details
+- **`toast-bug-analysis.md`** - Analysis of the infinite toast loop bug, root cause, fix, and test coverage gaps
 
 ## Key Features
 

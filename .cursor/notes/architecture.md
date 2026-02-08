@@ -114,6 +114,7 @@ Both editor and viewer packages include a modern modal system built with React B
 - Methods: `toastOk(message)`, `toastAlert(message)`, `toastInfo(message)`
 - Auto-dismissing toasts with 5-second timeout
 - Positioned in top-right corner with color-coded variants (success, danger, info)
+- **Important**: Uses functional state updates for ID generation to maintain stable hook references (prevents infinite loops when used in `useEffect` dependencies)
 
 **Usage Example**:
 ```typescript

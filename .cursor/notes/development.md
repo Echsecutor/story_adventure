@@ -213,6 +213,7 @@ pnpm verify
 - **Graph layout**: Clear cache and reload, check dagre layout parameters
 - **Story validation**: Check JSON syntax and structure against TypeScript types
 - **React Flow errors**: Check node/edge data structure matches React Flow types
+- **Infinite loops with useEffect**: When using context values (like `toast` from `useToast()`) in `useEffect` dependencies, ensure the context value has stable references by using functional state updates in `useCallback` hooks. Example: use `setState(prev => ...)` instead of `setState(value)` when the callback depends on the state
 
 ### Browser DevTools
 
