@@ -4,7 +4,12 @@
 
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'fs';
-import { join } from 'path';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 // Note: JSZip is used for testing ZIP structure, but Playwright tests run in Node context
 // We'll use a simple check instead of full JSZip parsing for now
 

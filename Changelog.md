@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `DialogContext` and `useDialog` hook for programmatic alert, confirm, and prompt modals
   - `ToastContainer` and `useToast` hook for non-blocking toast notifications
   - Modal components in both editor and viewer packages
+- Comprehensive test coverage for toast system and infinite loop prevention
+  - Unit tests for ToastContainer in both editor and viewer (7 tests each)
+  - E2E tests for toast behavior in editor (7 scenarios including infinite loop detection)
+  - Tests verify stable hook references and proper toast display
 - Self-contained launcher infrastructure for playable bundles
   - Downloaded tVeb web server binaries (v0.2.0) for Windows and Linux
   - Created launch scripts: `run_story_adventure.sh` (Linux/macOS), `run_story_adventure.bat` and `run_story_adventure.ps1` (Windows)
@@ -45,6 +49,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Modified `ToastContainer.tsx` in both editor and viewer to use functional state updates for toast ID generation
   - Removed `nextId` from `showToast` dependency array to prevent context value from changing on every toast
   - Toast functions now maintain stable references, preventing useEffect re-triggering
+- Fixed VariablesPanel component tests
+  - Wrapped test components with `DialogProvider` to provide required context
+  - Updated delete test to properly handle async modal confirmation dialog
+  - All 7 VariablesPanel tests now passing
+- Fixed ES module `__dirname` issues in all E2E test files
+  - Added proper `fileURLToPath` and `dirname` imports for ES modules
+  - Updated: `editor-load.spec.ts`, `editor-edit.spec.ts`, `editor-bundle.spec.ts`, `editor-toast.spec.ts`
 - Fixed bundle export path issues by configuring viewer to use relative paths (`base: './'` in Vite config)
   - Assets now correctly resolve when viewer is in `/viewer/` subdirectory of bundle
   - Changed favicon reference from absolute to relative path

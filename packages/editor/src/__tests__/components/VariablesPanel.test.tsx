@@ -2,13 +2,23 @@
  * Unit tests for VariablesPanel component.
  */
 
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { VariablesPanel } from '../../components/panels/VariablesPanel.js';
+import { DialogProvider } from '../../components/modals/DialogContext';
 
 describe('VariablesPanel', () => {
   const mockOnChange = vi.fn();
   const mockOnHide = vi.fn();
+
+  // Helper to render with required providers
+  const renderWithProviders = (ui: React.ReactElement) => {
+    return render(
+      <DialogProvider>
+        {ui}
+      </DialogProvider>
+    );
+  };
 
   beforeEach(() => {
     mockOnChange.mockClear();
@@ -16,7 +26,7 @@ describe('VariablesPanel', () => {
   });
 
   it('renders when shown', () => {
-    render(
+    renderWithProviders(
       <VariablesPanel
         variables={{ var1: 'value1', var2: 'value2' }}
         onChange={mockOnChange}
@@ -29,7 +39,7 @@ describe('VariablesPanel', () => {
   });
 
   it('does not render when hidden', () => {
-    render(
+    renderWithProviders(
       <VariablesPanel
         variables={{ var1: 'value1' }}
         onChange={mockOnChange}
@@ -42,7 +52,7 @@ describe('VariablesPanel', () => {
   });
 
   it('displays existing variables', () => {
-    render(
+    renderWithProviders(
       <VariablesPanel
         variables={{ var1: 'value1', var2: 'value2' }}
         onChange={mockOnChange}
@@ -61,7 +71,7 @@ describe('VariablesPanel', () => {
   });
 
   it('adds a new variable', () => {
-    render(
+    renderWithProviders(
       <VariablesPanel
         variables={{ var1: 'value1' }}
         onChange={mockOnChange}
@@ -85,7 +95,7 @@ describe('VariablesPanel', () => {
   });
 
   it('edits an existing variable', () => {
-    render(
+    renderWithProviders(
       <VariablesPanel
         variables={{ var1: 'value1' }}
         onChange={mockOnChange}
@@ -108,12 +118,8 @@ describe('VariablesPanel', () => {
     });
   });
 
-  it('deletes a variable', () => {
-    // Mock window.confirm
-    const originalConfirm = window.confirm;
-    window.confirm = vi.fn(() => true);
-
-    render(
+  it('deletes a variable', async () => {
+    renderWithProviders(
       <VariablesPanel
         variables={{ var1: 'value1', var2: 'value2' }}
         onChange={mockOnChange}
@@ -125,15 +131,20 @@ describe('VariablesPanel', () => {
     const deleteButtons = screen.getAllByText('Delete');
     fireEvent.click(deleteButtons[0]); // Delete first variable
 
-    expect(mockOnChange).toHaveBeenCalledWith({
-      var2: 'value2',
-    });
+    // Wait for the confirm dialog to appear and click OK
+    const confirmButton = await screen.findByText('OK', {}, { timeout: 3000 });
+    fireEvent.click(confirmButton);
 
-    window.confirm = originalConfirm;
+    // Wait for the onChange to be called
+    await waitFor(() => {
+      expect(mockOnChange).toHaveBeenCalledWith({
+        var2: 'value2',
+      });
+    });
   });
 
   it('shows empty state when no variables', () => {
-    render(
+    renderWithProviders(
       <VariablesPanel
         variables={{}}
         onChange={mockOnChange}

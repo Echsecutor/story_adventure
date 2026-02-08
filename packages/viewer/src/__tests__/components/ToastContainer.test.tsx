@@ -2,8 +2,8 @@
  * Unit tests for ToastContainer component and useToast hook.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
 import { useEffect, useState } from 'react';
 import { ToastProvider, useToast } from '../../components/modals/ToastContainer';
 
@@ -16,11 +16,11 @@ describe('ToastContainer', () => {
     const TestComponent = () => {
       const toast = useToast();
       
-      return (
-        <button onClick={() => toast.toastOk('Success message')}>
-          Show Toast
-        </button>
-      );
+      useEffect(() => {
+        toast.toastOk('Success message');
+      }, [toast]);
+      
+      return <div>Test Component</div>;
     };
 
     render(
@@ -28,11 +28,6 @@ describe('ToastContainer', () => {
         <TestComponent />
       </ToastProvider>
     );
-
-    const button = screen.getByText('Show Toast');
-    act(() => {
-      button.click();
-    });
 
     await waitFor(() => {
       expect(screen.getByText('Success message')).toBeInTheDocument();
@@ -43,11 +38,11 @@ describe('ToastContainer', () => {
     const TestComponent = () => {
       const toast = useToast();
       
-      return (
-        <button onClick={() => toast.toastAlert('Error message')}>
-          Show Error
-        </button>
-      );
+      useEffect(() => {
+        toast.toastAlert('Error message');
+      }, [toast]);
+      
+      return <div>Test Component</div>;
     };
 
     render(
@@ -55,11 +50,6 @@ describe('ToastContainer', () => {
         <TestComponent />
       </ToastProvider>
     );
-
-    const button = screen.getByText('Show Error');
-    act(() => {
-      button.click();
-    });
 
     await waitFor(() => {
       expect(screen.getByText('Error message')).toBeInTheDocument();
@@ -70,11 +60,11 @@ describe('ToastContainer', () => {
     const TestComponent = () => {
       const toast = useToast();
       
-      return (
-        <button onClick={() => toast.toastInfo('Info message')}>
-          Show Info
-        </button>
-      );
+      useEffect(() => {
+        toast.toastInfo('Info message');
+      }, [toast]);
+      
+      return <div>Test Component</div>;
     };
 
     render(
@@ -82,34 +72,22 @@ describe('ToastContainer', () => {
         <TestComponent />
       </ToastProvider>
     );
-
-    const button = screen.getByText('Show Info');
-    act(() => {
-      button.click();
-    });
 
     await waitFor(() => {
       expect(screen.getByText('Info message')).toBeInTheDocument();
     });
   });
 
-  // Note: Timer-based auto-dismiss test removed as it causes test hangs with vitest fake timers
-  // The auto-dismiss functionality works correctly in the actual application
-
   it('displays multiple toasts simultaneously', async () => {
     const TestComponent = () => {
       const toast = useToast();
       
-      return (
-        <div>
-          <button onClick={() => toast.toastOk('First message')}>
-            Show First
-          </button>
-          <button onClick={() => toast.toastInfo('Second message')}>
-            Show Second
-          </button>
-        </div>
-      );
+      useEffect(() => {
+        toast.toastOk('First message');
+        toast.toastInfo('Second message');
+      }, [toast]);
+      
+      return <div>Test Component</div>;
     };
 
     render(
@@ -117,14 +95,6 @@ describe('ToastContainer', () => {
         <TestComponent />
       </ToastProvider>
     );
-
-    const firstButton = screen.getByText('Show First');
-    const secondButton = screen.getByText('Show Second');
-    
-    act(() => {
-      firstButton.click();
-      secondButton.click();
-    });
 
     await waitFor(() => {
       expect(screen.getByText('First message')).toBeInTheDocument();

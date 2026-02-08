@@ -4,7 +4,11 @@
 
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'fs';
-import { join } from 'path';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const exampleStoryPath = join(__dirname, '../../../stories/example_story.json');
 const exampleStory = JSON.parse(readFileSync(exampleStoryPath, 'utf-8'));
