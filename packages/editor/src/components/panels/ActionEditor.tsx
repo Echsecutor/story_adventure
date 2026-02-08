@@ -3,7 +3,7 @@
  * Supports all 11 action types with recursive ACTION parameter support.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { JSX } from 'react';
 import { Button, Form, Row, Col } from 'react-bootstrap';
 import type { Action, ActionType } from '@story-adventure/shared';
@@ -261,6 +261,20 @@ function ActionRow({
 }
 
 /**
+ * Deep equality check for action arrays to prevent unnecessary updates.
+ */
+function areActionsEqual(a: Action[], b: Action[]): boolean {
+  if (a.length !== b.length) return false;
+  return a.every((action, i) => {
+    const other = b[i];
+    if (!other) return false;
+    if (action.action !== other.action) return false;
+    if (action.parameters.length !== other.parameters.length) return false;
+    return action.parameters.every((param, j) => param === other.parameters[j]);
+  });
+}
+
+/**
  * Action editor component for managing section scripts.
  */
 export function ActionEditor({
@@ -270,11 +284,21 @@ export function ActionEditor({
   onChange,
 }: ActionEditorProps) {
   const [actions, setActions] = useState<Action[]>(script);
+  const isInternalChangeRef = useRef(false);
 
-  // Sync with prop changes
+  // Sync with prop changes only when content actually differs
   useEffect(() => {
-    setActions(script);
-  }, [script]);
+    // Skip if this update came from our own onChange callback
+    if (isInternalChangeRef.current) {
+      isInternalChangeRef.current = false;
+      return;
+    }
+    
+    // Only update if the script content has actually changed
+    if (!areActionsEqual(actions, script)) {
+      setActions(script);
+    }
+  }, [script, actions]);
 
   const handleAddAction = () => {
     const newAction: Action = {
@@ -283,6 +307,7 @@ export function ActionEditor({
     };
     const newActions = [...actions, newAction];
     setActions(newActions);
+    isInternalChangeRef.current = true;
     onChange(newActions);
   };
 
@@ -290,12 +315,14 @@ export function ActionEditor({
     const newActions = [...actions];
     newActions[index] = newAction;
     setActions(newActions);
+    isInternalChangeRef.current = true;
     onChange(newActions);
   };
 
   const handleDeleteAction = (index: number) => {
     const newActions = actions.filter((_, i) => i !== index);
     setActions(newActions);
+    isInternalChangeRef.current = true;
     onChange(newActions);
   };
 

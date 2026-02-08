@@ -2,7 +2,7 @@
  * Unit tests for ActionEditor component.
  */
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { ActionEditor } from '../../components/panels/ActionEditor.js';
 import type { Action } from '@story-adventure/shared';
@@ -161,5 +161,87 @@ describe('ActionEditor', () => {
     // Find text input (second parameter of SET is STRING)
     const inputs = screen.getAllByRole('textbox');
     expect(inputs.length).toBeGreaterThan(0);
+  });
+
+  it('does not trigger onChange when re-rendering with same content but different reference', () => {
+    const script: Action[] = [
+      {
+        action: 'SET',
+        parameters: ['var1', 'value1'],
+      },
+    ];
+
+    const { rerender } = render(
+      <ActionEditor
+        script={script}
+        availableVariables={availableVariables}
+        availableSections={availableSections}
+        onChange={mockOnChange}
+      />
+    );
+
+    // Clear any initial calls
+    mockOnChange.mockClear();
+
+    // Re-render with new array reference but same content
+    const scriptCopy: Action[] = [
+      {
+        action: 'SET',
+        parameters: ['var1', 'value1'],
+      },
+    ];
+
+    rerender(
+      <ActionEditor
+        script={scriptCopy}
+        availableVariables={availableVariables}
+        availableSections={availableSections}
+        onChange={mockOnChange}
+      />
+    );
+
+    // onChange should NOT be called since content is identical
+    expect(mockOnChange).not.toHaveBeenCalled();
+  });
+
+  it('does update when script content actually changes', () => {
+    const script: Action[] = [
+      {
+        action: 'SET',
+        parameters: ['var1', 'value1'],
+      },
+    ];
+
+    const { rerender } = render(
+      <ActionEditor
+        script={script}
+        availableVariables={availableVariables}
+        availableSections={availableSections}
+        onChange={mockOnChange}
+      />
+    );
+
+    // Clear any initial calls
+    mockOnChange.mockClear();
+
+    // Re-render with different content
+    const newScript: Action[] = [
+      {
+        action: 'ADD_TO_VARIABLE',
+        parameters: ['var2', '5'],
+      },
+    ];
+
+    rerender(
+      <ActionEditor
+        script={newScript}
+        availableVariables={availableVariables}
+        availableSections={availableSections}
+        onChange={mockOnChange}
+      />
+    );
+
+    // Component should update its internal state
+    expect(screen.getByDisplayValue('ADD_TO_VARIABLE')).toBeInTheDocument();
   });
 });

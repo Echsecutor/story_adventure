@@ -12,7 +12,8 @@
     "test:e2e": "pnpm --filter './packages/*' test:e2e",
     "typecheck": "pnpm --filter './packages/*' typecheck",
     "lint": "pnpm --filter './packages/*' lint",
-    "verify": "pnpm typecheck && pnpm test && pnpm test:e2e"
+    "verify": "pnpm typecheck && pnpm test && pnpm test:e2e",
+    "clean": "pnpm --filter './packages/*' clean"
   },
   "devDependencies": {
     "@playwright/test": "^1.48.0",

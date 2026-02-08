@@ -9,7 +9,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist .vite playwright-report test-results coverage public/viewer-dist"
   },
   "dependencies": {
     "@story-adventure/shared": "workspace:*",

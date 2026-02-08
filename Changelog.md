@@ -7,8 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Fixed infinite loop in ActionEditor when loading a story
+  - Root cause: `useEffect` synced with `script` prop reference instead of content, causing update cycles
+  - Fixed by adding deep equality check to only update when action content actually changes
+  - Added ref flag to skip effect when changes originate from component itself
+- Fixed infinite toast loop when loading editor with saved story
+  - Root cause: `ToastContext.Provider` created new value object on every render, causing unstable hook references
+  - Fixed by memoizing context value with `useMemo` to ensure stable references
+  - Changed toast ID counter from state to `useRef` to prevent duplicate IDs when toasts are shown rapidly
+- Removed stale compiled `.js` files from src/ directories that were shadowing `.tsx` source files
+- Updated `.gitignore` to prevent tracking compiled `.js` files in src/ directories
+
 ### Added
 - Modern modal system using React Bootstrap for dialogs and notifications
+- Build artifact cleanup scripts in all packages
+  - Added `clean` script to each package's `package.json`
+  - Root-level `pnpm clean` to clean all packages at once
+  - Removes `dist/`, `.vite/`, `playwright-report/`, `test-results/`, `coverage/`
   - `DialogContext` and `useDialog` hook for programmatic alert, confirm, and prompt modals
   - `ToastContainer` and `useToast` hook for non-blocking toast notifications
   - Modal components in both editor and viewer packages
@@ -44,7 +60,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated `launcher/README.md` to reflect top-level file locations and usage
 - Updated root `README.md` with launcher documentation and bundle usage instructions
 
+### Changed
+- Improved `.gitignore` patterns for better build artifact exclusion
+  - Now ignores all `dist/` directories including `packages/shared/dist/`
+  - Added patterns for `.vite/`, `coverage/`, and generated files
+  - Consolidated test output patterns with wildcards
+
 ### Fixed
+- Removed tracked build artifacts from git history
+  - Untracked `playwright-report/`, `test-results/`, and `dist/` directories
+  - Removed generated `packages/editor/public/viewer-dist/` from tracking
 - Fixed infinite toast loop in editor when loading saved story
   - Modified `ToastContainer.tsx` in both editor and viewer to use functional state updates for toast ID generation
   - Removed `nextId` from `showToast` dependency array to prevent context value from changing on every toast

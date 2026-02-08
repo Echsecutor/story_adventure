@@ -193,6 +193,30 @@ pnpm typecheck
 
 # Full verification
 pnpm verify
+
+# Clean build artifacts
+pnpm clean
+```
+
+### Build Artifact Management
+
+All build artifacts are automatically ignored by `.gitignore` and can be cleaned with `pnpm clean`:
+
+**Ignored directories:**
+- `dist/` - Build outputs from Vite and TypeScript compiler
+- `.vite/` - Vite cache
+- `playwright-report/` - Playwright test reports
+- `test-results/` - Playwright test results
+- `coverage/` - Test coverage reports
+- `packages/editor/public/viewer-dist/` - Generated viewer bundle for editor
+
+**Cleaning:**
+```bash
+# Clean all packages
+pnpm clean
+
+# Clean specific package
+pnpm --filter editor clean
 ```
 
 ### Performance Optimization
@@ -213,7 +237,9 @@ pnpm verify
 - **Graph layout**: Clear cache and reload, check dagre layout parameters
 - **Story validation**: Check JSON syntax and structure against TypeScript types
 - **React Flow errors**: Check node/edge data structure matches React Flow types
-- **Infinite loops with useEffect**: When using context values (like `toast` from `useToast()`) in `useEffect` dependencies, ensure the context value has stable references by using functional state updates in `useCallback` hooks. Example: use `setState(prev => ...)` instead of `setState(value)` when the callback depends on the state
+- **Infinite loops with useEffect**: Two common patterns to avoid:
+  1. **Unstable context references**: When using context values (like `toast` from `useToast()`) in `useEffect` dependencies, ensure the context value has stable references by memoizing with `useMemo` and using functional state updates in `useCallback` hooks
+  2. **Prop sync loops**: When syncing component state with props via `useEffect`, use deep equality checks instead of reference equality. Example: `ActionEditor` uses `areActionsEqual()` to compare content, not array references. Also use a ref flag to skip effect when changes originate from component itself
 
 ### Browser DevTools
 

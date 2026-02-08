@@ -2,7 +2,7 @@
  * Toast container component for non-blocking notifications.
  */
 
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useMemo, useRef, ReactNode } from 'react';
 import { Toast, ToastContainer as BootstrapToastContainer } from 'react-bootstrap';
 
 interface ToastMessage {
@@ -22,20 +22,16 @@ const ToastContext = createContext<ToastContextValue | undefined>(undefined);
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
-  const [nextId, setNextId] = useState(0);
+  const nextIdRef = useRef(0);
 
   const showToast = useCallback((message: string, variant: 'success' | 'danger' | 'info' | 'warning') => {
-    setNextId((currentId) => {
-      const id = currentId;
-      setToasts((prev) => [...prev, { id, message, variant }]);
-      
-      // Auto-remove after 5 seconds
-      setTimeout(() => {
-        setToasts((prev) => prev.filter((toast) => toast.id !== id));
-      }, 5000);
-      
-      return currentId + 1;
-    });
+    const id = nextIdRef.current++;
+    setToasts((prev) => [...prev, { id, message, variant }]);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((toast) => toast.id !== id));
+    }, 5000);
   }, []);
 
   const toastOk = useCallback((message: string) => {
@@ -54,8 +50,14 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
   }, []);
 
+  // Memoize context value to prevent unnecessary re-renders
+  const contextValue = useMemo(
+    () => ({ showToast, toastOk, toastAlert, toastInfo }),
+    [showToast, toastOk, toastAlert, toastInfo]
+  );
+
   return (
-    <ToastContext.Provider value={{ showToast, toastOk, toastAlert, toastInfo }}>
+    <ToastContext.Provider value={contextValue}>
       {children}
       <BootstrapToastContainer 
         position="top-end" 

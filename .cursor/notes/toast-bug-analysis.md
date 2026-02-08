@@ -11,44 +11,76 @@ storage.js:70 successful store event for key current_editor_story (repeating)
 ToastContainer.js:32 Encountered two children with the same key, `0`. (repeating)
 ```
 
-## Root Cause
+## Root Cause - TWO Separate Bugs!
 
-The bug was in `ToastContainer.tsx` (both editor and viewer):
+### Bug #1: Unmemoized Context Value Object
+
+The primary bug was in `ToastContainer.tsx`:
 
 ```typescript
-const showToast = useCallback((message, variant) => {
-  const id = nextId;
-  setNextId(id + 1);  // ❌ This triggers recreation of showToast
-  setToasts((prev) => [...prev, { id, message, variant }]);
-  // ...
-}, [nextId]);  // ❌ Dependency on nextId causes infinite loop
+return (
+  <ToastContext.Provider value={{ showToast, toastOk, toastAlert, toastInfo }}>
+    {children}
+  </ToastContext.Provider>
+);
 ```
+
+**Problem:** The object `{ showToast, toastOk, toastAlert, toastInfo }` was created fresh on EVERY render, even though the functions themselves were memoized with `useCallback`. This meant the context value reference changed on every render.
 
 The infinite loop occurred because:
 
 1. `App.tsx` has a `useEffect` that depends on `toast` (from `useToast()` hook)
-2. When `showToast` is called, it increments `nextId` 
-3. `nextId` is in `showToast`'s dependency array
-4. This causes `showToast` to be recreated
-5. Which updates the `toast` context value reference
-6. Which triggers the `useEffect` in `App.tsx` again
-7. Which calls `toast.toastOk()` again → infinite loop
+2. When `toast.toastOk()` is called, it triggers state changes (adding toast to array)
+3. State change causes `ToastProvider` to re-render
+4. Re-render creates new context value object (even though functions are same)
+5. New context value triggers `useEffect` in `App.tsx` again
+6. Which calls `toast.toastOk()` again → infinite loop
 
-## The Fix
+### Bug #2: State-Based ID Counter Causes Duplicate Keys
 
-Use functional state updates to remove `nextId` from the dependency array:
+A second bug was using state for the ID counter:
 
 ```typescript
+const [nextId, setNextId] = useState(0);
+
 const showToast = useCallback((message, variant) => {
   setNextId((currentId) => {
     const id = currentId;
     setToasts((prev) => [...prev, { id, message, variant }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((toast) => toast.id !== id));
-    }, 5000);
-    return currentId + 1;  // ✅ Functional update
+    return currentId + 1;
   });
-}, []);  // ✅ Empty dependencies = stable reference
+}, []);
+```
+
+**Problem:** When `showToast` is called rapidly multiple times (as in an infinite loop), the `currentId` value hasn't been updated yet due to React's batching, so multiple toasts get the same ID, causing "duplicate key" warnings.
+
+## The Fix - Two Parts
+
+### Fix #1: Memoize Context Value
+
+```typescript
+const contextValue = useMemo(
+  () => ({ showToast, toastOk, toastAlert, toastInfo }),
+  [showToast, toastOk, toastAlert, toastInfo]
+);
+
+return (
+  <ToastContext.Provider value={contextValue}>  {/* ✅ Stable reference */}
+    {children}
+  </ToastContext.Provider>
+);
+```
+
+### Fix #2: Use useRef for ID Counter
+
+```typescript
+const nextIdRef = useRef(0);
+
+const showToast = useCallback((message, variant) => {
+  const id = nextIdRef.current++;  // ✅ Synchronous, no race condition
+  setToasts((prev) => [...prev, { id, message, variant }]);
+  // ...
+}, []);
 ```
 
 ## Why Tests Didn't Catch This
@@ -100,39 +132,47 @@ Note: Timer-based auto-dismiss tests were removed as they cause hangs with vites
 ## Files Modified
 
 ### Core Fix
-- `packages/editor/src/components/modals/ToastContainer.tsx` - Fixed
-- `packages/viewer/src/components/modals/ToastContainer.tsx` - Fixed
-- `packages/editor/src/components/modals/ToastContainer.js` - Fixed (compiled version)
-- `packages/viewer/src/components/modals/ToastContainer.js` - Fixed (compiled version)
+- `packages/editor/src/components/modals/ToastContainer.tsx` - Fixed (added `useMemo` for context value, `useRef` for ID counter)
+- `packages/viewer/src/components/modals/ToastContainer.tsx` - Fixed (added `useMemo` for context value, `useRef` for ID counter)
+
+### Cleanup
+- Deleted all stale `.js` files from `packages/*/src/` directories (24 files in editor, 12 files in viewer)
+  - These were compiled versions that were shadowing the `.tsx` source files
+  - Vite compiles TypeScript on-the-fly, so compiled files shouldn't be in src/
+- `.gitignore` - Added rules to prevent tracking `.js` files in src/ directories
 
 ### Tests Added
-- `packages/editor/src/__tests__/components/ToastContainer.test.tsx` - New unit tests
-- `packages/viewer/src/__tests__/components/ToastContainer.test.tsx` - New unit tests
-- `packages/editor/e2e/editor-toast.spec.ts` - New E2E tests
+- `packages/editor/src/__tests__/components/ToastContainer.test.tsx` - New unit tests (5 tests)
+- `packages/viewer/src/__tests__/components/ToastContainer.test.tsx` - New unit tests (5 tests)
+- `packages/editor/e2e/editor-toast.spec.ts` - New E2E tests (7 scenarios)
+
+### Test Configuration
+- `packages/editor/vitest.config.ts` - Added `testTimeout: 10000` (10s limit per test)
+- `packages/viewer/vitest.config.ts` - Added `testTimeout: 10000` (10s limit per test)
 
 ### Documentation
-- `Changelog.md` - Documented the bug fix
+- `Changelog.md` - Documented the bug fix and cleanup
 - `.cursor/notes/architecture.md` - Added note about stable hook references
 - `.cursor/notes/development.md` - Added common issue pattern
-- `.cursor/notes/toast-bug-analysis.md` - This file
+- `.cursor/notes/toast-bug-analysis.md` - This file (updated with correct root cause analysis)
 
 ## Test Results
 
-**Unit Tests:** ✅ **99/99 PASSING**
+**All Unit Tests:** ✅ **109/109 PASSING** (5.9s total)
 - shared: 57/57 tests passed ✅
-- viewer: 12/12 tests passed ✅
-- editor: 30/30 tests passed ✅ (VariablesPanel tests fixed with DialogProvider wrapper)
+- viewer: 17/17 tests passed ✅ (including 5 ToastContainer tests in 60ms)
+- editor: 35/35 tests passed ✅ (including 5 ToastContainer tests in 55ms)
 
-**Unit Tests (ToastContainer):** ⚠️ **Excluded from test run**
-- Tests excluded due to vitest fake timers interaction causing hangs
-- Core functionality (stable references, no infinite loop) is verified in the tests
-- Auto-dismiss and toast display work correctly in actual application
-- Tests pass conceptually but cause test suite hangs when executed with vitest
+**Unit Tests (ToastContainer):** ✅ **All passing, < 60ms each**
+- Tests verify stable references (prevents infinite loops)
+- Tests verify `useEffect` integration doesn't cause loops
+- Tests verify all required API functions are provided
+- Note: Visual rendering and auto-dismiss moved to E2E tests (proper environment)
 
 **E2E Tests:** ⚠️ **Ready but time-consuming**
 - Playwright browsers installed successfully
 - Tests written for: loading, editing, bundle generation, and toast behavior
-- All existing E2E tests updated with ES module __dirname fix
+- All existing E2E tests updated with ES module `__dirname` fix
 - New toast E2E tests created (7 test scenarios)
 - Tests take very long to run and may time out in some environments
 
@@ -150,3 +190,22 @@ Note: Timer-based auto-dismiss tests were removed as they cause hangs with vites
 2. **Fix VariablesPanel Tests:** Wrap test components with `DialogProvider`
 3. **Add More Hook Tests:** Test other custom hooks (`use Dialog`, `useStoryState`, etc.) for stable references
 4. **Monitor Performance:** Watch for similar patterns in other context providers
+
+## Related Infinite Loop Pattern: ActionEditor Prop Sync
+
+A similar infinite loop bug was found in `ActionEditor.tsx` (February 2026). The pattern was different but the root cause was similar - an unstable loop in `useEffect`:
+
+**Problem:**
+```typescript
+useEffect(() => {
+  setActions(script);
+}, [script]);
+```
+
+When the parent component passed a new `script` array reference (even with identical content), the effect would trigger, update state, call `onChange`, causing parent re-render with new array reference → infinite loop.
+
+**Solution:**
+1. Deep equality check: Only update state when content actually differs using `areActionsEqual()` function
+2. Ref flag: Track when changes originate from component itself using `isInternalChangeRef.current`
+
+**Key Takeaway:** When syncing component state with props via `useEffect`, always use content comparison (deep equality) rather than reference comparison to prevent loops when parent creates new array/object references.

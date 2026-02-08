@@ -14,7 +14,8 @@
     "build": "tsc",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist .vite coverage"
   },
   "devDependencies": {
     "typescript": "^5.7.2",

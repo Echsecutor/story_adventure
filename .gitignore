@@ -1,9 +1,26 @@
 .cursor/rules
 .pnpm-store/
 node_modules/
-packages/editor/dist/
-packages/viewer/dist/
-packages/editor/playwright-report/
-packages/editor/test-results/
-packages/viewer/playwright-report/
-packages/viewer/test-results/
+
+# Build outputs
+packages/*/dist/
+packages/shared/dist/
+packages/editor/public/viewer-dist/
+
+# Test outputs
+packages/*/playwright-report/
+packages/*/test-results/
+packages/*/coverage/
+
+# Vite cache
+packages/*/.vite/
+.vite/
+
+# Generated files
+packages/*/src/viewer-bundle-manifest.json
+
+# Don't track compiled .js files in src/ (Vite compiles .ts/.tsx on the fly)
+packages/*/src/**/*.js
+# Allow .js config files and scripts
+!packages/*/src/**/*.config.js
+!packages/*/src/**/*.setup.js
