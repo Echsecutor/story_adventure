@@ -24,7 +24,8 @@ This is a pnpm monorepo with three packages:
 - **`packages/editor/`** - Web-based story creation tool
   - React Flow graph editor (replaces Cytoscape.js)
   - Story structure editing, media embedding, action system UI
-  - Bundle generation (ZIP export with viewer)
+  - Bundle generation (ZIP export with viewer + launcher)
+  - `public/launcher/` - Self-contained launcher with tVeb binaries and scripts
   - Entry point: `src/main.tsx`, main component: `App.tsx`
 
 - **`packages/viewer/`** - Web-based story player
@@ -41,7 +42,8 @@ This is a pnpm monorepo with three packages:
   - Story-specific directories with JSON and image assets
 
 - **`scripts/`** - Build scripts
-  - `build-viewer-for-bundle.mjs` - Builds viewer and generates bundle manifest
+  - `build-viewer-for-bundle.mjs` - Builds viewer and generates bundle manifest (includes launcher files)
+  - `download-launcher-binaries.sh` - Downloads tVeb web server binaries for bundle launcher
 
 ### Story Format
 
@@ -75,6 +77,7 @@ Stories are JSON files with the following structure:
 - **`architecture.md`** - Technical architecture, component relationships, data flow, and security considerations
 - **`story-format.md`** - Complete JSON story format specification, action system, and variable management
 - **`development.md`** - Development workflow, coding standards, testing strategies, and contribution guidelines
+- **`launcher-infrastructure.md`** - Self-contained launcher with tVeb web server, bundle structure, and implementation details
 
 ## Key Features
 
@@ -83,5 +86,6 @@ Stories are JSON files with the following structure:
 - **Rich content**: Support for images, videos, embedded media
 - **Interactive elements**: Variable system, conditional logic, actions
 - **Export/Import**: JSON format with optional bundled media
+- **Playable bundles**: Self-contained ZIP bundles with embedded web server (tVeb) and launch scripts for Windows/Linux
 - **Type safety**: Full TypeScript coverage across codebase
 - **Modern tooling**: Vite HMR, comprehensive test suite

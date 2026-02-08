@@ -1,0 +1,3 @@
+# Ignore web server binaries (download separately)
+tVeb-*
+*.exe

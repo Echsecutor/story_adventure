@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Self-contained launcher infrastructure for playable bundles
+  - Downloaded tVeb web server binaries (v0.2.0) for Windows and Linux
+  - Created launch scripts: `run_story_adventure.sh` (Linux/macOS), `run_story_adventure.bat` and `run_story_adventure.ps1` (Windows)
+  - Created `launcher/README.md` with usage documentation and troubleshooting
+  - Created `scripts/download-launcher-binaries.sh` script to fetch web server binaries
+  - Added `download:launcher-binaries` npm script for easy binary download
+  - Updated bundle generation to include launcher files in ZIP bundles
+  - Bundles now launchable without additional software installation
+
+### Changed
+- Updated `build-viewer-for-bundle.mjs` to include launcher files in manifest
+  - Binary files (tVeb executables) stored as base64 in manifest
+  - Script files included as text in manifest
+- Updated `bundle.ts` to extract launcher files to `launcher/` folder in ZIP bundles
+  - Binary files properly decoded from base64 when creating bundle
+- Updated root `README.md` with launcher documentation and bundle usage instructions
+
+### Fixed
+- Fixed bundle export path issues by configuring viewer to use relative paths (`base: './'` in Vite config)
+  - Assets now correctly resolve when viewer is in `/viewer/` subdirectory of bundle
+  - Changed favicon reference from absolute to relative path
+
 ### Changed
 - **Phase 6: Polish and Cleanup**
   - Refactored to modern TypeScript + React + Vite monorepo structure

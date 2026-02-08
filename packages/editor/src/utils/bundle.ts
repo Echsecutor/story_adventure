@@ -9,7 +9,7 @@ import { get_file_safe_title, get_text_from_section } from '@story-adventure/sha
 import viewerBundleManifest from '../viewer-bundle-manifest.json';
 
 interface ViewerBundleManifest {
-  files: Record<string, string>;
+  files: Record<string, string | { base64: string }>;
 }
 
 // Data URL regexp: matches data:image/<type>;base64,<data>
@@ -160,8 +160,9 @@ export async function downloadGraphSplit(story: Story): Promise<void> {
     JSON.stringify(storyDeepCopy, null, 2)
   );
 
-  // Add viewer files from manifest
+  // Add viewer and launcher files from manifest
   const viewerFolder = zip.folder('viewer')!;
+  const launcherFolder = zip.folder('launcher')!;
   const manifest = viewerBundleManifest as ViewerBundleManifest;
   
   // Validate manifest is not empty
@@ -172,10 +173,21 @@ export async function downloadGraphSplit(story: Story): Promise<void> {
   }
   
   for (const [filePath, content] of Object.entries(manifest.files)) {
-    // Remove "viewer/" prefix from path since we're already in the viewer folder
-    const relativePath = filePath.replace(/^viewer\//, '');
-    if (typeof content === 'string') {
-      viewerFolder.file(relativePath, content);
+    if (filePath.startsWith('launcher/')) {
+      // Add launcher files to launcher folder
+      const relativePath = filePath.replace(/^launcher\//, '');
+      if (typeof content === 'string') {
+        launcherFolder.file(relativePath, content);
+      } else if (content && typeof content === 'object' && 'base64' in content) {
+        // Handle binary files stored as base64
+        launcherFolder.file(relativePath, content.base64, { base64: true });
+      }
+    } else if (filePath.startsWith('viewer/')) {
+      // Add viewer files to viewer folder
+      const relativePath = filePath.replace(/^viewer\//, '');
+      if (typeof content === 'string') {
+        viewerFolder.file(relativePath, content);
+      }
     }
   }
 

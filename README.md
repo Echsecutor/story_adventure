@@ -73,11 +73,14 @@ pnpm verify
 # Build all packages
 pnpm build
 
-# Build viewer bundle for ZIP export (copies viewer dist to editor public)
+# Download launcher binaries (tVeb web server for bundle launcher)
+pnpm download:launcher-binaries
+
+# Build viewer bundle for ZIP export (includes viewer + launcher)
 pnpm build:viewer-for-bundle
 ```
 
-Note: The editor's bundle generation feature requires the viewer bundle to be built first. Run `pnpm build:viewer-for-bundle` before generating playable adventure bundles.
+**Note:** The editor's bundle generation feature requires the viewer bundle to be built first. Run `pnpm download:launcher-binaries` and `pnpm build:viewer-for-bundle` before generating playable adventure bundles. The generated bundles include a minimal self-contained web server, making them directly launchable on Windows and Linux without any additional software.
 
 ## Story Format
 
@@ -89,6 +92,22 @@ A story consists of:
 - **Media** -- Images/videos per section, either linked or embedded as data URIs.
 
 Choices may have a description (displayed as a clickable option) or be empty (acting as a simple "next" button for pagination).
+
+## Playable Bundles
+
+The editor can export stories as standalone ZIP bundles that include:
+- Pre-built viewer application
+- Story JSON and media files
+- Self-contained web server binaries (Windows + Linux)
+- Launch scripts for easy startup
+
+Users can run bundles by:
+- **Linux/macOS:** Double-click `launcher/run_story_adventure.sh` or run from terminal
+- **Windows:** Double-click `launcher/run_story_adventure.bat` or use PowerShell script
+
+The launcher automatically starts the web server and opens the story in the default browser. No installation or configuration required.
+
+**Web Server:** Bundles use [tVeb (Tiniest Veb Server)](https://github.com/davlgd/tVeb), a minimal (~1.5 MB) open-source static file server.
 
 ## Acknowledgment
 

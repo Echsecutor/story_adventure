@@ -38,7 +38,7 @@ console.log('Generating viewer-bundle-manifest.json...');
 /**
  * Recursively read all files in a directory and return a map of relative paths to file contents
  */
-function readDirectoryRecursive(dir, baseDir = dir) {
+function readDirectoryRecursive(dir, baseDir = dir, prefix = 'viewer') {
   const manifest = {};
   const entries = readdirSync(dir);
 
@@ -47,23 +47,37 @@ function readDirectoryRecursive(dir, baseDir = dir) {
     const stat = statSync(fullPath);
 
     if (stat.isDirectory()) {
-      Object.assign(manifest, readDirectoryRecursive(fullPath, baseDir));
+      Object.assign(manifest, readDirectoryRecursive(fullPath, baseDir, prefix));
     } else if (stat.isFile()) {
       const relativePath = relative(baseDir, fullPath);
       // Normalize path separators to forward slashes
       const normalizedPath = relativePath.replace(/\\/g, '/');
-      // Prefix with "viewer/" for the manifest
-      const manifestPath = `viewer/${normalizedPath}`;
-      const content = readFileSync(fullPath, 'utf-8');
-      manifest[manifestPath] = content;
+      // Prefix with the specified prefix for the manifest
+      const manifestPath = `${prefix}/${normalizedPath}`;
+      // Read binary files as base64, text files as utf-8
+      // Detect binaries: .exe files, tVeb binaries (Linux), or .bin files
+      const fileName = fullPath.split('/').pop() || '';
+      const isBinary = fullPath.match(/\.(exe|bin)$/) || fileName.startsWith('tVeb-');
+      const content = isBinary 
+        ? readFileSync(fullPath).toString('base64')
+        : readFileSync(fullPath, 'utf-8');
+      manifest[manifestPath] = isBinary ? { base64: content } : content;
     }
   }
 
   return manifest;
 }
 
+// Read launcher files
+const launcherDir = join(editorPublicDir, 'launcher');
+const launcherFiles = readDirectoryRecursive(launcherDir, launcherDir, 'launcher');
+
+// Combine viewer and launcher files
 const manifest = {
-  files: readDirectoryRecursive(viewerDistDir),
+  files: {
+    ...readDirectoryRecursive(viewerDistDir),
+    ...launcherFiles,
+  },
 };
 
 // Ensure the directory exists

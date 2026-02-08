@@ -17,13 +17,21 @@ The Story Adventure Tools follows a modular client-side architecture with three 
   - `src/components/panels/SectionPanel.tsx` - Section editing sidebar
   - `src/components/panels/ActionEditor.tsx` - Action script editor
   - `src/utils/bundle.ts` - Bundle generation (ZIP export)
+  - `public/launcher/` - Self-contained launcher infrastructure
+    - `tVeb-linux-x86_64` - Web server binary for Linux (1.2 MB)
+    - `tVeb-windows-x86_64.exe` - Web server binary for Windows (1.4 MB)
+    - `run_story_adventure.sh` - Bash launcher script for Linux/macOS
+    - `run_story_adventure.bat` - Batch launcher script for Windows
+    - `run_story_adventure.ps1` - PowerShell launcher script for Windows
+    - `README.md` - Launcher usage documentation
 
 **Core Features**:
 
 - Graph-based story visualization using React Flow with dagre layout algorithm
 - Section editing with rich text, media embedding, and action scripting
 - Real-time story validation and JSON export/import
-- Bundle creation for distributable story packages (includes viewer)
+- Bundle creation for distributable story packages (includes viewer + launcher)
+- Self-contained launcher with embedded web server (tVeb v0.2.0) for instant playability
 
 ### 2. Viewer (`packages/viewer/`)
 
@@ -143,11 +151,25 @@ export const supported_actions: SupportedActions = {
 The editor generates playable adventure bundles (ZIP files) that include:
 
 1. **Viewer bundle** - Pre-built viewer dist files (copied from `packages/viewer/dist/` to `packages/editor/public/viewer-dist/`)
-2. **Story JSON** - The story file
-3. **Media files** - Extracted images from story sections
-4. **Manifest** - `viewer-bundle-manifest.json` maps viewer file paths to content (for offline ZIP generation)
+2. **Launcher infrastructure** - Self-contained web server and launch scripts
+   - `launcher/tVeb-linux-x86_64` - Web server binary for Linux (~1.2 MB)
+   - `launcher/tVeb-windows-x86_64.exe` - Web server binary for Windows (~1.4 MB)
+   - `launcher/run_story_adventure.sh` - Bash launcher script for Linux/macOS
+   - `launcher/run_story_adventure.bat` - Batch launcher script for Windows
+   - `launcher/run_story_adventure.ps1` - PowerShell launcher script for Windows
+   - `launcher/README.md` - Usage documentation
+3. **Story JSON** - The story file in `stories/<story-name>/<story-name>.json`
+4. **Media files** - Extracted images from story sections in `stories/<story-name>/`
+5. **Manifest** - `viewer-bundle-manifest.json` maps viewer and launcher file paths to content (for offline ZIP generation)
+6. **Root index.html** - Redirect to viewer with auto-load of story
 
-The build script (`scripts/build-viewer-for-bundle.mjs`) generates the manifest at build time, allowing the editor to create ZIP files without fetching viewer files at runtime.
+The build script (`scripts/build-viewer-for-bundle.mjs`) generates the manifest at build time, including both viewer files (as text) and launcher binaries (as base64), allowing the editor to create ZIP files without fetching files at runtime.
+
+**Binary Handling**: Launcher binaries (`.exe` files and `tVeb-*` files) are stored as base64 in the manifest and decoded when creating the bundle.
+
+**Critical Configuration**: The viewer's `vite.config.ts` must have `base: './'` to use relative paths for assets. This ensures the viewer works correctly when bundled in a subdirectory structure (e.g., `/viewer/` folder within the ZIP), allowing assets to resolve from `./assets/` instead of absolute paths from root.
+
+**Web Server**: Bundles use tVeb (Tiniest Veb Server) v0.2.0, a minimal (~1.5 MB) open-source static file server written in V. Download binaries via `pnpm download:launcher-binaries` before building bundles.
 
 ## Input Handling Best Practices
 

@@ -1,3 +1,5 @@
 .cursor/rules
 .pnpm-store/
 node_modules/
+packages/editor/dist/
+packages/viewer/dist/
