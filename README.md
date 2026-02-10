@@ -1,6 +1,6 @@
 # Story Adventure Tools
 
-A minimalist framework for creating and playing through non-linear interactive stories. Everything runs client-side in your browser -- files never leave your computer.
+This is a framework for creating and playing through non-linear interactive stories. Everything runs client-side in your browser -- files never leave your computer.
 
 If you like this, consider supporting further development!
 

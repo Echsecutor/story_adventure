@@ -112,7 +112,7 @@ export function GraphEditor({
   );
 
   return (
-    <div style={{ width: '100%', height: '50vh' }}>
+    <div style={{ width: '100%', height: '100%' }}>
       <ReactFlow
         nodes={nodes as Node[]}
         edges={edges as Edge[]}

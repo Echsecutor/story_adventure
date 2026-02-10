@@ -173,41 +173,70 @@ export function SectionPanel({
 
   if (!selectedNode && !selectedEdge) {
     return (
-      <div style={{ padding: '20px' }}>
-        <p>Select a node or edge to edit</p>
+      <div style={{ padding: '12px 20px' }}>
+        <p className="text-muted mb-0">Select a node or edge to edit</p>
       </div>
     );
   }
 
   const isEditingSection = !!selectedNode;
 
-  return (
-    <div style={{ padding: '20px', maxWidth: '400px' }}>
-      <h5>
-        {isEditingSection
-          ? `Section ${selectedNode.id}`
-          : `Choice: ${selectedEdge?.source} → ${selectedEdge?.target}`}
-      </h5>
-
-      <Form.Group className="mb-3">
-        <Form.Label>
-          {isEditingSection ? 'Story Text' : 'Choice Text'}
-        </Form.Label>
+  // Choice editing: simple single-row layout
+  if (!isEditingSection) {
+    return (
+      <div style={{ padding: '12px 20px' }}>
+        <div className="d-flex align-items-center gap-3 mb-2">
+          <h6 className="mb-0 text-nowrap">
+            Choice: {selectedEdge?.source} &rarr; {selectedEdge?.target}
+          </h6>
+          <Button variant="danger" size="sm" onClick={onDelete}>
+            Delete Choice
+          </Button>
+        </div>
         <Form.Control
           ref={textAreaRef}
           as="textarea"
-          rows={10}
+          rows={3}
           value={text}
           onChange={(e) => handleTextChange(e.target.value)}
-          placeholder={isEditingSection ? 'Enter story text... (Paste image to add media)' : 'Enter choice text...'}
+          placeholder="Enter choice text..."
         />
-      </Form.Group>
+      </div>
+    );
+  }
 
-      {isEditingSection && (
-        <>
-          <Form.Group className="mb-3">
-            <Form.Label>Media</Form.Label>
-            <div className="d-flex gap-2 mb-2">
+  // Section editing: horizontal multi-column layout
+  return (
+    <div style={{ padding: '12px 20px' }}>
+      <div className="d-flex align-items-center gap-3 mb-2">
+        <h6 className="mb-0">Section {selectedNode.id}</h6>
+        <Button variant="danger" size="sm" onClick={onDelete}>
+          Delete Section
+        </Button>
+      </div>
+
+      <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+        {/* Column 1: Story text */}
+        <div style={{ flex: '1 1 300px', minWidth: 0 }}>
+          <Form.Group className="mb-2">
+            <Form.Label className="small fw-bold mb-1">Story Text</Form.Label>
+            <Form.Control
+              ref={textAreaRef}
+              as="textarea"
+              rows={8}
+              value={text}
+              onChange={(e) => handleTextChange(e.target.value)}
+              placeholder="Enter story text... (Paste image to add media)"
+              style={{ resize: 'vertical' }}
+            />
+          </Form.Group>
+        </div>
+
+        {/* Column 2: Media */}
+        <div style={{ flex: '0 1 280px', minWidth: '200px' }}>
+          <Form.Group className="mb-2">
+            <Form.Label className="small fw-bold mb-1">Media</Form.Label>
+            <div className="d-flex gap-2 mb-1">
               <Button
                 variant="outline-primary"
                 size="sm"
@@ -221,30 +250,33 @@ export function SectionPanel({
                   size="sm"
                   onClick={handleRemoveMedia}
                 >
-                  Remove Media
+                  Remove
                 </Button>
               )}
             </div>
             <Form.Control
               type="text"
+              size="sm"
               value={mediaSrc}
               onChange={(e) => handleMediaSrcChange(e.target.value)}
-              placeholder="Image URL or data URL (or paste image in text area)"
+              placeholder="Image URL or data URL"
             />
           </Form.Group>
-
           {mediaSrc && (
-            <div className="mb-3">
+            <div className="mb-2">
               <img
                 src={mediaSrc}
                 alt="Section media"
-                style={{ maxHeight: '300px', width: '100%', objectFit: 'contain' }}
+                style={{ maxHeight: '150px', maxWidth: '100%', objectFit: 'contain' }}
               />
             </div>
           )}
+        </div>
 
-          <Form.Group className="mb-3">
-            <Form.Label>Actions (Script)</Form.Label>
+        {/* Column 3: Actions & Choices */}
+        <div style={{ flex: '1 1 300px', minWidth: 0 }}>
+          <Form.Group className="mb-2">
+            <Form.Label className="small fw-bold mb-1">Actions (Script)</Form.Label>
             <ActionEditor
               script={selectedNode.data.section.script}
               availableVariables={availableVariables}
@@ -253,10 +285,32 @@ export function SectionPanel({
             />
           </Form.Group>
 
-          <Form.Group className="mb-3">
-            <Form.Label>Add Choice to Section</Form.Label>
+          <div style={{ border: '3px solid red', padding: '8px', margin: '8px 0', background: '#fff0f0' }}>
+            <Form.Group className="mb-2">
+              <Form.Label className="small fw-bold mb-1" style={{ color: 'red' }}>AI Extension (DEBUG VISIBLE?)</Form.Label>
+              <Form.Check
+                type="switch"
+                id="ai-extendable-check"
+                label="AI Extendable"
+                title="When enabled, the AI story extension feature in the viewer can automatically generate new story branches from this section using a configured LLM endpoint. The player must opt in and provide their own API credentials."
+                checked={selectedNode.data.section.ai_extendable ?? false}
+                onChange={(e) =>
+                  onUpdateSection(selectedNode.id, {
+                    ai_extendable: e.target.checked || undefined,
+                  })
+                }
+              />
+              <Form.Text className="text-muted">
+                Allow AI to generate new story branches from this section in the viewer.
+              </Form.Text>
+            </Form.Group>
+          </div>
+
+          <Form.Group className="mb-2">
+            <Form.Label className="small fw-bold mb-1">Add Choice</Form.Label>
             <div className="d-flex gap-2">
               <Form.Select
+                size="sm"
                 value={targetSectionId}
                 onChange={(e) => setTargetSectionId(e.target.value)}
               >
@@ -270,19 +324,16 @@ export function SectionPanel({
               </Form.Select>
               <Button
                 variant="primary"
+                size="sm"
                 onClick={handleAddChoice}
                 disabled={!targetSectionId}
               >
-                Add Choice
+                Add
               </Button>
             </div>
           </Form.Group>
-        </>
-      )}
-
-      <Button variant="danger" onClick={onDelete} className="mt-3">
-        Delete {isEditingSection ? 'Section' : 'Choice'}
-      </Button>
+        </div>
+      </div>
     </div>
   );
 }

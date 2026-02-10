@@ -30,10 +30,13 @@ The Story Adventure Tools follows a modular client-side architecture with three 
 **Core Features**:
 
 - Graph-based story visualization using React Flow with dagre layout algorithm
+- **Top/bottom split layout**: graph editor (full width) on top, edit panel below
+  - Flexbox column layout in `App.tsx`; graph fills parent height (`100%` in `GraphEditor.tsx`)
+  - `SectionPanel` uses horizontal multi-column layout (text | media | actions) for the full-width bottom area
 - Section editing with rich text, media embedding, and action scripting
 - Real-time story validation and JSON export/import
 - Bundle creation for distributable story packages (includes viewer + launcher)
-- Self-contained launcher with embedded web server (tVeb v0.2.0) for instant playability
+- Self-contained launcher with embedded web server (miniserve) for instant playability
 - Modern modal dialogs and toast notifications (React Bootstrap)
 
 ### 2. Viewer (`packages/viewer/`)

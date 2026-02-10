@@ -7,7 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Viewer E2E tests failing because Vite dev server could not serve story files from the monorepo root `stories/` directory
+  - Added `serveMonorepoStories` Vite plugin to `packages/viewer/vite.config.ts` that serves the stories directory at `/stories/` during development
+- Fixed ambiguous `getByText('Help')` selector in E2E hotkey test that matched toast notifications in addition to the modal title
+
+### Added
+- Toast feedback on "Save Configuration" button click in viewer AI settings (success/error)
+- AI Extendable toggle switch in editor section panel with bold "AI Extension" label and tooltip explanation
+  - Allows story authors to mark sections as AI-extendable directly in the editor UI
+  - Uses a toggle switch (`Form.Check type="switch"`) instead of a small checkbox for better visibility
+
 ### Changed
+- Redesigned editor layout from left/right split to top/bottom split
+  - Graph editor now uses full viewport width (better for wide story graphs)
+  - Edit panel appears below the graph with a horizontal multi-column layout
+  - Graph fills available height, expanding to full screen when nothing is selected
+  - Eliminates wasted whitespace in the lower-left area
 - **BREAKING**: Upgraded web server from tVeb to miniserve
   - Replaced tVeb v0.2.0 (17 stars, abandoned) with miniserve v0.32.0 (7,300+ stars, actively maintained)
   - miniserve is production-ready, written in Rust, with proper MIME type handling
@@ -37,6 +53,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated `.gitignore` to prevent tracking compiled `.js` files in src/ directories
 
 ### Added
+- AI story extension feature (viewer only)
+  - Stories can mark sections as AI-extendable for dynamic LLM-powered story expansion
+  - New data model fields: `Section.ai_extendable`, `Section.ai_gen`, `StoryMeta.ai_gen_look_ahead`, `StoryMeta.characters`
+  - **Security-first design**: LLM endpoint configuration (URL, API key) stored in browser localStorage only, never in story files
+  - LLM endpoint configuration UI in viewer menu screen settings accordion
+  - User consent dialog on story load for AI-capable stories with explicit privacy warning
+  - AI expansion preference toggle on menu screen with localStorage persistence
+  - Look-ahead engine performs BFS traversal to find `ai_extendable` sections within configurable range
+  - OpenAI-compatible streaming API client with SSE parsing and error handling
+  - LLM prompt builder with system and user prompts optimized for branching narrative generation
+  - Story validator ensures AI-generated updates preserve existing content and maintain graph integrity
+  - Automatic image prompt generation (`ai_gen`) for new sections to support visual consistency
+  - Character profile tracking in metadata for behavioral consistency across AI-generated paths
 - Modern modal system using React Bootstrap for dialogs and notifications
 - Build artifact cleanup scripts in all packages
   - Added `clean` script to each package's `package.json`

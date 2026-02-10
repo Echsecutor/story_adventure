@@ -18,8 +18,8 @@ test.describe('Viewer Hotkeys', () => {
     const helpModal = page.locator('#help_modal');
     await expect(helpModal).toBeVisible({ timeout: 2000 });
     
-    // Verify help content is displayed
-    const helpTitle = page.getByText('Help');
+    // Verify help content is displayed (use modal title ID to avoid matching toast text)
+    const helpTitle = page.locator('#help_modal_label');
     await expect(helpTitle).toBeVisible();
   });
 

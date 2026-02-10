@@ -20,6 +20,25 @@ export interface StoryMeta {
     name: string;
     url: string;
   };
+  /** Number of steps to look ahead for AI-extendable sections (default: 2) */
+  ai_gen_look_ahead?: number;
+  /** Character profiles for consistent AI generation (name -> description) */
+  characters?: Record<string, string>;
+}
+
+/**
+ * LLM endpoint configuration for AI story extension.
+ * NOTE: This is stored in browser localStorage, not in story files.
+ */
+export interface LlmEndpoint {
+  /** API endpoint URL (e.g., "https://api.openai.com/v1/chat/completions") */
+  url: string;
+  /** Optional API key for authentication */
+  api_key?: string;
+  /** Optional endpoint type (default: "openai") */
+  type?: string;
+  /** Optional model identifier (e.g., "gpt-4o") */
+  model?: string;
 }
 
 /**
@@ -40,6 +59,18 @@ export interface Media {
   type: 'image' | 'video';
   /** Source path (relative path or data URL) */
   src: string;
+}
+
+/**
+ * AI image generation metadata for a section.
+ */
+export interface AiGenImage {
+  /** Image generation prompt describing the scene visually */
+  prompt: string;
+  /** Optional negative prompt (what to avoid in image generation) */
+  negative_prompt?: string;
+  /** Optional image size specification */
+  size?: string;
 }
 
 /**
@@ -99,6 +130,10 @@ export interface Section {
   media?: Media;
   /** Optional array of actions to execute when entering this section */
   script?: Action[];
+  /** Whether this section can be extended by AI (default: false) */
+  ai_extendable?: boolean;
+  /** AI image generation metadata if image was AI-generated or needs generation */
+  ai_gen?: AiGenImage;
 }
 
 /**

@@ -36,9 +36,21 @@ Contains story metadata and authoring information:
   "license": {
     "name": "CC BY-SA 4.0",
     "url": "https://creativecommons.org/licenses/by-sa/4.0/"
+  },
+  "ai_gen_look_ahead": 2,
+  "characters": {
+    "Alice": "A curious and brave young woman",
+    "Bob": "A wise old mentor"
   }
 }
 ```
+
+### AI Extension Fields (Optional)
+
+- **`ai_gen_look_ahead`** - Number of steps to look ahead for AI-extendable sections (default: 2)
+- **`characters`** - Character profiles for consistent AI generation (name -> description)
+
+**Note**: LLM endpoint configuration (URL, API key, model) is NOT stored in story files. Users configure their own LLM endpoint through the viewer's settings menu, and it's stored in browser localStorage for security.
 
 ## State Section
 
@@ -86,6 +98,11 @@ Core story content organized by unique section IDs:
 - **`next`** - Array of choice objects for navigation
 - **`media`** - Optional media object (image/video)
 - **`script`** - Optional array of action objects
+- **`ai_extendable`** - Optional boolean flag (default: false) indicating this section can be extended by AI
+- **`ai_gen`** - Optional AI image generation metadata
+  - `prompt` - Image generation prompt describing the scene
+  - `negative_prompt` - Optional negative prompt (what to avoid)
+  - `size` - Optional image size specification
 
 ### Choice Objects
 

@@ -76,6 +76,7 @@ Stories are JSON files with the following structure:
 
 - **`architecture.md`** - Technical architecture, component relationships, data flow, and security considerations
 - **`story-format.md`** - Complete JSON story format specification, action system, and variable management
+- **`ai-features.md`** - AI story extension features, OpenAI API integration, LLM prompting strategies, and data model extensions
 - **`development.md`** - Development workflow, coding standards, testing strategies, and contribution guidelines
 - **`launcher-infrastructure.md`** - Self-contained launcher with tVeb web server, bundle structure, and implementation details
 - **`toast-bug-analysis.md`** - Analysis of the infinite toast loop bug, root cause, fix, and test coverage gaps
@@ -86,6 +87,7 @@ Stories are JSON files with the following structure:
 - **Visual editing**: Graph-based story structure editing with React Flow
 - **Rich content**: Support for images, videos, embedded media
 - **Interactive elements**: Variable system, conditional logic, actions
+- **AI story extension**: Optional LLM-powered dynamic story expansion (viewer only)
 - **Export/Import**: JSON format with optional bundled media
 - **Playable bundles**: Self-contained ZIP bundles with embedded web server (tVeb) and launch scripts for Windows/Linux
 - **Type safety**: Full TypeScript coverage across codebase

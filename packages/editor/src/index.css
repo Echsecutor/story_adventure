@@ -13,18 +13,7 @@ body {
   height: 100vh;
 }
 
-.container {
-  max-width: 90%;
-}
-
-.col {
-  text-align: center;
-}
-
-.row {
-  margin-top: 5px;
-  margin-bottom: 5px;
-}
+/* Legacy grid overrides removed - using flexbox layout now */
 
 pre {
   font-family: Consolas, "courier new", monospace;
@@ -44,10 +33,10 @@ pre {
   right: 2px;
 }
 
-/* React Flow graph container */
+/* React Flow graph container - fills parent */
 .react-flow {
   width: 100%;
-  height: 50vh;
+  height: 100%;
 }
 
 /* Section node styles */

@@ -12,11 +12,19 @@ import { HelpModal } from './components/HelpModal';
 import { BackgroundImage } from './components/BackgroundImage';
 import { useStoryPlayer } from './hooks/useStoryPlayer';
 import { useHotkeys } from './hooks/useHotkeys';
+import { useAiExpansion } from './hooks/useAiExpansion';
 import { loadFile } from './utils/fileLoader';
 import { saveAs } from './utils/fileSaver';
 import { useToast } from './components/modals/ToastContainer';
 import { useDialog } from './components/modals/DialogContext';
 import { get_file_safe_title } from '@story-adventure/shared';
+import {
+  getAiExpansionConsent,
+  setAiExpansionConsent,
+  hasValidLlmEndpoint,
+  setLlmEndpoint,
+} from './utils/aiPreferences';
+import type { LlmEndpoint } from '@story-adventure/shared';
 
 // Override INPUT action to use modal prompt()
 import { supported_actions } from '@story-adventure/shared';
@@ -27,6 +35,7 @@ function App() {
   const [showHelp, setShowHelp] = useState(false);
   const [textVisible, setTextVisible] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [aiExpansionEnabled, setAiExpansionEnabled] = useState<boolean>(false);
 
   // Override INPUT action handler to use modal prompt
   useEffect(() => {
@@ -56,6 +65,30 @@ function App() {
     getCurrentChoices,
   } = useStoryPlayer();
 
+  // Check if story has AI extension capabilities
+  const storyHasAiCapabilities = useCallback((storyData: Story): boolean => {
+    // Check if any section is ai_extendable
+    return Object.values(storyData.sections).some(
+      (section) => section.ai_extendable === true
+    );
+  }, []);
+
+  // Callback to update story when AI extends it
+  const handleAiStoryUpdate = useCallback(
+    (updatedStory: Story) => {
+      loadStory(updatedStory);
+    },
+    [loadStory]
+  );
+
+  // AI expansion hook
+  useAiExpansion({
+    story,
+    currentSectionId,
+    enabled: aiExpansionEnabled,
+    onStoryUpdate: handleAiStoryUpdate,
+  });
+
   // Load story from file
   const handleLoadFile = useCallback(async () => {
     try {
@@ -77,6 +110,103 @@ function App() {
       setIsLoading(false);
     }
   }, [loadStory, toast]);
+
+  // Check for AI consent after story loads
+  useEffect(() => {
+    if (!story) {
+      return;
+    }
+
+    // Check if story has AI-extendable sections
+    if (!storyHasAiCapabilities(story)) {
+      return;
+    }
+
+    // Check if LLM endpoint is configured
+    const hasEndpoint = hasValidLlmEndpoint();
+
+    // Check localStorage for existing consent
+    const existingConsent = getAiExpansionConsent();
+
+    if (existingConsent !== null && hasEndpoint) {
+      // User has already made a choice and has endpoint configured
+      setAiExpansionEnabled(existingConsent);
+      return;
+    }
+
+    // Show configuration/consent dialog
+    const showAiSetupDialog = async () => {
+      if (!hasEndpoint) {
+        // No endpoint configured - offer to set it up
+        const wantsToSetup = await dialog.confirm(
+          'This story supports AI-powered expansion, which can dynamically generate new content. To use this feature, you need to configure an LLM endpoint (like OpenAI). Would you like to set this up now?',
+          'AI Story Expansion Available'
+        );
+
+        if (!wantsToSetup) {
+          setAiExpansionEnabled(false);
+          return;
+        }
+
+        // Prompt for endpoint configuration
+        const url = await dialog.prompt(
+          'Enter the LLM API endpoint URL (e.g., https://api.openai.com/v1/chat/completions):',
+          'https://api.openai.com/v1/chat/completions',
+          'Configure LLM Endpoint'
+        );
+
+        if (!url || url.trim().length === 0) {
+          toast.toastInfo('AI expansion setup cancelled');
+          setAiExpansionEnabled(false);
+          return;
+        }
+
+        const apiKey = await dialog.prompt(
+          'Enter your API key (optional, but usually required):',
+          '',
+          'API Key'
+        );
+
+        const model = await dialog.prompt(
+          'Enter model name (optional, leave empty for server default):',
+          '',
+          'Model Name'
+        );
+
+        // Save the endpoint configuration
+        const endpoint: LlmEndpoint = {
+          url: url.trim(),
+          api_key: apiKey && apiKey.trim().length > 0 ? apiKey.trim() : undefined,
+          model: model && model.trim().length > 0 ? model.trim() : undefined,
+          type: 'openai',
+        };
+
+        setLlmEndpoint(endpoint);
+        toast.toastOk('LLM endpoint configured successfully!');
+      }
+
+      // Now ask for consent
+      const confirmed = await dialog.confirm(
+        'Your configured LLM endpoint will be called to dynamically generate new story content and images based on the existing story. Do you want to enable AI expansion for this session?',
+        'Enable AI Story Expansion?'
+      );
+
+      setAiExpansionEnabled(confirmed);
+
+      // Ask if user wants to remember this choice
+      if (confirmed) {
+        const remember = await dialog.confirm(
+          'Would you like to remember this choice for future AI-capable stories?',
+          'Remember AI Expansion Preference?'
+        );
+        if (remember) {
+          setAiExpansionConsent(true);
+        }
+      }
+    };
+
+    showAiSetupDialog();
+  }, [story, dialog, storyHasAiCapabilities, toast]);
 
   // Load story from URL query parameter
   useEffect(() => {
@@ -233,7 +363,16 @@ function App() {
           </div>
         </div>
       )}
-      {viewerState === 'MENU' && <MenuScreen onLoadFile={handleLoadFile} />}
+      {viewerState === 'MENU' && (
+        <MenuScreen
+          onLoadFile={handleLoadFile}
+          aiExpansionEnabled={aiExpansionEnabled}
+          onAiExpansionToggle={(enabled) => {
+            setAiExpansionEnabled(enabled);
+            setAiExpansionConsent(enabled);
+          }}
+        />
+      )}
       {viewerState === 'PLAYING' && (
         <Container
           id="story_container"

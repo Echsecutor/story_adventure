@@ -237,6 +237,8 @@ pnpm --filter editor clean
 - **Graph layout**: Clear cache and reload, check dagre layout parameters
 - **Story validation**: Check JSON syntax and structure against TypeScript types
 - **React Flow errors**: Check node/edge data structure matches React Flow types
+- **react-bootstrap OverlayTrigger/Tooltip**: These components silently fail with React 19 due to ref forwarding incompatibility. Use native `title` attributes or `Form.Text` for help text instead. Other react-bootstrap components (Form, Button, etc.) work fine.
+- **Story files not loading in dev server**: The viewer Vite config includes a `serveMonorepoStories` plugin that serves `../../stories/` at `/stories/`. Without this, `/?load=../stories/...` URLs fail because the dev server root is `packages/viewer/`
 - **Infinite loops with useEffect**: Two common patterns to avoid:
   1. **Unstable context references**: When using context values (like `toast` from `useToast()`) in `useEffect` dependencies, ensure the context value has stable references by memoizing with `useMemo` and using functional state updates in `useCallback` hooks
   2. **Prop sync loops**: When syncing component state with props via `useEffect`, use deep equality checks instead of reference equality. Example: `ActionEditor` uses `areActionsEqual()` to compare content, not array references. Also use a ref flag to skip effect when changes originate from component itself

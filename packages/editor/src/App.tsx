@@ -3,7 +3,7 @@
  */
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { Container, Row, Col } from 'react-bootstrap';
+// Bootstrap grid imports removed - using flexbox top/bottom layout
 import type { Node, Edge, Connection } from '@xyflow/react';
 import type { Story } from '@story-adventure/shared';
 import { get_story, save_story } from '@story-adventure/shared';
@@ -275,8 +275,10 @@ function App() {
     setVariables(variables);
   }, [setVariables]);
 
+  const hasSelection = !!(selectedNode || selectedEdge);
+
   return (
-    <div>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
       <Navbar
         onNewStory={handleNewStory}
         onLoadStory={handleLoadStory}
@@ -289,35 +291,37 @@ function App() {
         onShowVariables={() => setShowVariablesPanel(true)}
         onShowJson={() => setShowJsonModal(true)}
       />
-      <Container fluid>
-        <Row>
-          <Col xs={12} md={selectedNode || selectedEdge ? 8 : 12}>
-            <GraphEditor
-              nodes={flowNodes}
-              edges={flowEdges}
-              onNodeClick={handleNodeClick}
-              onEdgeClick={handleEdgeClick}
-              onConnect={handleConnect}
-              onNodesChange={() => {}}
-              onEdgesChange={() => {}}
-            />
-          </Col>
-          {(selectedNode || selectedEdge) && (
-            <Col xs={12} md={4}>
-              <SectionPanel
-                selectedNode={selectedNode}
-                selectedEdge={selectedEdge}
-                onUpdateSection={handleUpdateSection}
-                onUpdateChoice={handleUpdateChoice}
-                onDelete={handleDelete}
-                onAddChoice={handleAddChoice}
-                availableSections={availableSections}
-                availableVariables={availableVariables}
-              />
-            </Col>
-          )}
-        </Row>
-      </Container>
+      <div style={{ flex: hasSelection ? '1 1 55%' : '1 1 100%', minHeight: 0 }}>
+        <GraphEditor
+          nodes={flowNodes}
+          edges={flowEdges}
+          onNodeClick={handleNodeClick}
+          onEdgeClick={handleEdgeClick}
+          onConnect={handleConnect}
+          onNodesChange={() => {}}
+          onEdgesChange={() => {}}
+        />
+      </div>
+      {hasSelection && (
+        <div style={{
+          flex: '1 1 45%',
+          minHeight: 0,
+          borderTop: '2px solid #dee2e6',
+          overflowY: 'auto',
+          background: '#fff',
+        }}>
+          <SectionPanel
+            selectedNode={selectedNode}
+            selectedEdge={selectedEdge}
+            onUpdateSection={handleUpdateSection}
+            onUpdateChoice={handleUpdateChoice}
+            onDelete={handleDelete}
+            onAddChoice={handleAddChoice}
+            availableSections={availableSections}
+            availableVariables={availableVariables}
+          />
+        </div>
+      )}
 
       <VariablesPanel
         variables={story.state?.variables || {}}

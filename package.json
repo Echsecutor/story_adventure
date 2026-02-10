@@ -12,7 +12,7 @@
     "test:e2e": "pnpm --filter './packages/*' test:e2e",
     "typecheck": "pnpm --filter './packages/*' typecheck",
     "lint": "pnpm --filter './packages/*' lint",
-    "verify": "pnpm typecheck && pnpm test && pnpm test:e2e",
+    "verify": "pnpm lint && pnpm typecheck && pnpm test && pnpm test:e2e",
     "clean": "pnpm --filter './packages/*' clean"
   },
   "devDependencies": {
