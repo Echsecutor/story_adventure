@@ -8,6 +8,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- Fixed toast notifications appearing outside the viewport when page is scrolled
+  - Changed `BootstrapToastContainer` from default `position: absolute` to `position: fixed` in both editor and viewer
+  - Toasts now always appear at the top-right of the viewport regardless of scroll position
+- Fixed AI Extendable toggle in editor not visually updating when clicked
+  - Toggle read directly from stale `selectedNode` prop instead of local state
+  - Added `aiExtendable` local state in `SectionPanel` (consistent with `text` and `mediaSrc` patterns)
+- Fixed AI Story Expansion toggle always showing "Disabled" on viewer reload despite being saved as enabled
+  - `aiExpansionEnabled` state was always initialized to `false`; now initializes from `localStorage`
+- Fixed stale compiled `.js` files in `src/` directories shadowing `.tsx` source files
+  - Running `tsc` (via `pnpm build`) emitted `.js` files next to `.tsx` sources because `noEmit` was not set
+  - Vite resolved `.js` imports to these stale compiled files instead of the `.tsx` source files
+  - Added `noEmit: true` to `tsconfig.base.json` to prevent `tsc` from emitting files (Vite handles compilation)
+  - Shared package overrides `noEmit: false` in its own tsconfig since it needs to emit to `dist/`
+  - Updated `clean` scripts in all packages to also delete stale `.js` files from `src/` directories
+  - Root `dev` script now runs `clean` before starting dev servers to prevent stale files
 - Viewer E2E tests failing because Vite dev server could not serve story files from the monorepo root `stories/` directory
   - Added `serveMonorepoStories` Vite plugin to `packages/viewer/vite.config.ts` that serves the stories directory at `/stories/` during development
 - Fixed ambiguous `getByText('Help')` selector in E2E hotkey test that matched toast notifications in addition to the modal title

@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "pnpm --filter './packages/*' dev",
+    "dev": "pnpm clean && pnpm --filter './packages/*' dev",
     "build": "pnpm --filter './packages/*' build",
     "build:viewer-for-bundle": "node scripts/build-viewer-for-bundle.mjs",
     "download:launcher-binaries": "bash scripts/download-launcher-binaries.sh",

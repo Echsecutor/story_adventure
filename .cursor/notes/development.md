@@ -237,7 +237,8 @@ pnpm --filter editor clean
 - **Graph layout**: Clear cache and reload, check dagre layout parameters
 - **Story validation**: Check JSON syntax and structure against TypeScript types
 - **React Flow errors**: Check node/edge data structure matches React Flow types
-- **react-bootstrap OverlayTrigger/Tooltip**: These components silently fail with React 19 due to ref forwarding incompatibility. Use native `title` attributes or `Form.Text` for help text instead. Other react-bootstrap components (Form, Button, etc.) work fine.
+- **react-bootstrap OverlayTrigger/Tooltip**: These components may silently fail with React 19 due to ref forwarding incompatibility. Use native `title` attributes or `Form.Text` for help text instead. Other react-bootstrap components (Form, Button, etc.) work fine.
+- **Stale `.js` files shadowing `.tsx` sources**: `tsconfig.base.json` has `noEmit: true` to prevent `tsc` from emitting `.js` files next to `.tsx` sources (since Vite handles compilation). The shared package overrides this with `noEmit: false` because it needs to emit to `dist/`. The `clean` scripts in all packages delete any stale `.js` files from `src/`. Root `dev` script runs `clean` first as a safeguard.
 - **Story files not loading in dev server**: The viewer Vite config includes a `serveMonorepoStories` plugin that serves `../../stories/` at `/stories/`. Without this, `/?load=../stories/...` URLs fail because the dev server root is `packages/viewer/`
 - **Infinite loops with useEffect**: Two common patterns to avoid:
   1. **Unstable context references**: When using context values (like `toast` from `useToast()`) in `useEffect` dependencies, ensure the context value has stable references by memoizing with `useMemo` and using functional state updates in `useCallback` hooks

@@ -38,6 +38,7 @@ export function SectionPanel({
 }: SectionPanelProps) {
   const [text, setText] = useState('');
   const [mediaSrc, setMediaSrc] = useState('');
+  const [aiExtendable, setAiExtendable] = useState(false);
   const [targetSectionId, setTargetSectionId] = useState('');
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -47,15 +48,18 @@ export function SectionPanel({
       const section = selectedNode.data.section;
       setText(section.text_lines?.join('\n') || section.text || '');
       setMediaSrc(section.media?.src || '');
+      setAiExtendable(section.ai_extendable ?? false);
       setTargetSectionId('');
     } else if (selectedEdge && selectedEdge.data) {
       const choice = selectedEdge.data.choice;
       setText(choice.text || '');
       setMediaSrc('');
+      setAiExtendable(false);
       setTargetSectionId(selectedEdge.target);
     } else {
       setText('');
       setMediaSrc('');
+      setAiExtendable(false);
       setTargetSectionId('');
     }
   }, [selectedNode, selectedEdge]);
@@ -285,26 +289,26 @@ export function SectionPanel({
             />
           </Form.Group>
 
-          <div style={{ border: '3px solid red', padding: '8px', margin: '8px 0', background: '#fff0f0' }}>
-            <Form.Group className="mb-2">
-              <Form.Label className="small fw-bold mb-1" style={{ color: 'red' }}>AI Extension (DEBUG VISIBLE?)</Form.Label>
-              <Form.Check
-                type="switch"
-                id="ai-extendable-check"
-                label="AI Extendable"
-                title="When enabled, the AI story extension feature in the viewer can automatically generate new story branches from this section using a configured LLM endpoint. The player must opt in and provide their own API credentials."
-                checked={selectedNode.data.section.ai_extendable ?? false}
-                onChange={(e) =>
-                  onUpdateSection(selectedNode.id, {
-                    ai_extendable: e.target.checked || undefined,
-                  })
-                }
-              />
-              <Form.Text className="text-muted">
-                Allow AI to generate new story branches from this section in the viewer.
-              </Form.Text>
-            </Form.Group>
-          </div>
+          <Form.Group className="mb-2">
+            <Form.Label className="small fw-bold mb-1">AI Extension</Form.Label>
+            <Form.Check
+              type="switch"
+              id="ai-extendable-check"
+              label="AI Extendable"
+              title="When enabled, the AI story extension feature in the viewer can automatically generate new story branches from this section using a configured LLM endpoint. The player must opt in and provide their own API credentials."
+              checked={aiExtendable}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                setAiExtendable(checked);
+                onUpdateSection(selectedNode.id, {
+                  ai_extendable: checked || undefined,
+                });
+              }}
+            />
+            <Form.Text className="text-muted">
+              Allow AI to generate new story branches from this section in the viewer.
+            </Form.Text>
+          </Form.Group>
 
           <Form.Group className="mb-2">
             <Form.Label className="small fw-bold mb-1">Add Choice</Form.Label>

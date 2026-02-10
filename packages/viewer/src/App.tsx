@@ -35,7 +35,9 @@ function App() {
   const [showHelp, setShowHelp] = useState(false);
   const [textVisible, setTextVisible] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-  const [aiExpansionEnabled, setAiExpansionEnabled] = useState<boolean>(false);
+  const [aiExpansionEnabled, setAiExpansionEnabled] = useState<boolean>(
+    () => getAiExpansionConsent() === true
+  );
 
   // Override INPUT action handler to use modal prompt
   useEffect(() => {

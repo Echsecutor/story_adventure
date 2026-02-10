@@ -17,6 +17,7 @@
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
+    "noEmit": true,
     "paths": {
       "@story-adventure/shared": ["./packages/shared/src"]
     }

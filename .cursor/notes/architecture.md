@@ -154,6 +154,8 @@ toast.toastInfo('Press ? for help');
 2. Story validation → Real-time feedback → JSON serialization
 3. Media embedding → Base64 encoding → Bundle generation
 
+**Important: Stale `selectedNode` pattern** — In `App.tsx`, `selectedNode` is a snapshot taken on click. It is NOT updated when the story changes. `SectionPanel` must use local state (e.g., `text`, `mediaSrc`, `aiExtendable`) for all editable fields and update them in change handlers for immediate UI feedback. Reading directly from `selectedNode.data.section.*` for mutable fields will appear stale until the node is re-clicked.
+
 ### Viewer Workflow
 
 1. Story loading → State initialization → Section rendering

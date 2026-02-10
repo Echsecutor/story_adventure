@@ -10,7 +10,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "typecheck": "tsc --noEmit",
-    "clean": "rm -rf dist .vite playwright-report test-results coverage public/viewer-dist"
+    "clean": "rm -rf dist .vite playwright-report test-results coverage public/viewer-dist && find src -name '*.js' -not -path '*/node_modules/*' -delete 2>/dev/null; true"
   },
   "dependencies": {
     "@story-adventure/shared": "workspace:*",

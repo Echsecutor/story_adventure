@@ -174,6 +174,7 @@ interface AiGenImage {
 ## Editor Support
 
 - **AI Extendable toggle**: `SectionPanel.tsx` has a toggle switch (`Form.Check type="switch"`) under a bold "AI Extension" label to toggle `ai_extendable` on sections, with a `title` attribute tooltip and `Form.Text` help text below
+- **Important**: Toggle uses local `aiExtendable` state (like `text` and `mediaSrc`) for immediate UI feedback, since `selectedNode` is a stale snapshot that doesn't update until re-selected
 - **Note**: Do NOT use `OverlayTrigger`/`Tooltip` from react-bootstrap -- they cause silent render failures with React 19 due to ref forwarding incompatibility. Use native `title` attributes or `Form.Text` for help text instead.
 - Unchecking sets `ai_extendable` to `undefined` (omitted from JSON) rather than `false`
 
@@ -185,6 +186,7 @@ interface AiGenImage {
 - Configuration persisted in browser localStorage only
 - Warning shown: "Your configured LLM endpoint will be called to generate text/images"
 - User preference (enabled/disabled) stored in browser localStorage
+- `aiExpansionEnabled` state in `App.tsx` initializes from localStorage via `getAiExpansionConsent()`
 - Toggle available on menu screen
 - No story data sent unless explicitly enabled
 - Stories only contain `ai_extendable` flags and `ai_gen` prompts - no credentials

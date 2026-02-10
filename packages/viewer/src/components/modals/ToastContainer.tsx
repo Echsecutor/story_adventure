@@ -62,7 +62,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       <BootstrapToastContainer 
         position="top-end" 
         className="p-3"
-        style={{ zIndex: 9999 }}
+        style={{ zIndex: 9999, position: 'fixed' }}
       >
         {toasts.map((toast) => (
           <Toast

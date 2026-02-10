@@ -1,6 +1,12 @@
-# Toast Infinite Loop Bug - Analysis and Fix
+# Toast System - Bugs and Fixes
 
-## Bug Description
+## Viewport Positioning Fix
+
+The `BootstrapToastContainer` uses `position: absolute` by default. When the page is scrolled (e.g. in AI settings), toasts render at the top of the document, not the viewport, making them invisible. Fixed by adding `position: 'fixed'` to inline styles in both editor and viewer `ToastContainer.tsx`.
+
+---
+
+## Infinite Loop Bug Description
 
 After loading a story into the editor, the "Loaded saved story" success toast appeared repeatedly in an infinite loop, eventually causing the browser to slow down.
 
