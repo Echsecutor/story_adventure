@@ -100,7 +100,7 @@ export async function callLlmStreaming(
 
   // Build request body
   const requestBody: {
-    messages: Array<{ role: string; content: string }>;
+    messages: Array<{ role: string; content: MessageContent }>;
     stream: boolean;
     model?: string;
   } = {

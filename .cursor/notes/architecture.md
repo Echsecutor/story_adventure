@@ -48,6 +48,7 @@ The Story Adventure Tools follows a modular client-side architecture with three 
   - `src/App.tsx` - Main app component coordinating viewer state
   - `src/components/StoryPlayer.tsx` - Story text display with markdown
   - `src/components/ChoiceButtons.tsx` - Choice navigation buttons
+  - `src/components/SettingsModal.tsx` - Unified settings modal with all configuration options
   - `src/components/modals/DialogContext.tsx` - Modal dialog system (alert/confirm/prompt)
   - `src/components/modals/ToastContainer.tsx` - Toast notification system
   - `src/hooks/useStoryPlayer.ts` - Story state management hook
@@ -60,6 +61,11 @@ The Story Adventure Tools follows a modular client-side architecture with three 
 - Media display (images, videos) with responsive design
 - Keyboard navigation and hotkey support
 - Modern modal dialogs and toast notifications (React Bootstrap)
+- Unified settings modal with gear icon (⚙) always visible during playback
+  - Image information section (when viewing images) with AI prompt generation
+  - Story management (load/save story)
+  - AI expansion configuration
+  - Keyboard shortcuts reference
 
 ### 3. Shared (`packages/shared/`)
 

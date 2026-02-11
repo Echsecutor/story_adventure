@@ -1,0 +1,57 @@
+{
+  "meta": {
+    "title": "Image Generation Test Story",
+    "author": {
+      "name": "Test Author"
+    }
+  },
+  "state": {
+    "current_section": "1"
+  },
+  "sections": {
+    "1": {
+      "id": "1",
+      "text_lines": [
+        "# Welcome to the Image Generation Test",
+        "",
+        "This section has an image prompt but no image yet.",
+        "",
+        "Click the 'Generate Image' button to create an image from the prompt."
+      ],
+      "ai_gen": {
+        "prompt": "A simple red apple on a white background, photorealistic, studio lighting",
+        "size": "1024x1024"
+      },
+      "next": [
+        {
+          "text": "Next section",
+          "next": "2"
+        }
+      ]
+    },
+    "2": {
+      "id": "2",
+      "text_lines": [
+        "# Second Section",
+        "",
+        "This section already has an image with an ai_gen prompt.",
+        "",
+        "You can regenerate it from the settings modal."
+      ],
+      "media": {
+        "type": "image",
+        "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+      },
+      "ai_gen": {
+        "prompt": "A beautiful sunset over the ocean, vibrant colors",
+        "size": "1024x1024"
+      },
+      "next": [
+        {
+          "text": "Back to start",
+          "next": "1"
+        }
+      ]
+    }
+  }
+}

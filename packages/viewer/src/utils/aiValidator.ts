@@ -118,18 +118,58 @@ function mergeStories(
       return { story: mergedStory, error };
     }
     
-    const originalChoiceCount = originalExtended.next?.length || 0;
-    const updatedChoiceCount = updatedExtended?.next?.length || 0;
-    
-    if (updatedChoiceCount > originalChoiceCount) {
-      // Add new choices from partial story
-      const newChoices = updatedExtended!.next!.slice(originalChoiceCount);
-      mergedStory.sections[extendedSectionId]!.next = [
-        ...(originalExtended.next || []),
-        ...newChoices
-      ];
-      console.log(`[Validator] Added ${newChoices.length} new choices to section ${extendedSectionId}`);
+    // Build a map of original choices by their `next` property
+    const originalChoicesByTarget = new Map<string, { text?: string; next: string | number }>();
+    for (const choice of originalExtended.next || []) {
+      originalChoicesByTarget.set(choice.next.toString(), choice);
     }
+    
+    // Build a map of updated choices by their `next` property
+    const updatedChoicesByTarget = new Map<string, { text?: string; next: string | number }>();
+    for (const choice of updatedExtended?.next || []) {
+      updatedChoicesByTarget.set(choice.next.toString(), choice);
+    }
+    
+    // Merge choices: for each choice in updated, either update existing or add new
+    const mergedChoices = [...(originalExtended.next || [])];
+    let addedCount = 0;
+    let updatedCount = 0;
+    
+    for (const [targetId, updatedChoice] of updatedChoicesByTarget) {
+      if (originalChoicesByTarget.has(targetId)) {
+        // Existing choice - update it if AI added text
+        const originalChoice = originalChoicesByTarget.get(targetId)!;
+        const existingIndex = mergedChoices.findIndex(c => c.next.toString() === targetId);
+        if (existingIndex !== -1 && updatedChoice.text && !originalChoice.text) {
+          // AI added text to a choice that didn't have text
+          mergedChoices[existingIndex] = { 
+            text: updatedChoice.text, 
+            next: originalChoice.next 
+          };
+          updatedCount++;
+          console.log(`[Validator] Updated choice text for target ${targetId}: "${updatedChoice.text}"`);
+        }
+      } else {
+        // New choice - add it (ensure text is provided, fallback to empty string)
+        const choiceToAdd = { 
+          text: updatedChoice.text || '', 
+          next: updatedChoice.next 
+        };
+        mergedChoices.push(choiceToAdd);
+        addedCount++;
+        console.log(`[Validator] Added new choice to section ${extendedSectionId}: "${updatedChoice.text || '(no text)'}" -> ${targetId}`);
+      }
+    }
+    
+    mergedStory.sections[extendedSectionId]!.next = mergedChoices;
+    
+    if (addedCount > 0 || updatedCount > 0) {
+      console.log(`[Validator] Choice merge summary: ${addedCount} added, ${updatedCount} updated`);
+    }
+    
+    // Set ai_extendable to false after successful expansion
+    mergedStory.sections[extendedSectionId]!.ai_extendable = false;
+    console.log(`[Validator] Set ai_extendable=false for section ${extendedSectionId}`);
   }
   
   // Merge meta.characters if provided

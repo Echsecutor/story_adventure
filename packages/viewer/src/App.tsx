@@ -3,13 +3,13 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
-import { Container } from 'react-bootstrap';
+import { Container, Button, Spinner } from 'react-bootstrap';
 import type { Story } from '@story-adventure/shared';
 import { MenuScreen } from './components/MenuScreen';
 import { StoryPlayer } from './components/StoryPlayer';
 import { ChoiceButtons } from './components/ChoiceButtons';
 import { HelpModal } from './components/HelpModal';
-import { ImageInfoModal } from './components/ImageInfoModal';
+import { SettingsModal } from './components/SettingsModal';
 import { BackgroundImage } from './components/BackgroundImage';
 import { useStoryPlayer } from './hooks/useStoryPlayer';
 import { useHotkeys } from './hooks/useHotkeys';
@@ -24,8 +24,12 @@ import {
   setAiExpansionConsent,
   hasValidLlmEndpoint,
   setLlmEndpoint,
+  getImageGenEnabled,
+  setImageGenEnabled,
+  getImageGenConfig,
 } from './utils/aiPreferences';
 import type { LlmEndpoint } from '@story-adventure/shared';
+import { generateImage } from './utils/aiImageGeneration';
 
 // Override INPUT action to use modal prompt()
 import { supported_actions } from '@story-adventure/shared';
@@ -36,12 +40,16 @@ function App() {
   const toast = useToast();
   const dialog = useDialog();
   const [showHelp, setShowHelp] = useState(false);
-  const [showImageInfo, setShowImageInfo] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [textVisible, setTextVisible] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [aiExpansionEnabled, setAiExpansionEnabled] = useState<boolean>(
     () => getAiExpansionConsent() === true
   );
+  const [imageGenEnabled, setImageGenEnabledState] = useState<boolean>(
+    () => getImageGenEnabled() === true
+  );
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
 
   // Override INPUT action handler to use modal prompt
   useEffect(() => {
@@ -112,6 +120,65 @@ function App() {
     },
     [story, loadStory, toast]
   );
+
+  // Callback to generate image for a section
+  const handleGenerateImage = useCallback(
+    async (sectionId: string, prompt: string) => {
+      if (!story) {
+        return;
+      }
+
+      const config = getImageGenConfig();
+      if (!config || !config.url) {
+        toast.toastAlert('Please configure image generation endpoint in settings');
+        return;
+      }
+
+      setIsGeneratingImage(true);
+      toast.toastInfo('Generating image...');
+
+      try {
+        const result = await generateImage({
+          config,
+          prompt,
+          size: story.sections[sectionId]?.ai_gen?.size || '1024x1024',
+          timeoutMs: 60000,
+        });
+
+        if (result.success && result.imageDataUrl) {
+          // Create a deep copy of the story
+          const updatedStory = JSON.parse(JSON.stringify(story)) as Story;
+          
+          // Update the section's media field
+          const section = updatedStory.sections[sectionId];
+          if (section) {
+            section.media = {
+              type: 'image',
+              src: result.imageDataUrl,
+            };
+            
+            loadStory(updatedStory);
+            toast.toastOk('Image generated successfully!');
+          }
+        } else {
+          toast.toastAlert(`Failed to generate image: ${result.error || 'Unknown error'}`);
+        }
+      } catch (error) {
+        toast.toastAlert(
+          `Error generating image: ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
+      } finally {
+        setIsGeneratingImage(false);
+      }
+    },
+    [story, loadStory, toast]
+  );
+
+  // Toggle image generation enabled
+  const handleImageGenToggle = useCallback((enabled: boolean) => {
+    setImageGenEnabledState(enabled);
+    setImageGenEnabled(enabled);
+  }, []);
 
   // Auto-save story to IndexedDB whenever it changes
   useEffect(() => {
@@ -457,46 +524,72 @@ function App() {
             }}
           >
             <StoryPlayer text={sectionText} isVisible={textVisible} />
+            {imageGenEnabled && 
+             currentSection?.ai_gen?.prompt && 
+             !currentSection?.media && 
+             currentSectionId && (
+              <div style={{ marginTop: '10px', marginBottom: '10px', textAlign: 'center' }}>
+                <Button
+                  variant="primary"
+                  onClick={() => handleGenerateImage(currentSectionId, currentSection.ai_gen!.prompt)}
+                  disabled={isGeneratingImage}
+                >
+                  {isGeneratingImage ? (
+                    <>
+                      <Spinner
+                        as="span"
+                        animation="border"
+                        size="sm"
+                        role="status"
+                        aria-hidden="true"
+                        className="me-2"
+                      />
+                      Generating Image...
+                    </>
+                  ) : (
+                    'Generate Image'
+                  )}
+                </Button>
+              </div>
+            )}
             <ChoiceButtons
               choices={choices}
               onChoiceClick={(next) => loadSection(next.toString())}
             />
           </Container>
-          {currentSection?.media && (
-            <button
-              onClick={() => setShowImageInfo(true)}
-              title="Image Information"
-              style={{
-                position: 'fixed',
-                bottom: '20px',
-                left: '20px',
-                width: '40px',
-                height: '40px',
-                borderRadius: '50%',
-                backgroundColor: 'rgba(0, 0, 0, 0.7)',
-                color: 'white',
-                border: '2px solid rgba(255, 255, 255, 0.3)',
-                fontSize: '20px',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                zIndex: 1000,
-                transition: 'all 0.2s ease',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.6)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
-              }}
-            >
-              ?
-            </button>
-          )}
+          <button
+            onClick={() => setShowSettings(true)}
+            title="Settings"
+            style={{
+              position: 'fixed',
+              bottom: '20px',
+              left: '20px',
+              width: '40px',
+              height: '40px',
+              borderRadius: '50%',
+              backgroundColor: 'rgba(0, 0, 0, 0.7)',
+              color: 'white',
+              border: '2px solid rgba(255, 255, 255, 0.3)',
+              fontSize: '20px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000,
+              transition: 'all 0.2s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
+              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.6)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+            }}
+          >
+            ⚙
+          </button>
         </>
       )}
       <HelpModal
@@ -504,12 +597,24 @@ function App() {
         onHide={() => setShowHelp(false)}
         hotkeys={hotkeys}
       />
-      <ImageInfoModal
-        show={showImageInfo}
-        onHide={() => setShowImageInfo(false)}
+      <SettingsModal
+        show={showSettings}
+        onHide={() => setShowSettings(false)}
         section={currentSection}
         sectionId={currentSectionId}
         onSavePrompt={handleSaveImagePrompt}
+        onLoadFile={handleLoadFile}
+        onSaveStory={handleSaveProgress}
+        hasStory={!!story}
+        aiExpansionEnabled={aiExpansionEnabled}
+        onAiExpansionToggle={(enabled) => {
+          setAiExpansionEnabled(enabled);
+          setAiExpansionConsent(enabled);
+        }}
+        imageGenEnabled={imageGenEnabled}
+        onImageGenToggle={handleImageGenToggle}
+        onGenerateImage={handleGenerateImage}
+        hotkeys={hotkeys}
       />
     </>
   );

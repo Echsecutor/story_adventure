@@ -3,6 +3,7 @@
  */
 
 import type { Story, Section } from '@story-adventure/shared';
+import type { MessageContent } from './aiApiClient';
 
 /**
  * System prompt template explaining the LLM's role in story extension.
@@ -72,6 +73,7 @@ Response format (standard Story JSON):
 2. **Extended Section**:
    - Include the extended section in your response
    - Keep ALL its existing choices in the "next" array (in the same order)
+   - Each choice needs a text. If existing choices no not have text, add a suitable text for that choice.
    - Append your new choices to the end of the "next" array
 
 3. **New Sections**:
@@ -90,7 +92,7 @@ Response format (standard Story JSON):
    - Every possible path must form a coherent story
 
 6. **Length Requirements**:
-   - Generate at least one complete path of minimum length: 4 × ai_gen_look_ahead sections
+   - Generate at least one complete path of minimum length: 8 sections
    - You may create multiple branching paths
 
 7. **Choice Targets**:
@@ -318,7 +320,7 @@ export function buildPromptMessages(
   story: Story,
   extendFromSectionId: string,
   lookAhead: number
-): Array<{ role: string; content: string | Array<{ type: 'text' | 'image_url'; text?: string; image_url?: { url: string } }> }> {
+): Array<{ role: string; content: MessageContent }> {
   const userPrompt = buildUserPrompt(story, extendFromSectionId, lookAhead);
 
   console.debug('[AI Prompt] System prompt:', SYSTEM_PROMPT);

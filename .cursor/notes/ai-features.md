@@ -301,11 +301,11 @@ The viewer's AI Story Expansion Settings includes a "Test AI Communication" butt
 
 ## Image Prompt Generation (Reverse Engineering)
 
-The viewer includes an image information modal accessible via a "?" button in the lower left corner (visible when playing and section has media):
+The viewer includes image information accessible via the settings modal (gear icon ⚙ in lower left corner):
 
 ### Features
 
-- **Display AI Generation Metadata**: Shows `ai_gen` fields (prompt, negative_prompt, size) if available
+- **Display AI Generation Metadata**: Shows `ai_gen` fields (prompt, negative_prompt, size) if available in "Image Information" section
 - **Generate Image Prompt**: Uses vision-capable LLM to reverse-engineer the image into an image generation prompt
 - **Prompt Engineering**: AI analyzes visual style, composition, lighting, colors, mood, subject details, and artistic techniques
 - **Save to Section**: Generated prompts can be saved to the section's `ai_gen.prompt` field
@@ -314,9 +314,9 @@ The viewer includes an image information modal accessible via a "?" button in th
 
 ### Implementation
 
-- **Modal**: `ImageInfoModal.tsx` - displays metadata, provides "Generate Image Prompt" button, and "Save to Section" functionality
+- **Modal**: `SettingsModal.tsx` - displays metadata in "Image Information" accordion section, provides "Generate Image Prompt" button, and "Save to Section" functionality
 - **API Client**: `aiImageDescription.ts` - handles multimodal API calls for image prompt generation
-- **Button**: Fixed position in lower left, only visible when section has media
+- **Button**: Settings button (⚙) always visible in lower left corner during playback
 - **Story Update**: Generated prompts are saved via callback that updates the story structure and triggers auto-save to IndexedDB
 - **UI Feedback**: Shows "✓ Saved" badge after saving prompt to section
 - **Vision Models Supported**: GPT-4o, GPT-4-turbo, Claude 3+, Gemini 2.0+/2.5+, Grok-2-vision
@@ -359,6 +359,76 @@ The image prompt generation request uses multimodal content:
 
 The `aiApiClient.ts` supports both string and array content types via the `MessageContent` type. This ensures the AI returns clean, usable prompt text without any formatting artifacts.
 
+## AI Image Generation
+
+The viewer supports AI-powered image generation for sections with `ai_gen.prompt` fields.
+
+### Configuration
+
+**Storage**: Image generation settings are stored in browser localStorage (separate from LLM endpoint config):
+- **Key**: `ai_image_generation_config` - stores endpoint configuration
+- **Key**: `ai_image_generation_enabled` - stores enabled/disabled state
+- Configuration includes: URL, API key (optional), model (optional)
+
+**Interface**: Settings accessible via "AI Image Generation Settings" section in settings modal
+
+### API Format
+
+Uses OpenAI-compatible `/v1/images/generations` endpoint (not chat completions):
+
+**Request**:
+```json
+{
+  "prompt": "text description of desired image",
+  "n": 1,
+  "size": "1024x1024",
+  "response_format": "b64_json",
+  "model": "dall-e-3"  // optional
+}
+```
+
+**Response**:
+```json
+{
+  "data": [
+    {
+      "b64_json": "iVBORw0KGgoAAAANS..."
+    }
+  ]
+}
+```
+
+### Features
+
+1. **Auto-generate Button**: When image generation is enabled and section has `ai_gen.prompt` but no `media`, a "Generate Image" button appears in the story container
+2. **Regenerate Button**: In Image Information section of settings modal, "(Re)generate Image" button available when section has `ai_gen` metadata
+3. **Base64 Storage**: Generated images saved as data URLs in section's `media.src` field (`data:image/png;base64,...`)
+4. **Auto-save**: Story automatically saved to IndexedDB after successful image generation
+5. **Size Support**: Respects `ai_gen.size` field from section metadata (defaults to "1024x1024")
+
+### Implementation
+
+- **API Client**: `aiImageGeneration.ts` - handles image generation API calls with base64 response
+- **Settings UI**: `SettingsModal.tsx` - configuration and regenerate button
+- **Story Button**: `App.tsx` - conditional "Generate Image" button in story container
+- **State Management**: `App.tsx` - `handleGenerateImage()` callback updates story structure
+- **Preferences**: `aiPreferences.ts` - localStorage functions for config and enabled state
+
+### Supported Models
+
+Any OpenAI-compatible image generation endpoint:
+- DALL-E 2/3 (OpenAI)
+- Gemini image models (gemini-2.5-flash-image, gemini-3-pro-image-preview)
+- Custom endpoints following the same API format
+
+### User Experience
+
+- Enable/disable toggle in settings (default: disabled)
+- Button only appears when conditions are met (enabled + prompt exists + no image)
+- Loading spinner during generation (60-second timeout)
+- Toast notifications for success/failure
+- Generated images persist through save/load
+
 ## Validation and Merging
 
 ### New Architecture
@@ -388,10 +458,15 @@ The merging process:
 3. **Add new sections**: Copy all truly new sections to merged story
 4. **Merge extended section choices**: 
    - If response includes the extended section
-   - Extract choices that are beyond the original choice count
-   - Append these new choices to the original section's `next` array
-5. **Merge characters**: Merge `meta.characters` into story (preserving existing)
-6. **Final validation**: Verify graph integrity of merged story
+   - Build maps of choices by their `next` property (target section ID)
+   - For each choice in the AI response:
+     - If it targets an existing choice's section, merge text if AI added text
+     - If it targets a new section, add as a new choice
+   - Choices are identified by their `next` property, not by position or text
+   - This allows AI to add text to existing choices without creating duplicates
+5. **Mark as extended**: Set `ai_extendable = false` on the extended section to prevent re-expansion
+6. **Merge characters**: Merge `meta.characters` into story (preserving existing)
+7. **Final validation**: Verify graph integrity of merged story
 
 ### Key Improvements
 

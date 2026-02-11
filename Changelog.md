@@ -8,17 +8,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Image information modal in viewer showing AI generation metadata
-  - "?" button in lower left corner when section has media
-  - Displays `ai_gen` metadata: prompt, negative_prompt, size
-  - "Generate Image Prompt" button uses vision-capable LLM to reverse-engineer image into generation prompt
-  - AI analyzes visual style, composition, lighting, colors, and creates prompt suitable for image generators
-  - Generated prompts can be saved to section's `ai_gen.prompt` field for persistence with story
-  - Saved prompts are included when saving/exporting the story
-  - Supports multimodal chat/completions API format (OpenAI-compatible)
-  - Works with vision models: GPT-4o, Claude 3+, Gemini 2+, Grok-2-vision, etc.
+- AI Image Generation feature in viewer
+  - New "AI Image Generation Settings" section in settings modal with enable/disable toggle
+  - Configuration for image generation endpoint (URL, API key, model)
+  - Model defaults to "dall-e-3" if not specified
+  - Settings stored in browser localStorage (never shared with stories)
+  - "Generate Image" button appears when section has `ai_gen.prompt` but no image
+  - "(Re)generate Image" button in Image Information section of settings modal
+  - Supports OpenAI-compatible image generation APIs (e.g., DALL-E, custom endpoints)
+  - Generated images saved as base64 data URLs in section's `media` field
+  - Automatic story save after successful image generation
+- Unified settings modal in viewer with comprehensive configuration options
+  - Always-visible gear icon (⚙) button in lower left corner during playback
+  - Consolidated modal with accordion sections for: Image Information, Story Management, AI Settings, and Keyboard Shortcuts
+  - Image information section (only visible when viewing an image) shows `ai_gen` metadata and prompt generation
+  - Story management section with "Load Story" and "Save Story" buttons (save button disabled when no story loaded)
+  - AI Story Expansion settings with LLM endpoint configuration and test communication feature
+  - Keyboard shortcuts reference table showing all available hotkeys and their descriptions
+  - Replaces previous image-only "?" button with comprehensive settings access
 
 ### Changed
+- Viewer settings button now always visible (previously only shown when section had media)
+- Settings modal opens with all accordions collapsed by default for cleaner initial view
+
+### Removed
+- `ImageInfoModal.tsx` component (functionality integrated into unified `SettingsModal`)
 - **BREAKING**: Viewer now saves and loads complete stories (including AI-generated content) instead of just state
   - Save/Load progress functions now work with entire story structure, not just current state
   - Story automatically saved to browser IndexedDB and restored on reload (unless URL param provided)
@@ -33,6 +47,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Uses standard Story format (no artificial data structures) to reduce LLM confusion
 
 ### Fixed
+- Fixed AI story expansion choice merging to identify choices by their `next` property
+  - Choices are now matched by target section ID instead of position
+  - When AI adds text to a choice that existed without text, they merge into one choice
+  - Prevents duplicate choices for the same target section
+  - Extended sections are now marked with `ai_extendable = false` after successful expansion to prevent re-expansion
 - Fixed AI story expansion validation failing due to media comparison issues
   - Validator now allows media to differ when it contains stripped embedded data placeholders
   - Implemented proper story merging algorithm that preserves original section data (including media) and only adds new content from LLM
