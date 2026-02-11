@@ -31,6 +31,7 @@ This is a pnpm monorepo with three packages:
 - **`packages/viewer/`** - Web-based story player
   - Story playback with state management
   - Markdown rendering, media display, save/load progress
+  - Complete story persistence to IndexedDB (auto-save/restore)
   - Keyboard hotkeys for navigation
   - Entry point: `src/main.tsx`, main component: `App.tsx`
 

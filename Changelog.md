@@ -7,7 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Image information modal in viewer showing AI generation metadata
+  - "?" button in lower left corner when section has media
+  - Displays `ai_gen` metadata: prompt, negative_prompt, size
+  - "Generate Image Prompt" button uses vision-capable LLM to reverse-engineer image into generation prompt
+  - AI analyzes visual style, composition, lighting, colors, and creates prompt suitable for image generators
+  - Generated prompts can be saved to section's `ai_gen.prompt` field for persistence with story
+  - Saved prompts are included when saving/exporting the story
+  - Supports multimodal chat/completions API format (OpenAI-compatible)
+  - Works with vision models: GPT-4o, Claude 3+, Gemini 2+, Grok-2-vision, etc.
+
 ### Changed
+- **BREAKING**: Viewer now saves and loads complete stories (including AI-generated content) instead of just state
+  - Save/Load progress functions now work with entire story structure, not just current state
+  - Story automatically saved to browser IndexedDB and restored on reload (unless URL param provided)
+  - Critical for AI-expanded stories since the story structure changes dynamically during play
+  - Auto-save triggers 1 second after story changes
 - **BREAKING**: Completely refactored AI story expansion system for better reliability and efficiency
   - LLM now returns partial Story object (standard format) with only new/modified sections
   - Extended section included with original choices preserved + new choices appended

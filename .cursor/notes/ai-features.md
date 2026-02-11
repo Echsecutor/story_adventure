@@ -4,6 +4,18 @@
 
 The viewer supports optional AI-powered story extension, allowing stories to be dynamically expanded using LLM-based generation when the player approaches sections marked as `ai_extendable`.
 
+## Story Persistence
+
+Since AI expansion modifies the story structure dynamically (adding new sections and choices), the viewer now persists the **complete story** (not just state) to browser IndexedDB:
+
+- **Key**: `'current_viewer_story'` in IndexedDB
+- **Auto-save**: Triggers 1 second after story changes (debounced)
+- **Auto-restore**: On mount, if no `?load=` URL parameter is present, restores saved story from IndexedDB
+- **Save/Load Progress**: Now saves/loads entire story structure, not just current state
+- **Implementation**: Uses same `get_story()`/`save_story()` from `@story-adventure/shared` as editor
+
+This ensures AI-generated content persists across browser sessions and can be saved/loaded as complete story files.
+
 ## OpenAI Chat Completions API Format
 
 ### Configuration Storage
@@ -21,6 +33,9 @@ Configuration is persisted to `localStorage` key: `llm_endpoint_config`
 
 ### Request Body
 
+The API supports both text-only and multimodal (image + text) messages:
+
+**Text-only format:**
 ```json
 {
   "model": "gpt-4o",
@@ -31,6 +46,29 @@ Configuration is persisted to `localStorage` key: `llm_endpoint_config`
   "stream": true
 }
 ```
+
+**Multimodal format (for vision models):**
+```json
+{
+  "model": "gpt-4o",
+  "messages": [
+    { "role": "system", "content": "System prompt..." },
+    { 
+      "role": "user", 
+      "content": [
+        { "type": "text", "text": "Describe this image:" },
+        { "type": "image_url", "image_url": { "url": "https://..." } }
+      ]
+    }
+  ],
+  "stream": true
+}
+```
+
+Image URLs can be:
+- Public HTTP/HTTPS URLs
+- Data URIs (base64-encoded): `data:image/jpeg;base64,...`
+- Cloud storage URLs (e.g., `gs://...` for Gemini on Vertex AI)
 
 ### HTTP Headers
 
@@ -260,6 +298,66 @@ The viewer's AI Story Expansion Settings includes a "Test AI Communication" butt
 - Displays success/fail badge after test completes
 - Status resets when settings are changed
 - Implementation in `MenuScreen.tsx` using `callLlmStreaming()` from `aiApiClient.ts`
+
+## Image Prompt Generation (Reverse Engineering)
+
+The viewer includes an image information modal accessible via a "?" button in the lower left corner (visible when playing and section has media):
+
+### Features
+
+- **Display AI Generation Metadata**: Shows `ai_gen` fields (prompt, negative_prompt, size) if available
+- **Generate Image Prompt**: Uses vision-capable LLM to reverse-engineer the image into an image generation prompt
+- **Prompt Engineering**: AI analyzes visual style, composition, lighting, colors, mood, subject details, and artistic techniques
+- **Save to Section**: Generated prompts can be saved to the section's `ai_gen.prompt` field
+- **Persistence**: Saved prompts are included in the story structure and persist through save/load operations
+- **Multimodal API Support**: Sends image + text prompt using chat/completions format
+
+### Implementation
+
+- **Modal**: `ImageInfoModal.tsx` - displays metadata, provides "Generate Image Prompt" button, and "Save to Section" functionality
+- **API Client**: `aiImageDescription.ts` - handles multimodal API calls for image prompt generation
+- **Button**: Fixed position in lower left, only visible when section has media
+- **Story Update**: Generated prompts are saved via callback that updates the story structure and triggers auto-save to IndexedDB
+- **UI Feedback**: Shows "✓ Saved" badge after saving prompt to section
+- **Vision Models Supported**: GPT-4o, GPT-4-turbo, Claude 3+, Gemini 2.0+/2.5+, Grok-2-vision
+
+### Prompt Strategy
+
+The system instructs the AI to:
+- Analyze the image comprehensively
+- Generate a detailed image generation prompt that could recreate the image
+- Focus on visual style, composition, lighting, colors, mood, subject details, and artistic techniques
+- Format the prompt as if instructing an AI image generator (DALL-E, Stable Diffusion, Midjourney, etc.)
+- Return ONLY the raw prompt text without any headers, labels, markdown formatting, or explanatory text
+
+### Message Format
+
+The image prompt generation request uses multimodal content:
+
+```typescript
+{
+  role: 'system',
+  content: 'You are an expert at analyzing images and creating detailed image generation prompts. ' +
+           'Your task is to reverse-engineer images into prompts that could recreate them. ' +
+           'Always respond with ONLY the raw prompt text - no formatting, no labels, no explanations.'
+},
+{
+  role: 'user',
+  content: [
+    { 
+      type: 'text', 
+      text: 'Analyze this image and generate a detailed image generation prompt that would recreate it. ' +
+            'Focus on: visual style, composition, lighting, colors, mood, subject details, and artistic techniques. ' +
+            'Write the prompt as if instructing an AI image generator like DALL-E, Stable Diffusion, or Midjourney. ' +
+            'IMPORTANT: Return ONLY the raw prompt text itself. Do NOT include any headers, labels, markdown formatting, ' +
+            'code fences, or words like "Prompt:", "Here is", etc. Just the plain prompt text.'
+    },
+    { type: 'image_url', image_url: { url: imageUrl } }
+  ]
+}
+```
+
+The `aiApiClient.ts` supports both string and array content types via the `MessageContent` type. This ensures the AI returns clean, usable prompt text without any formatting artifacts.
 
 ## Validation and Merging
 

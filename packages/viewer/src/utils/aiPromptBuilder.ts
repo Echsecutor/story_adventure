@@ -318,7 +318,7 @@ export function buildPromptMessages(
   story: Story,
   extendFromSectionId: string,
   lookAhead: number
-): Array<{ role: string; content: string }> {
+): Array<{ role: string; content: string | Array<{ type: 'text' | 'image_url'; text?: string; image_url?: { url: string } }> }> {
   const userPrompt = buildUserPrompt(story, extendFromSectionId, lookAhead);
 
   console.debug('[AI Prompt] System prompt:', SYSTEM_PROMPT);

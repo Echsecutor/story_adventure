@@ -4,11 +4,12 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { Container } from 'react-bootstrap';
-import type { Story, StoryState } from '@story-adventure/shared';
+import type { Story } from '@story-adventure/shared';
 import { MenuScreen } from './components/MenuScreen';
 import { StoryPlayer } from './components/StoryPlayer';
 import { ChoiceButtons } from './components/ChoiceButtons';
 import { HelpModal } from './components/HelpModal';
+import { ImageInfoModal } from './components/ImageInfoModal';
 import { BackgroundImage } from './components/BackgroundImage';
 import { useStoryPlayer } from './hooks/useStoryPlayer';
 import { useHotkeys } from './hooks/useHotkeys';
@@ -17,7 +18,7 @@ import { loadFile } from './utils/fileLoader';
 import { saveAs } from './utils/fileSaver';
 import { useToast } from './components/modals/ToastContainer';
 import { useDialog } from './components/modals/DialogContext';
-import { get_file_safe_title } from '@story-adventure/shared';
+import { get_file_safe_title, get_story, save_story } from '@story-adventure/shared';
 import {
   getAiExpansionConsent,
   setAiExpansionConsent,
@@ -29,10 +30,13 @@ import type { LlmEndpoint } from '@story-adventure/shared';
 // Override INPUT action to use modal prompt()
 import { supported_actions } from '@story-adventure/shared';
 
+const CURRENT_VIEWER_STORY_KEY = 'current_viewer_story';
+
 function App() {
   const toast = useToast();
   const dialog = useDialog();
   const [showHelp, setShowHelp] = useState(false);
+  const [showImageInfo, setShowImageInfo] = useState(false);
   const [textVisible, setTextVisible] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [aiExpansionEnabled, setAiExpansionEnabled] = useState<boolean>(
@@ -82,6 +86,51 @@ function App() {
     },
     [loadStory]
   );
+
+  // Callback to save generated image prompt to section
+  const handleSaveImagePrompt = useCallback(
+    (sectionId: string, prompt: string) => {
+      if (!story) {
+        return;
+      }
+
+      // Create a deep copy of the story
+      const updatedStory = JSON.parse(JSON.stringify(story)) as Story;
+      
+      // Update the section's ai_gen field
+      const section = updatedStory.sections[sectionId];
+      if (section) {
+        if (!section.ai_gen) {
+          section.ai_gen = { prompt };
+        } else {
+          section.ai_gen.prompt = prompt;
+        }
+        
+        loadStory(updatedStory);
+        toast.toastOk('Image prompt saved to story section');
+      }
+    },
+    [story, loadStory, toast]
+  );
+
+  // Auto-save story to IndexedDB whenever it changes
+  useEffect(() => {
+    if (!story) {
+      return;
+    }
+
+    const saveTimer = setTimeout(() => {
+      save_story(CURRENT_VIEWER_STORY_KEY, story)
+        .then(() => {
+          console.debug('Story auto-saved to IndexedDB');
+        })
+        .catch((error) => {
+          console.error('Failed to auto-save story:', error);
+        });
+    }, 1000); // Debounce for 1 second
+
+    return () => clearTimeout(saveTimer);
+  }, [story]);
 
   // AI expansion hook
   useAiExpansion({
@@ -210,11 +259,13 @@ function App() {
     showAiSetupDialog();
   }, [story, dialog, storyHasAiCapabilities, toast]);
 
-  // Load story from URL query parameter
+  // Load story from URL query parameter or IndexedDB on mount
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const loadParam = params.get('load');
+    
     if (loadParam) {
+      // Load from URL parameter (takes precedence)
       setIsLoading(true);
       toast.toastInfo('Loading story from ' + loadParam);
       fetch(loadParam)
@@ -236,55 +287,73 @@ function App() {
         .finally(() => {
           setIsLoading(false);
         });
+    } else {
+      // Try to load saved story from IndexedDB
+      setIsLoading(true);
+      get_story(CURRENT_VIEWER_STORY_KEY)
+        .then((savedStory) => {
+          if (savedStory) {
+            loadStory(savedStory);
+            toast.toastOk('Restored saved story from browser storage');
+            toast.toastInfo("Press '?' to display the viewer help.");
+          }
+        })
+        .catch((error) => {
+          console.error('Failed to load saved story:', error);
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
     }
   }, [loadStory, toast]);
 
-  // Save progress
+  // Save progress (saves the complete story, including any AI-generated content)
   const handleSaveProgress = useCallback(() => {
     if (!story) {
       toast.toastAlert('No story loaded');
       return;
     }
     const blob = new Blob(
-      [
-        JSON.stringify(
-          {
-            meta: story.meta,
-            state: story.state,
-          },
-          null,
-          2
-        ),
-      ],
+      [JSON.stringify(story, null, 2)],
       {
         type: 'text/json;charset=utf-8',
       }
     );
     saveAs(blob, get_file_safe_title(story) + '_save.json');
+    toast.toastOk('Complete story saved (including AI-generated content)');
   }, [story, toast]);
 
-  // Load progress
+  // Load progress (loads the complete story)
   const handleLoadProgress = useCallback(async () => {
-    if (!story?.meta?.title) {
-      toast.toastAlert('Please load the story first!');
-      return;
-    }
     try {
       const content = await loadFile();
-      const saved = JSON.parse(content) as { meta?: { title?: string }; state?: StoryState };
-      if (story.meta.title !== saved.meta?.title) {
-        toast.toastAlert(
-          `The loaded story is '${story.meta.title}' but the save game is for '${saved.meta?.title}'`
-        );
+      const loadedStory = JSON.parse(content) as Story;
+      
+      // Validate it's a valid story structure
+      if (!loadedStory.sections || typeof loadedStory.sections !== 'object') {
+        toast.toastAlert('Invalid story file - missing sections');
         return;
       }
-      story.state = saved.state;
-      loadStory(story);
+      
+      // If there's a current story, check if titles match
+      if (story?.meta?.title && loadedStory.meta?.title && 
+          story.meta.title !== loadedStory.meta.title) {
+        const proceed = await dialog.confirm(
+          `The loaded story is '${loadedStory.meta.title}' but the current story is '${story.meta.title}'. Do you want to replace the current story?`,
+          'Different Story'
+        );
+        if (!proceed) {
+          return;
+        }
+      }
+      
+      loadStory(loadedStory);
+      toast.toastOk('Story loaded successfully');
     } catch (error) {
       toast.toastAlert('Failed to load save file');
       console.error(error);
     }
-  }, [story, loadStory, toast]);
+  }, [story, loadStory, toast, dialog]);
 
   // Toggle fullscreen
   const handleFullscreen = useCallback(() => {
@@ -376,27 +445,71 @@ function App() {
         />
       )}
       {viewerState === 'PLAYING' && (
-        <Container
-          id="story_container"
-          style={{
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-            maxWidth: '99vw',
-            position: 'absolute',
-            bottom: '10px',
-            left: 0,
-          }}
-        >
-          <StoryPlayer text={sectionText} isVisible={textVisible} />
-          <ChoiceButtons
-            choices={choices}
-            onChoiceClick={(next) => loadSection(next.toString())}
-          />
-        </Container>
+        <>
+          <Container
+            id="story_container"
+            style={{
+              backgroundColor: 'rgba(0, 0, 0, 0.7)',
+              maxWidth: '99vw',
+              position: 'absolute',
+              bottom: '10px',
+              left: 0,
+            }}
+          >
+            <StoryPlayer text={sectionText} isVisible={textVisible} />
+            <ChoiceButtons
+              choices={choices}
+              onChoiceClick={(next) => loadSection(next.toString())}
+            />
+          </Container>
+          {currentSection?.media && (
+            <button
+              onClick={() => setShowImageInfo(true)}
+              title="Image Information"
+              style={{
+                position: 'fixed',
+                bottom: '20px',
+                left: '20px',
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                color: 'white',
+                border: '2px solid rgba(255, 255, 255, 0.3)',
+                fontSize: '20px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 1000,
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.6)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+              }}
+            >
+              ?
+            </button>
+          )}
+        </>
       )}
       <HelpModal
         show={showHelp}
         onHide={() => setShowHelp(false)}
         hotkeys={hotkeys}
+      />
+      <ImageInfoModal
+        show={showImageInfo}
+        onHide={() => setShowImageInfo(false)}
+        section={currentSection}
+        sectionId={currentSectionId}
+        onSavePrompt={handleSaveImagePrompt}
       />
     </>
   );

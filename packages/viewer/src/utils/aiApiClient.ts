@@ -17,13 +17,25 @@ export interface LlmResponse {
 }
 
 /**
+ * Content part for multimodal messages.
+ */
+export type MessageContentPart =
+  | { type: 'text'; text: string }
+  | { type: 'image_url'; image_url: { url: string } };
+
+/**
+ * Message content can be simple string or array of content parts (for multimodal).
+ */
+export type MessageContent = string | MessageContentPart[];
+
+/**
  * Options for LLM API requests.
  */
 export interface LlmRequestOptions {
   /** LLM endpoint configuration */
   endpoint: LlmEndpoint;
   /** Array of message objects (role + content) */
-  messages: Array<{ role: string; content: string }>;
+  messages: Array<{ role: string; content: MessageContent }>;
   /** Optional timeout in milliseconds (default: 120000 = 2 minutes) */
   timeoutMs?: number;
   /** Optional abort signal for cancellation */
