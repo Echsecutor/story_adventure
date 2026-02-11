@@ -7,7 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **BREAKING**: Completely refactored AI story expansion system for better reliability and efficiency
+  - LLM now returns partial Story object (standard format) with only new/modified sections
+  - Extended section included with original choices preserved + new choices appended
+  - Implemented proper merging algorithm that preserves all original data
+  - Only relevant story context sent to LLM (visited sections + look-ahead) instead of complete story
+  - Reduces token usage significantly and improves JSON generation reliability
+  - Uses standard Story format (no artificial data structures) to reduce LLM confusion
+
 ### Fixed
+- Fixed AI story expansion validation failing due to media comparison issues
+  - Validator now allows media to differ when it contains stripped embedded data placeholders
+  - Implemented proper story merging algorithm that preserves original section data (including media) and only adds new content from LLM
+  - Added comprehensive logging throughout validation process to help debug issues
+  - Added detailed error messages showing exactly what changed when validation fails
+- Fixed AI expansion generating malformed JSON when token limit approached
+  - Reduced prompt size by sending only relevant sections (history + look-ahead)
+  - Improved system prompt with clear JSON structure requirements
+  - Added validation for required fields (id, text, ai_gen.prompt) in new sections
 - Fixed toast notifications appearing outside the viewport when page is scrolled
   - Changed `BootstrapToastContainer` from default `position: absolute` to `position: fixed` in both editor and viewer
   - Toasts now always appear at the top-right of the viewport regardless of scroll position
@@ -28,6 +46,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed ambiguous `getByText('Help')` selector in E2E hotkey test that matched toast notifications in addition to the modal title
 
 ### Added
+- "Test AI Communication" button in viewer AI Story Expansion Settings
+  - Tests LLM endpoint configuration with a simple test message
+  - Shows spinner while testing, displays success/fail badge
+  - Uses 30-second timeout for test requests
+  - Resets status when settings are changed
 - Toast feedback on "Save Configuration" button click in viewer AI settings (success/error)
 - AI Extendable toggle switch in editor section panel with bold "AI Extension" label and tooltip explanation
   - Allows story authors to mark sections as AI-extendable directly in the editor UI

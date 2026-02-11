@@ -77,6 +77,7 @@ Stories are JSON files with the following structure:
 - **`architecture.md`** - Technical architecture, component relationships, data flow, and security considerations
 - **`story-format.md`** - Complete JSON story format specification, action system, and variable management
 - **`ai-features.md`** - AI story extension features, OpenAI API integration, LLM prompting strategies, and data model extensions
+- **`ai-expansion-refactor-summary.md`** - Summary of the AI expansion system refactor: new response format, context optimization, improved validation
 - **`development.md`** - Development workflow, coding standards, testing strategies, and contribution guidelines
 - **`launcher-infrastructure.md`** - Self-contained launcher with tVeb web server, bundle structure, and implementation details
 - **`toast-bug-analysis.md`** - Analysis of the infinite toast loop bug, root cause, fix, and test coverage gaps

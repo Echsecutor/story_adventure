@@ -86,46 +86,105 @@ while (true) {
 
 ## LLM Prompting Strategy for Story Generation
 
+### Response Format
+
+The LLM returns a **partial Story object** using the standard story format:
+
+```typescript
+{
+  sections: {
+    "extended_section_id": {  // The section being extended
+      id: "extended_section_id",
+      text_lines: [...],
+      next: [
+        ...existing_choices,  // Original choices preserved
+        ...new_choices        // New choices appended
+      ]
+    },
+    "extended_section_id_ext_1": {  // New sections
+      id: "extended_section_id_ext_1",
+      text_lines: [...],
+      ai_gen: { prompt: "..." },
+      next: [...]
+    },
+    // ... more new sections
+  },
+  meta: {
+    characters: {  // Optional character updates
+      "CharacterName": "description"
+    }
+  }
+}
+```
+
+This approach:
+- Uses standard Story format (no artificial structures)
+- Reduces LLM confusion (familiar format)
+- Extended section shows explicit relationship (source + edges)
+- Reduces token usage (only returns new/modified sections)
+- Improves JSON generation reliability (simpler, familiar structure)
+
 ### System Prompt Design
 
-Based on research into branching narrative generation (TaleFrame, STORY2GAME, what-if systems), the system prompt should:
+The system prompt:
 
-1. **Define the LLM's role clearly**: "You are a creative writer extending an interactive branching story adventure."
+1. **Defines the response format clearly**: Shows exact JSON structure with examples
 
-2. **Explain the data structure**: Story is a directed graph where sections have text, media, and choices leading to other sections.
+2. **Explains the task**: Extend story by creating new sections and choices
 
-3. **Style consistency**: "Follow the general style, tone, and language of the existing story."
+3. **Emphasizes JSON validity**: 
+   - No markdown code fences
+   - Proper quoted property names
+   - Valid parseable JSON
 
-4. **Character consistency**: 
-   - Analyze existing characters
-   - Use `meta.characters` if present for character profiles
-   - Create character profiles if missing to ensure behavioral consistency
+4. **Visual content requirement**: Every new section MUST have `ai_gen.prompt`
 
-5. **Structural requirements**:
+5. **Style & character consistency**: 
+   - Match existing story style and tone
+   - Use existing character profiles
+   - Add/update characters in response
+
+6. **Structural requirements**:
    - Multiple choices create meaningful player agency
-   - Each new section needs `ai_gen` image prompt for visual consistency
    - Minimum path length: 4 × `ai_gen_look_ahead` sections
-   - Branches may merge but all linearizations must be coherent
+   - Branches may merge to existing sections
+   - All paths must be coherent
 
-6. **Output format**: "Your response must contain ONLY the updated story JSON with all existing sections preserved and new sections added."
+7. **ID generation**: Clear format (e.g., "5_ext_1", "5_ext_2")
+
+### Context Optimization
+
+Instead of sending the complete story, only send:
+
+1. **Story metadata**: Title, author, existing character profiles
+2. **Relevant sections**: 
+   - All visited sections (from `story.state.history`)
+   - Sections reachable within `ai_gen_look_ahead` steps from the extended section
+   - Uses BFS traversal to find reachable sections
+
+This dramatically reduces token usage while maintaining necessary context.
 
 ### User Prompt Structure
 
 Dynamic per-request:
 
 - Section ID to extend from
-- Full current story JSON (with base64 images stripped/truncated)
+- Story metadata and character profiles
+- Relevant existing sections only (not entire story)
+- List of existing section IDs for reference validation
 - `ai_gen_look_ahead` value
-- Explicit constraint: "Do not delete or modify existing sections. Only add new sections and choices."
+- Minimum path length requirement (4 × look_ahead)
+- Expected response format reminder
 
 ### Key Design Principles
 
-From research (TaleFrame, STORY2GAME, what-if papers):
+From research (TaleFrame, STORY2GAME, what-if systems):
 
-- **Structured Information Decomposition**: Breaking story into entities, events, relationships, and outline enables fine-grained control
-- **Meta-Prompting with Context**: Referencing major plot points and character goals maintains narrative coherence across branches
-- **Action-Centric with Preconditions**: Generating actions with explicit state requirements maintains logical story progression
-- **Constraint vs Flexibility Balance**: Define boundaries through structured frameworks while preserving creative flexibility
+- **Structured Information Decomposition**: Request specific fields (sections, choices, characters) separately
+- **Context Minimization**: Send only necessary sections to reduce token usage and improve reliability
+- **Meta-Prompting with Context**: Reference existing characters and story style for coherence
+- **Clear Format Specification**: Provide exact JSON structure and examples to reduce generation errors
+- **Constraint vs Flexibility Balance**: Define boundaries through structured format while preserving creative flexibility
 
 ## AI Extension Data Model
 
@@ -191,17 +250,63 @@ interface AiGenImage {
 - No story data sent unless explicitly enabled
 - Stories only contain `ai_extendable` flags and `ai_gen` prompts - no credentials
 
-## Validation Rules
+## Testing AI Communication
 
-Before applying LLM-generated story updates:
+The viewer's AI Story Expansion Settings includes a "Test AI Communication" button:
 
-1. **No deletions**: All existing section IDs must remain with identical content
-2. **Valid extensions**: Specified `ai_extendable` section must have new choices added
-3. **Graph integrity**: All `next` references must point to valid section IDs
-4. **JSON validity**: Response must be valid JSON story format
-5. **Character consistency**: If LLM adds characters, merge into `meta.characters`
+- Sends simple test message: "Communication test: say hello and return immediately."
+- System prompt: "You are a helpful AI assistant."
+- Shows spinner during test (30-second timeout)
+- Displays success/fail badge after test completes
+- Status resets when settings are changed
+- Implementation in `MenuScreen.tsx` using `callLlmStreaming()` from `aiApiClient.ts`
 
-## Error Handling
+## Validation and Merging
+
+### New Architecture
+
+The validator now processes partial Story responses in the standard format. This simplifies validation and uses the familiar story data model.
+
+### Validation Rules
+
+The validator performs these checks on the partial story:
+
+1. **JSON validity**: Response must be valid JSON (handles markdown code fences)
+2. **Structure validation**: Must have `sections` object
+3. **Content requirement**: Must have at least some new sections or include the extended section
+4. **New section structure**: Each new section must have:
+   - Matching `id` field
+   - Either `text` or `text_lines` field
+   - Ideally an `ai_gen.prompt` field (warning if missing, not an error)
+5. **Reference validation**: All choice targets in all sections must reference valid section IDs (existing or newly created)
+6. **Graph integrity**: Validate all edges point to existing nodes
+
+### Merging Algorithm
+
+The merging process:
+
+1. **Start with original**: Deep copy of the original story (preserves all existing data)
+2. **Identify new sections**: Find sections in response that don't exist in original
+3. **Add new sections**: Copy all truly new sections to merged story
+4. **Merge extended section choices**: 
+   - If response includes the extended section
+   - Extract choices that are beyond the original choice count
+   - Append these new choices to the original section's `next` array
+5. **Merge characters**: Merge `meta.characters` into story (preserving existing)
+6. **Final validation**: Verify graph integrity of merged story
+
+### Key Improvements
+
+- **Standard format**: Uses familiar Story structure, no artificial data models
+- **No media comparison needed**: Since LLM doesn't return existing sections (except extended), media preservation is automatic
+- **Simpler for LLM**: Familiar structure reduces generation errors
+- **Flexible validation**: Warnings for missing `ai_gen.prompt` instead of hard failures
+- **Explicit edge source**: Extended section in response shows where new edges come from
+- **Atomic merging**: Clear separation between original content (preserved) and new content (added)
+
+## Error Handling and Debugging
+
+### Error Types
 
 - HTTP errors (non-2xx responses)
 - Network failures
@@ -209,3 +314,35 @@ Before applying LLM-generated story updates:
 - Validation failures
 - Timeout (AbortController)
 - All errors result in toast notifications with diagnostic info
+
+### Comprehensive Logging
+
+The AI expansion system includes detailed console logging for debugging:
+
+**In `useAiExpansion.ts`:**
+- Complete LLM response logged before validation
+- Response length tracked
+- Extension triggers and section IDs logged
+
+**In `aiPromptBuilder.ts`:**
+- Section extraction logged (history sections and look-ahead sections)
+- Total relevant section count logged
+- Section IDs included in prompt logged
+
+**In `aiValidator.ts`:**
+- Each validation step logged with step number and description
+- Extension structure logged (new section count, new choice count)
+- JSON extraction progress logged (with first 500 chars on parse errors)
+- Validation checks logged:
+  - Structure validation (new_sections, new_choices)
+  - Required field validation (id, text, ai_gen.prompt)
+  - Reference validation (all targets exist)
+  - Duplicate ID detection
+- Merge process logged:
+  - Sections added
+  - Choices added to extended section
+  - Characters merged
+- Final section count logged
+- Graph integrity validation logged
+
+All logs use `[AI Expansion]`, `[AI Prompt]`, or `[Validator]` prefixes for easy filtering.

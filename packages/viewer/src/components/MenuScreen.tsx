@@ -3,10 +3,11 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Button, Container, Row, Col, Form, Accordion } from 'react-bootstrap';
+import { Button, Container, Row, Col, Form, Accordion, Spinner, Badge } from 'react-bootstrap';
 import type { LlmEndpoint } from '@story-adventure/shared';
 import { getLlmEndpoint, setLlmEndpoint } from '../utils/aiPreferences';
 import { useToast } from './modals/ToastContainer';
+import { callLlmStreaming } from '../utils/aiApiClient';
 
 interface MenuScreenProps {
   onLoadFile: () => void;
@@ -24,6 +25,7 @@ export function MenuScreen({
   const [llmApiKey, setLlmApiKey] = useState('');
   const [llmModel, setLlmModel] = useState('');
   const [llmType, setLlmType] = useState('openai');
+  const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'success' | 'fail'>('idle');
 
   // Load LLM endpoint config from localStorage on mount
   useEffect(() => {
@@ -66,6 +68,48 @@ export function MenuScreen({
 
     // Save after a short delay to avoid saving on every keystroke
     setTimeout(() => handleSaveLlmConfig(), 500);
+    
+    // Reset test status when settings change
+    setTestStatus('idle');
+  };
+
+  // Test AI communication with current settings
+  const handleTestCommunication = async () => {
+    setTestStatus('testing');
+    
+    try {
+      const endpoint = getLlmEndpoint();
+      if (!endpoint || !endpoint.url) {
+        toast.toastAlert('Please configure LLM endpoint URL first');
+        setTestStatus('fail');
+        return;
+      }
+
+      const messages = [
+        { role: 'system', content: 'You are a helpful AI assistant.' },
+        { role: 'user', content: 'Communication test: say hello and return immediately.' }
+      ];
+
+      const response = await callLlmStreaming({
+        endpoint,
+        messages,
+        timeoutMs: 30000, // 30 second timeout for test
+      });
+
+      if (response.success && response.content) {
+        console.log('[Test AI Communication] Success:', response.content);
+        toast.toastOk('AI communication test successful!');
+        setTestStatus('success');
+      } else {
+        console.error('[Test AI Communication] Failed:', response.error);
+        toast.toastAlert(`Test failed: ${response.error || 'Unknown error'}`);
+        setTestStatus('fail');
+      }
+    } catch (error) {
+      console.error('[Test AI Communication] Error:', error);
+      toast.toastAlert(`Test error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setTestStatus('fail');
+    }
   };
 
   return (
@@ -175,9 +219,41 @@ export function MenuScreen({
                   </Form.Select>
                 </Form.Group>
 
-                <Button variant="primary" size="sm" onClick={() => handleSaveLlmConfig(true)}>
-                  Save Configuration
-                </Button>
+                <div className="d-flex gap-2 align-items-center">
+                  <Button variant="primary" size="sm" onClick={() => handleSaveLlmConfig(true)}>
+                    Save Configuration
+                  </Button>
+                  
+                  <Button 
+                    variant="secondary" 
+                    size="sm" 
+                    onClick={handleTestCommunication}
+                    disabled={testStatus === 'testing'}
+                  >
+                    {testStatus === 'testing' ? (
+                      <>
+                        <Spinner
+                          as="span"
+                          animation="border"
+                          size="sm"
+                          role="status"
+                          aria-hidden="true"
+                          className="me-2"
+                        />
+                        Testing...
+                      </>
+                    ) : (
+                      'Test AI Communication'
+                    )}
+                  </Button>
+                  
+                  {testStatus === 'success' && (
+                    <Badge bg="success">Success</Badge>
+                  )}
+                  {testStatus === 'fail' && (
+                    <Badge bg="danger">Failed</Badge>
+                  )}
+                </div>
               </Accordion.Body>
             </Accordion.Item>
           </Accordion>

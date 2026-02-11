@@ -155,6 +155,7 @@ export function useAiExpansion(options: UseAiExpansionOptions): void {
           '[AI Expansion] LLM response received, length:',
           response.content.length
         );
+        console.log('[AI Expansion] Complete LLM response:', response.content);
 
         // Validate the response
         const validation = validateAiStoryUpdate(story, response.content, sectionId);
