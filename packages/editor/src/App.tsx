@@ -27,6 +27,7 @@ import { LinearizeDialog } from './components/dialogs/LinearizeDialog.js';
 import { StoryMetadataModal } from './components/dialogs/StoryMetadataModal.js';
 import { AISettingsModal } from './components/dialogs/AISettingsModal.js';
 import { SectionActionsModal } from './components/dialogs/SectionActionsModal.js';
+import { ImportFromWebModal } from './components/dialogs/ImportFromWebModal.js';
 import { useStoryState } from './hooks/useStoryState.js';
 import { useAutoSave } from './hooks/useAutoSave.js';
 import { useHotkeys } from './hooks/useHotkeys.js';
@@ -40,6 +41,7 @@ import {
   downloadGraphSplit,
   depthFirstSearch,
 } from './utils/bundle.js';
+import { importFromWeb } from './utils/webImporter.js';
 import type { SectionNodeData, ChoiceEdgeData } from './utils/storyToFlow.js';
 
 const CURRENT_EDITOR_STORY_KEY = 'current_editor_story';
@@ -68,6 +70,7 @@ function App() {
   const [showMetadataModal, setShowMetadataModal] = useState(false);
   const [showAISettingsModal, setShowAISettingsModal] = useState(false);
   const [showActionsModal, setShowActionsModal] = useState(false);
+  const [showImportFromWebModal, setShowImportFromWebModal] = useState(false);
   const [isAIProcessing, setIsAIProcessing] = useState(false);
 
   // Auto-save every 30 seconds
@@ -131,6 +134,27 @@ function App() {
       toast.toastOk('Story loaded');
     } catch (error) {
       toast.toastAlert(`Error loading story: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }, [loadStory, toast]);
+
+  // Handle import from web
+  const handleImportFromWeb = useCallback(async (url: string) => {
+    try {
+      toast.toastInfo('Importing from web...');
+      const result = await importFromWeb(url);
+      
+      if (result.success && result.story) {
+        loadStory(result.story);
+        setSelectedNode(null);
+        setSelectedEdge(null);
+        setNeedsRedraw((n) => n + 1);
+        toast.toastOk('Story imported successfully from web');
+      } else {
+        throw new Error(result.error || 'Import failed');
+      }
+    } catch (error) {
+      toast.toastAlert(`Error importing from web: ${error instanceof Error ? error.message : String(error)}`);
+      throw error; // Re-throw so modal can handle it
     }
   }, [loadStory, toast]);
 
@@ -476,6 +500,7 @@ function App() {
       <Navbar
         onNewStory={handleNewStory}
         onLoadStory={handleLoadStory}
+        onImportFromWeb={() => setShowImportFromWebModal(true)}
         onSaveStory={handleSaveStory}
         onSaveStoryWithImages={handleSaveStoryWithImages}
         onGenerateBundle={handleGenerateBundle}
@@ -549,6 +574,12 @@ function App() {
       <AISettingsModal
         show={showAISettingsModal}
         onHide={() => setShowAISettingsModal(false)}
+      />
+
+      <ImportFromWebModal
+        show={showImportFromWebModal}
+        onHide={() => setShowImportFromWebModal(false)}
+        onImport={handleImportFromWeb}
       />
 
       <SectionActionsModal

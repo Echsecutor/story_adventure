@@ -7,6 +7,7 @@ import { Navbar as BootstrapNavbar, Nav, NavDropdown, Container } from 'react-bo
 export interface NavbarProps {
   onNewStory: () => void;
   onLoadStory: () => void;
+  onImportFromWeb: () => void;
   onSaveStory: () => void;
   onSaveStoryWithImages: () => void;
   onGenerateBundle: () => void;
@@ -25,6 +26,7 @@ export interface NavbarProps {
 export function Navbar({
   onNewStory,
   onLoadStory,
+  onImportFromWeb,
   onSaveStory,
   onSaveStoryWithImages,
   onGenerateBundle,
@@ -46,6 +48,7 @@ export function Navbar({
             <NavDropdown title="File" id="file-menu">
               <NavDropdown.Item onClick={onNewStory}>New Adventure</NavDropdown.Item>
               <NavDropdown.Item onClick={onLoadStory}>Load Adventure</NavDropdown.Item>
+              <NavDropdown.Item onClick={onImportFromWeb}>Import From Web</NavDropdown.Item>
               <NavDropdown.Divider />
               <NavDropdown.Item onClick={onSaveStory}>
                 Save Adventure as it is

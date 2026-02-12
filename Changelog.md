@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Import From Web feature in editor (`File → Import From Web`)
+  - Import story content directly from web URLs
+  - Optimized for civitai.com articles with automatic article extraction
+  - Falls back to generic content extraction for other websites
+  - Creates linear story with text sections and images
+  - Uses CORS proxy services to fetch cross-origin content
+  - Images linked by URL (use "Save with images" to embed later)
 - AI utility modules moved to shared package for use in both editor and viewer
   - `aiPreferences.ts` - localStorage management for AI settings
   - `aiApiClient.ts` - OpenAI-compatible LLM streaming client

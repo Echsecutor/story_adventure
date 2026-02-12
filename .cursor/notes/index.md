@@ -30,6 +30,7 @@ This is a pnpm monorepo with three packages:
 - **`packages/editor/`** - Web-based story creation tool
   - React Flow graph editor (replaces Cytoscape.js)
   - Story structure editing, media embedding, action system UI
+  - Web import from URLs (civitai.com articles and generic pages)
   - AI story extension - generates new branches using LLM
   - AI image generation - creates images from prompts
   - AI prompt derivation - analyzes images to create prompts
@@ -93,6 +94,7 @@ Stories are JSON files with the following structure:
 - **`launcher-infrastructure.md`** - Self-contained launcher with tVeb web server, bundle structure, and implementation details
 - **`toast-bug-analysis.md`** - Analysis of the infinite toast loop bug, root cause, fix, and test coverage gaps
 - **`image-generation-models.md`** - Image generation model testing results, API parameters, SFW/NSFW capabilities, and model-specific configuration
+- **`web-import-feature.md`** - Web import functionality for converting web pages to stories, CORS proxy strategy, and extraction logic
 
 ## Key Features
 
@@ -103,7 +105,7 @@ Stories are JSON files with the following structure:
 - **AI story extension**: Optional LLM-powered dynamic story expansion (editor and viewer)
 - **AI image generation**: Generate images from prompts using configured endpoints (editor and viewer)
 - **AI prompt derivation**: Analyze existing images to create generation prompts (editor and viewer)
-- **Export/Import**: JSON format with optional bundled media
+- **Export/Import**: JSON format with optional bundled media, plus web import from URLs (optimized for civitai.com)
 - **Playable bundles**: Self-contained ZIP bundles with embedded web server (tVeb) and launch scripts for Windows/Linux
 - **Type safety**: Full TypeScript coverage across codebase
 - **Modern tooling**: Vite HMR, comprehensive test suite
