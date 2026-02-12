@@ -5,9 +5,15 @@
 import { useState, useEffect } from 'react';
 import { Modal, Button, Form, Accordion, Spinner, Badge, Table, Row, Col } from 'react-bootstrap';
 import type { Section, LlmEndpoint } from '@story-adventure/shared';
-import { getLlmEndpoint, setLlmEndpoint, getImageGenConfig, setImageGenConfig, type ImageGenConfig } from '../utils/aiPreferences';
-import { generateImageDescription } from '../utils/aiImageDescription';
-import { callLlmStreaming } from '../utils/aiApiClient';
+import {
+  getLlmEndpoint,
+  setLlmEndpoint,
+  getImageGenConfig,
+  setImageGenConfig,
+  generateImageDescription,
+  callLlmStreaming,
+  type ImageGenConfig,
+} from '@story-adventure/shared';
 import { useToast } from './modals/ToastContainer';
 
 interface HotkeyDefinition {

@@ -15,6 +15,8 @@ export interface NavbarProps {
   onRedraw: () => void;
   onShowVariables: () => void;
   onShowJson: () => void;
+  onShowMetadata: () => void;
+  onShowAISettings: () => void;
 }
 
 /**
@@ -31,6 +33,8 @@ export function Navbar({
   onRedraw,
   onShowVariables,
   onShowJson,
+  onShowMetadata,
+  onShowAISettings,
 }: NavbarProps) {
   return (
     <BootstrapNavbar bg="light" expand="lg">
@@ -61,6 +65,9 @@ export function Navbar({
               </NavDropdown.Item>
             </NavDropdown>
             <NavDropdown title="Edit" id="edit-menu">
+              <NavDropdown.Item onClick={onShowMetadata}>Story Metadata</NavDropdown.Item>
+              <NavDropdown.Item onClick={onShowAISettings}>AI Configuration</NavDropdown.Item>
+              <NavDropdown.Divider />
               <NavDropdown.Item onClick={onAddSection}>Add Section</NavDropdown.Item>
             </NavDropdown>
             <NavDropdown title="Story Variables" id="variables-menu">

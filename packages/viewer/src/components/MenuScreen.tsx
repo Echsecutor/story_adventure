@@ -5,9 +5,12 @@
 import { useState, useEffect } from 'react';
 import { Button, Container, Row, Col, Form, Accordion, Spinner, Badge } from 'react-bootstrap';
 import type { LlmEndpoint } from '@story-adventure/shared';
-import { getLlmEndpoint, setLlmEndpoint } from '../utils/aiPreferences';
+import {
+  getLlmEndpoint,
+  setLlmEndpoint,
+  callLlmStreaming,
+} from '@story-adventure/shared';
 import { useToast } from './modals/ToastContainer';
-import { callLlmStreaming } from '../utils/aiApiClient';
 
 interface MenuScreenProps {
   onLoadFile: () => void;

@@ -7,7 +7,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- AI utility modules moved to shared package for use in both editor and viewer
+  - `aiPreferences.ts` - localStorage management for AI settings
+  - `aiApiClient.ts` - OpenAI-compatible LLM streaming client
+  - `aiImageGeneration.ts` - image generation API client
+  - `aiImageDescription.ts` - vision API client for prompt derivation
+  - `aiPromptBuilder.ts` - context building for AI story expansion
+  - `aiValidator.ts` - AI response validation and merging
+- Story metadata modal in editor (`Edit → Story Metadata`)
+  - Edit title, author (name, url), year, license (name, url)
+  - Configure starting section (used for linearization and AI expansion)
+  - Configure AI look-ahead steps (default: 2)
+  - Edit character profiles (JSON format) for consistent AI generation
+- AI configuration modal in editor (`Edit → AI Configuration`)
+  - Configure LLM endpoint for story extension (URL, API key, model, type)
+  - Configure image generation endpoint (URL, API key, model)
+  - Test LLM communication with feedback badges
+  - Settings stored in browser localStorage only (never in story files)
+- Section Actions modal in editor (accessed via "More..." button in section panel)
+  - Consolidated UI for section scripts and AI settings
+  - AI extendable toggle to mark sections for AI extension
+  - Image generation prompt editor
+  - "Extend with AI" button - generates new story branches from current section
+  - "Generate Image" button - creates images from prompts using configured endpoint
+  - "Derive Prompt from Image" button - analyzes existing images to create generation prompts
+- AI story extension in editor
+  - Creates linear story path from starting section to selected section
+  - Includes look-ahead sections for context
+  - Calls configured LLM to generate new story branches
+  - Validates and merges AI-generated content
+  - Updates graph with new sections and choices
+  - Requires starting section to be set in story metadata
+- AI image generation in editor
+  - Generate images from `ai_gen.prompt` fields
+  - Saves generated images as base64 data URLs
+  - Supports model-specific parameters (size, etc.)
+- AI prompt derivation in editor
+  - Analyzes existing section images using vision-capable LLM
+  - Generates detailed image generation prompts
+  - Auto-fills `ai_gen.prompt` field with derived prompt
+
 ### Changed
+- SectionPanel refactored to keep core editing features accessible
+  - Three-column layout: text, media, and choice management
+  - Choices remain in main panel (frequently used feature)
+  - Actions and AI features moved to modal (accessed via "More..." button)
+  - Increased text area to 10 rows for better editing experience
+- Graph editor section nodes now display a small preview of the section image (if present)
+  - Image previews are constrained to max 60px width and 40px height
+  - Nodes use compact, content-fitting dimensions with min/max constraints
+  - Nodes with images: 70-100px width, min 70px height
+  - Nodes without images: 60-120px width, min 40px height
+  - Images shown above the section ID with proper styling (rounded corners, border)
+  - Long section IDs are truncated with ellipsis to maintain compact layout
 - Image generation prompt in settings modal is now editable with live save functionality
   - Edit prompt directly in textarea and save changes to section
   - Auto-saves edited prompt when generating image if changes haven't been saved

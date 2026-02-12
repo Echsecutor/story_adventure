@@ -19,6 +19,7 @@ import { saveAs } from './utils/fileSaver';
 import { useToast } from './components/modals/ToastContainer';
 import { useDialog } from './components/modals/DialogContext';
 import { get_file_safe_title, get_story, save_story } from '@story-adventure/shared';
+import type { LlmEndpoint } from '@story-adventure/shared';
 import {
   getAiExpansionConsent,
   setAiExpansionConsent,
@@ -27,9 +28,8 @@ import {
   getImageGenEnabled,
   setImageGenEnabled,
   getImageGenConfig,
-} from './utils/aiPreferences';
-import type { LlmEndpoint } from '@story-adventure/shared';
-import { generateImage } from './utils/aiImageGeneration';
+  generateImage,
+} from '@story-adventure/shared';
 
 // Override INPUT action to use modal prompt()
 import { supported_actions } from '@story-adventure/shared';

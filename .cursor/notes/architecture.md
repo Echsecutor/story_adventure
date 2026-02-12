@@ -12,7 +12,7 @@ The Story Adventure Tools follows a modular client-side architecture with three 
   - `src/main.tsx` - Application entry point
   - `src/App.tsx` - Main app component managing story state
   - `src/components/GraphEditor.tsx` - React Flow canvas wrapper
-  - `src/components/nodes/SectionNode.tsx` - Custom node component
+  - `src/components/nodes/SectionNode.tsx` - Custom node component with image preview support
   - `src/components/edges/ChoiceEdge.tsx` - Custom edge component
   - `src/components/panels/SectionPanel.tsx` - Section editing sidebar
   - `src/components/panels/ActionEditor.tsx` - Action script editor
@@ -30,6 +30,9 @@ The Story Adventure Tools follows a modular client-side architecture with three 
 **Core Features**:
 
 - Graph-based story visualization using React Flow with dagre layout algorithm
+  - Section nodes display image previews (max 60x40px) when sections have media
+  - Compact node sizing that fits content: 70-100px width with images, 60-120px without
+  - Root nodes (green diamonds), leaf nodes (red hexagons), regular nodes (blue rectangles)
 - **Top/bottom split layout**: graph editor (full width) on top, edit panel below
   - Flexbox column layout in `App.tsx`; graph fills parent height (`100%` in `GraphEditor.tsx`)
   - `SectionPanel` uses horizontal multi-column layout (text | media | actions) for the full-width bottom area

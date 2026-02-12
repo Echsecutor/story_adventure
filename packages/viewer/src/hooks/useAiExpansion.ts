@@ -4,11 +4,14 @@
 
 import { useEffect, useRef, useCallback } from 'react';
 import type { Story } from '@story-adventure/shared';
-import { buildPromptMessages } from '../utils/aiPromptBuilder';
-import { callLlmStreaming } from '../utils/aiApiClient';
-import { validateAiStoryUpdate } from '../utils/aiValidator';
+import {
+  buildPromptMessages,
+  callLlmStreaming,
+  validateAiStoryUpdate,
+  getLlmEndpoint,
+  hasValidLlmEndpoint,
+} from '@story-adventure/shared';
 import { useToast } from '../components/modals/ToastContainer';
-import { getLlmEndpoint, hasValidLlmEndpoint } from '../utils/aiPreferences';
 
 /**
  * Options for the AI expansion hook.

@@ -6,13 +6,27 @@ import { useState, useCallback, useEffect, useMemo } from 'react';
 // Bootstrap grid imports removed - using flexbox top/bottom layout
 import type { Node, Edge, Connection } from '@xyflow/react';
 import type { Story } from '@story-adventure/shared';
-import { get_story, save_story } from '@story-adventure/shared';
+import {
+  get_story,
+  save_story,
+  getLlmEndpoint,
+  hasValidLlmEndpoint,
+  getImageGenConfig,
+  generateImage,
+  generateImageDescription,
+  buildPromptMessages,
+  callLlmStreaming,
+  validateAiStoryUpdate,
+} from '@story-adventure/shared';
 import { Navbar } from './components/Navbar.js';
 import { GraphEditor } from './components/GraphEditor.js';
 import { SectionPanel } from './components/panels/SectionPanel.js';
 import { VariablesPanel } from './components/panels/VariablesPanel.js';
 import { StoryJsonModal } from './components/dialogs/StoryJsonModal.js';
 import { LinearizeDialog } from './components/dialogs/LinearizeDialog.js';
+import { StoryMetadataModal } from './components/dialogs/StoryMetadataModal.js';
+import { AISettingsModal } from './components/dialogs/AISettingsModal.js';
+import { SectionActionsModal } from './components/dialogs/SectionActionsModal.js';
 import { useStoryState } from './hooks/useStoryState.js';
 import { useAutoSave } from './hooks/useAutoSave.js';
 import { useHotkeys } from './hooks/useHotkeys.js';
@@ -24,6 +38,7 @@ import {
   downloadAsIs,
   downloadGraphInOne,
   downloadGraphSplit,
+  depthFirstSearch,
 } from './utils/bundle.js';
 import type { SectionNodeData, ChoiceEdgeData } from './utils/storyToFlow.js';
 
@@ -50,6 +65,10 @@ function App() {
   const [showVariablesPanel, setShowVariablesPanel] = useState(false);
   const [showJsonModal, setShowJsonModal] = useState(false);
   const [showLinearizeDialog, setShowLinearizeDialog] = useState(false);
+  const [showMetadataModal, setShowMetadataModal] = useState(false);
+  const [showAISettingsModal, setShowAISettingsModal] = useState(false);
+  const [showActionsModal, setShowActionsModal] = useState(false);
+  const [isAIProcessing, setIsAIProcessing] = useState(false);
 
   // Auto-save every 30 seconds
   useAutoSave(story);
@@ -275,6 +294,181 @@ function App() {
     setVariables(variables);
   }, [setVariables]);
 
+  // Handle metadata update
+  const handleUpdateMetadata = useCallback((meta: import('@story-adventure/shared').StoryMeta) => {
+    loadStory({
+      ...story,
+      meta,
+    });
+    toast.toastOk('Story metadata updated');
+  }, [story, loadStory, toast]);
+
+  // Handle extend section with AI
+  const handleExtendWithAI = useCallback(async (sectionId: string) => {
+    // Check if starting section is set
+    const startingSection = story.state?.current_section;
+    if (!startingSection) {
+      toast.toastAlert('Please set a starting section in Story Metadata first');
+      return;
+    }
+
+    // Check if LLM endpoint is configured
+    if (!hasValidLlmEndpoint()) {
+      toast.toastAlert('Please configure LLM endpoint in AI Configuration');
+      return;
+    }
+
+    const endpoint = getLlmEndpoint();
+    if (!endpoint) {
+      toast.toastAlert('No LLM endpoint configured');
+      return;
+    }
+
+    setIsAIProcessing(true);
+    toast.toastInfo('Extending story with AI...');
+
+    try {
+      // Create linear story from starting section to current section
+      const linearPath = await depthFirstSearch(
+        [startingSection],
+        sectionId,
+        [],
+        story
+      );
+
+      if (!linearPath) {
+        toast.toastAlert(`Could not find path from starting section ${startingSection} to section ${sectionId}`);
+        setIsAIProcessing(false);
+        return;
+      }
+
+      // Get look-ahead value
+      const lookAhead = story.meta?.ai_gen_look_ahead || 2;
+
+      // Build prompt messages with the full story (buildPromptMessages handles context extraction)
+      const messages = buildPromptMessages(story, sectionId, lookAhead);
+
+      // Call LLM API
+      const response = await callLlmStreaming({
+        endpoint,
+        messages,
+        timeoutMs: 120000,
+      });
+
+      if (!response.success || !response.content) {
+        toast.toastAlert(`AI extension failed: ${response.error || 'Unknown error'}`);
+        setIsAIProcessing(false);
+        return;
+      }
+
+      console.log('[AI Extension] Raw response:', response.content);
+
+      // Validate and merge response
+      const validation = validateAiStoryUpdate(story, response.content, sectionId);
+      
+      if (!validation.valid) {
+        toast.toastAlert(`AI response validation failed: ${validation.error || 'Invalid response'}`);
+        console.error('[AI Extension] Validation errors:', validation.error);
+        setIsAIProcessing(false);
+        return;
+      }
+
+      if (!validation.story) {
+        toast.toastAlert('AI extension failed: No merged story returned');
+        setIsAIProcessing(false);
+        return;
+      }
+
+      // Update story with merged result
+      loadStory(validation.story);
+      setNeedsRedraw((n) => n + 1);
+      
+      // Count new sections
+      const originalSectionCount = Object.keys(story.sections).length;
+      const newSectionCount = Object.keys(validation.story.sections).length - originalSectionCount;
+      toast.toastOk(`AI extension successful! Added ${newSectionCount} new sections`);
+    } catch (error) {
+      toast.toastAlert(
+        `Error extending story: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+      console.error('[AI Extension] Error:', error);
+    } finally {
+      setIsAIProcessing(false);
+    }
+  }, [story, loadStory, toast]);
+
+  // Handle generate image from prompt
+  const handleGenerateImage = useCallback(async (sectionId: string, prompt: string) => {
+    const config = getImageGenConfig();
+    if (!config || !config.url) {
+      toast.toastAlert('Please configure image generation endpoint in AI Configuration');
+      return;
+    }
+
+    setIsAIProcessing(true);
+    toast.toastInfo('Generating image...');
+
+    try {
+      const section = story.sections[sectionId];
+      const result = await generateImage({
+        config,
+        prompt,
+        size: section?.ai_gen?.size || '1024x1024',
+        timeoutMs: 60000,
+      });
+
+      if (result.success && result.imageDataUrl) {
+        updateSection(sectionId, {
+          media: {
+            type: 'image',
+            src: result.imageDataUrl,
+          },
+        });
+        toast.toastOk('Image generated successfully!');
+      } else {
+        toast.toastAlert(`Failed to generate image: ${result.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      toast.toastAlert(
+        `Error generating image: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    } finally {
+      setIsAIProcessing(false);
+    }
+  }, [story, updateSection, toast]);
+
+  // Handle derive prompt from image
+  const handleDerivePrompt = useCallback(async (_sectionId: string, imageUrl: string): Promise<string | null> => {
+    const endpoint = getLlmEndpoint();
+    if (!endpoint || !endpoint.url) {
+      toast.toastAlert('Please configure LLM endpoint in AI Configuration');
+      return null;
+    }
+
+    toast.toastInfo('Analyzing image to derive prompt...');
+
+    try {
+      const result = await generateImageDescription({
+        endpoint,
+        imageUrl,
+        timeoutMs: 60000,
+      });
+
+      if (result.success && result.description) {
+        toast.toastOk('Image prompt derived successfully!');
+        return result.description;
+      } else {
+        toast.toastAlert(`Failed to derive prompt: ${result.error || 'Unknown error'}`);
+        return null;
+      }
+    } catch (error) {
+      toast.toastAlert(
+        `Error deriving prompt: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+      return null;
+    }
+  }, [toast]);
+
   const hasSelection = !!(selectedNode || selectedEdge);
 
   return (
@@ -290,6 +484,8 @@ function App() {
         onRedraw={handleRedraw}
         onShowVariables={() => setShowVariablesPanel(true)}
         onShowJson={() => setShowJsonModal(true)}
+        onShowMetadata={() => setShowMetadataModal(true)}
+        onShowAISettings={() => setShowAISettingsModal(true)}
       />
       <div style={{ flex: hasSelection ? '1 1 55%' : '1 1 100%', minHeight: 0 }}>
         <GraphEditor
@@ -316,6 +512,7 @@ function App() {
             onUpdateSection={handleUpdateSection}
             onUpdateChoice={handleUpdateChoice}
             onDelete={handleDelete}
+            onShowActions={() => setShowActionsModal(true)}
             onAddChoice={handleAddChoice}
             availableSections={availableSections}
             availableVariables={availableVariables}
@@ -340,6 +537,31 @@ function App() {
         story={story}
         show={showLinearizeDialog}
         onHide={() => setShowLinearizeDialog(false)}
+      />
+
+      <StoryMetadataModal
+        story={story}
+        show={showMetadataModal}
+        onHide={() => setShowMetadataModal(false)}
+        onUpdateMeta={handleUpdateMetadata}
+      />
+
+      <AISettingsModal
+        show={showAISettingsModal}
+        onHide={() => setShowAISettingsModal(false)}
+      />
+
+      <SectionActionsModal
+        section={selectedNode?.data.section || null}
+        show={showActionsModal}
+        onHide={() => setShowActionsModal(false)}
+        onUpdateSection={handleUpdateSection}
+        availableSections={availableSections}
+        availableVariables={availableVariables}
+        onExtendWithAI={handleExtendWithAI}
+        onGenerateImage={handleGenerateImage}
+        onDerivePrompt={handleDerivePrompt}
+        isAIProcessing={isAIProcessing}
       />
     </div>
   );

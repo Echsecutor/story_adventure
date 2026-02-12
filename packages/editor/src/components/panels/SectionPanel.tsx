@@ -4,10 +4,9 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Button, Form } from 'react-bootstrap';
-import type { Section, Action } from '@story-adventure/shared';
+import type { Section } from '@story-adventure/shared';
 import type { Node, Edge } from '@xyflow/react';
 import type { SectionNodeData, ChoiceEdgeData } from '../../utils/storyToFlow.js';
-import { ActionEditor } from './ActionEditor.js';
 import { handleImagePaste } from '../../utils/mediaHandler.js';
 import { loadImageFile } from '../../utils/fileLoader.js';
 
@@ -17,6 +16,7 @@ export interface SectionPanelProps {
   onUpdateSection: (sectionId: string, updates: Partial<Section>) => void;
   onUpdateChoice: (sourceSectionId: string, targetSectionId: string, text: string) => void;
   onDelete: () => void;
+  onShowActions: () => void;
   onAddChoice: (targetSectionId: string) => void;
   availableSections: Section[];
   /** Available story variables for action editor */
@@ -32,13 +32,12 @@ export function SectionPanel({
   onUpdateSection,
   onUpdateChoice,
   onDelete,
+  onShowActions,
   onAddChoice,
   availableSections,
-  availableVariables,
 }: SectionPanelProps) {
   const [text, setText] = useState('');
   const [mediaSrc, setMediaSrc] = useState('');
-  const [aiExtendable, setAiExtendable] = useState(false);
   const [targetSectionId, setTargetSectionId] = useState('');
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -48,18 +47,15 @@ export function SectionPanel({
       const section = selectedNode.data.section;
       setText(section.text_lines?.join('\n') || section.text || '');
       setMediaSrc(section.media?.src || '');
-      setAiExtendable(section.ai_extendable ?? false);
       setTargetSectionId('');
     } else if (selectedEdge && selectedEdge.data) {
       const choice = selectedEdge.data.choice;
       setText(choice.text || '');
       setMediaSrc('');
-      setAiExtendable(false);
-      setTargetSectionId(selectedEdge.target);
+      setTargetSectionId('');
     } else {
       setText('');
       setMediaSrc('');
-      setAiExtendable(false);
       setTargetSectionId('');
     }
   }, [selectedNode, selectedEdge]);
@@ -153,24 +149,10 @@ export function SectionPanel({
     };
   }, [selectedNode, onUpdateSection]);
 
-  // Handle script (actions) changes
-  const handleScriptChange = (script: Action[]) => {
-    if (selectedNode) {
-      onUpdateSection(selectedNode.id, {
-        script: script.length > 0 ? script : undefined,
-      });
-    }
-  };
-
   // Handle adding choice
   const handleAddChoice = () => {
     if (selectedNode && targetSectionId) {
-      if (targetSectionId === 'new') {
-        // onAddChoice will handle creating new section
-        onAddChoice('new');
-      } else {
-        onAddChoice(targetSectionId);
-      }
+      onAddChoice(targetSectionId);
       setTargetSectionId('');
     }
   };
@@ -209,11 +191,14 @@ export function SectionPanel({
     );
   }
 
-  // Section editing: horizontal multi-column layout
+  // Section editing: horizontal three-column layout
   return (
     <div style={{ padding: '12px 20px' }}>
       <div className="d-flex align-items-center gap-3 mb-2">
         <h6 className="mb-0">Section {selectedNode.id}</h6>
+        <Button variant="primary" size="sm" onClick={onShowActions}>
+          More...
+        </Button>
         <Button variant="danger" size="sm" onClick={onDelete}>
           Delete Section
         </Button>
@@ -221,13 +206,13 @@ export function SectionPanel({
 
       <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
         {/* Column 1: Story text */}
-        <div style={{ flex: '1 1 300px', minWidth: 0 }}>
+        <div style={{ flex: '1 1 350px', minWidth: 0 }}>
           <Form.Group className="mb-2">
             <Form.Label className="small fw-bold mb-1">Story Text</Form.Label>
             <Form.Control
               ref={textAreaRef}
               as="textarea"
-              rows={8}
+              rows={10}
               value={text}
               onChange={(e) => handleTextChange(e.target.value)}
               placeholder="Enter story text... (Paste image to add media)"
@@ -237,7 +222,7 @@ export function SectionPanel({
         </div>
 
         {/* Column 2: Media */}
-        <div style={{ flex: '0 1 280px', minWidth: '200px' }}>
+        <div style={{ flex: '0 1 280px', minWidth: '220px' }}>
           <Form.Group className="mb-2">
             <Form.Label className="small fw-bold mb-1">Media</Form.Label>
             <div className="d-flex gap-2 mb-1">
@@ -277,42 +262,11 @@ export function SectionPanel({
           )}
         </div>
 
-        {/* Column 3: Actions & Choices */}
-        <div style={{ flex: '1 1 300px', minWidth: 0 }}>
-          <Form.Group className="mb-2">
-            <Form.Label className="small fw-bold mb-1">Actions (Script)</Form.Label>
-            <ActionEditor
-              script={selectedNode.data.section.script}
-              availableVariables={availableVariables}
-              availableSections={availableSections.map((s) => s.id)}
-              onChange={handleScriptChange}
-            />
-          </Form.Group>
-
-          <Form.Group className="mb-2">
-            <Form.Label className="small fw-bold mb-1">AI Extension</Form.Label>
-            <Form.Check
-              type="switch"
-              id="ai-extendable-check"
-              label="AI Extendable"
-              title="When enabled, the AI story extension feature in the viewer can automatically generate new story branches from this section using a configured LLM endpoint. The player must opt in and provide their own API credentials."
-              checked={aiExtendable}
-              onChange={(e) => {
-                const checked = e.target.checked;
-                setAiExtendable(checked);
-                onUpdateSection(selectedNode.id, {
-                  ai_extendable: checked || undefined,
-                });
-              }}
-            />
-            <Form.Text className="text-muted">
-              Allow AI to generate new story branches from this section in the viewer.
-            </Form.Text>
-          </Form.Group>
-
+        {/* Column 3: Add Choice */}
+        <div style={{ flex: '0 1 280px', minWidth: '220px' }}>
           <Form.Group className="mb-2">
             <Form.Label className="small fw-bold mb-1">Add Choice</Form.Label>
-            <div className="d-flex gap-2">
+            <div className="d-flex gap-2 mb-2">
               <Form.Select
                 size="sm"
                 value={targetSectionId}
@@ -335,6 +289,9 @@ export function SectionPanel({
                 Add
               </Button>
             </div>
+            <Form.Text className="text-muted d-block">
+              Use <strong>More...</strong> button above for section scripts and AI features.
+            </Form.Text>
           </Form.Group>
         </div>
       </div>

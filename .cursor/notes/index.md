@@ -20,10 +20,20 @@ This is a pnpm monorepo with three packages:
   - `utils.ts` - Utility functions (text extraction, file naming)
   - `variables.ts` - Variable interpolation logic
   - `storage.ts` - IndexedDB storage utilities
+  - `aiPreferences.ts` - AI configuration management (localStorage)
+  - `aiApiClient.ts` - LLM streaming client (OpenAI-compatible)
+  - `aiImageGeneration.ts` - Image generation API client
+  - `aiImageDescription.ts` - Vision API for prompt derivation
+  - `aiPromptBuilder.ts` - Context building for AI story expansion
+  - `aiValidator.ts` - AI response validation and merging
 
 - **`packages/editor/`** - Web-based story creation tool
   - React Flow graph editor (replaces Cytoscape.js)
   - Story structure editing, media embedding, action system UI
+  - AI story extension - generates new branches using LLM
+  - AI image generation - creates images from prompts
+  - AI prompt derivation - analyzes images to create prompts
+  - Story metadata editor (starting section, characters, etc.)
   - Bundle generation (ZIP export with viewer + launcher)
   - `public/launcher/` - Self-contained launcher with tVeb binaries and scripts
   - Entry point: `src/main.tsx`, main component: `App.tsx`
@@ -45,12 +55,6 @@ This is a pnpm monorepo with three packages:
 - **`scripts/`** - Build scripts
   - `build-viewer-for-bundle.mjs` - Builds viewer and generates bundle manifest (includes launcher files)
   - `download-launcher-binaries.sh` - Downloads tVeb web server binaries for bundle launcher
-
-- **`model_test/`** - Image generation model testing infrastructure
-  - `test_image_generation.sh` - Parallel testing script for 17+ image models
-  - `.env` - API credentials configuration (git-ignored)
-  - `outputs/` - Generated test images
-  - Tests SFW/NSFW capabilities across DALL-E, GPT-Image, Grok, and Imagen models
 
 ### Story Format
 
@@ -96,7 +100,9 @@ Stories are JSON files with the following structure:
 - **Visual editing**: Graph-based story structure editing with React Flow
 - **Rich content**: Support for images, videos, embedded media
 - **Interactive elements**: Variable system, conditional logic, actions
-- **AI story extension**: Optional LLM-powered dynamic story expansion (viewer only)
+- **AI story extension**: Optional LLM-powered dynamic story expansion (editor and viewer)
+- **AI image generation**: Generate images from prompts using configured endpoints (editor and viewer)
+- **AI prompt derivation**: Analyze existing images to create generation prompts (editor and viewer)
 - **Export/Import**: JSON format with optional bundled media
 - **Playable bundles**: Self-contained ZIP bundles with embedded web server (tVeb) and launch scripts for Windows/Linux
 - **Type safety**: Full TypeScript coverage across codebase

@@ -11,6 +11,7 @@ import type { SectionNodeData } from '../../utils/storyToFlow.js';
  * Custom node component for story sections.
  * Shows section ID and highlights when selected.
  * Styles root nodes (diamond, green) and leaf nodes (hexagon, red) differently.
+ * Displays a small preview of the section image if present.
  */
 export const SectionNode = memo((props: NodeProps) => {
   const { data, id, selected } = props;
@@ -26,6 +27,9 @@ export const SectionNode = memo((props: NodeProps) => {
   
   const isRoot = !hasIncoming;
   const isLeaf = !hasOutgoing || (section.next && section.next.length === 0);
+  
+  // Check if section has an image
+  const hasImage = section.media && section.media.type === 'image' && section.media.src;
   
   // Determine node shape and color
   let nodeClass = 'section-node';
@@ -59,9 +63,11 @@ export const SectionNode = memo((props: NodeProps) => {
     <div
       className={nodeClass}
       style={{
-        width: '150px',
-        height: '50px',
+        minWidth: hasImage ? '70px' : '60px',
+        maxWidth: hasImage ? '100px' : '120px',
+        minHeight: hasImage ? '70px' : '40px',
         display: 'flex',
+        flexDirection: hasImage ? 'column' : 'row',
         alignItems: 'center',
         justifyContent: 'center',
         borderRadius: '8px',
@@ -70,10 +76,27 @@ export const SectionNode = memo((props: NodeProps) => {
         color: 'white',
         fontWeight: 'bold',
         fontSize: '14px',
+        padding: hasImage ? '6px' : '8px 12px',
+        gap: hasImage ? '4px' : '0',
       }}
     >
       <Handle type="target" position={Position.Left} />
-      <div>{section.id}</div>
+      {hasImage && (
+        <img
+          src={section.media!.src}
+          alt={`Section ${section.id}`}
+          style={{
+            maxWidth: '60px',
+            maxHeight: '40px',
+            objectFit: 'cover',
+            borderRadius: '4px',
+            border: '1px solid rgba(255,255,255,0.3)',
+          }}
+        />
+      )}
+      <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        {section.id}
+      </div>
       <Handle type="source" position={Position.Right} />
     </div>
   );
