@@ -60,9 +60,13 @@ The Story Adventure Tools follows a modular client-side architecture with three 
 - State persistence and save/load functionality (IndexedDB)
 - Media display (images, videos) with responsive design
 - Keyboard navigation and hotkey support
+- Click-to-advance: clicking on story text or images advances to next section (modal interactions excluded)
 - Modern modal dialogs and toast notifications (React Bootstrap)
 - Unified settings modal with gear icon (⚙) always visible during playback
-  - Image information section (when viewing images) with AI prompt generation
+  - Image information section (when viewing images) with AI prompt generation and editing
+    - View and edit existing ai_gen.prompt with live save
+    - Generate new prompts from image analysis
+    - Generate/regenerate images using edited prompts
   - Story management (load/save story)
   - AI expansion configuration
   - Keyboard shortcuts reference

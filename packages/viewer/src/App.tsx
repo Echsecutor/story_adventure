@@ -454,7 +454,19 @@ function App() {
       ) {
         return;
       }
-      oneStepForward();
+      
+      // Don't advance if clicking inside a modal
+      if (target.closest('.modal, .modal-content')) {
+        return;
+      }
+      
+      // Only advance if clicking on story content (image or text container)
+      const storyContainer = document.getElementById('story_container');
+      const backgroundImage = target.closest('.background-image');
+      
+      if (storyContainer?.contains(target) || backgroundImage) {
+        oneStepForward();
+      }
     },
     [currentSectionId, oneStepForward]
   );

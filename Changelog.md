@@ -7,7 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Image generation prompt in settings modal is now editable with live save functionality
+  - Edit prompt directly in textarea and save changes to section
+  - Auto-saves edited prompt when generating image if changes haven't been saved
+  - Shows "Save Changes" button when prompt is modified
+
+### Fixed
+- Viewer click-to-advance now only triggers on story content (image or text), not when clicking inside settings modal
+
 ### Added
+- Image generation model testing infrastructure in `model_test/`
+  - Bash script to test 15 image generation models (OpenAI, Google, xAI)
+  - Tests both SFW and NSFW prompts for content policy analysis
+  - Supports DALL-E 2/3, GPT Image series, Grok series, and Imagen 4.0 models
+  - Base64 JSON response handling with automatic PNG file output
+  - Comprehensive documentation of model capabilities and API parameters
+  - Detailed error logging with full request/response bodies for debugging
+  - Smart skip logic - avoids regenerating existing images (use `--force` to override)
+  - Environment-based configuration via `.env` file (credentials never committed)
+  - Setup verification script to ensure proper configuration
+  - Parallel test execution for faster completion (~1-2 minutes for all models)
 - AI Image Generation feature in viewer
   - New "AI Image Generation Settings" section in settings modal with enable/disable toggle
   - Configuration for image generation endpoint (URL, API key, model)
@@ -30,6 +50,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Viewer settings button now always visible (previously only shown when section had media)
 - Settings modal opens with all accordions collapsed by default for cleaner initial view
+- Image generation default model changed from `dall-e-3` to `grok-2-image` for NSFW support
+- Image generation now handles model-specific parameters correctly
+  - Grok models: omit `size` parameter (causes errors if included)
+  - GPT-image models: omit `response_format` parameter
+  - DALL-E and Imagen models: include both `size` and `response_format`
 
 ### Removed
 - `ImageInfoModal.tsx` component (functionality integrated into unified `SettingsModal`)
@@ -47,6 +72,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Uses standard Story format (no artificial data structures) to reduce LLM confusion
 
 ### Fixed
+- Fixed `chatgpt-image-latest` model failing with "Unknown parameter: 'response_format'" error
+  - Correctly classified as gpt-image family model that doesn't support response_format parameter
+  - Now successfully generates images using correct parameter format
+- Fixed model-specific parameter handling in `test_image_generation.sh`
+  - GPT-image models (gpt-image-1, gpt-image-1-mini, gpt-image-1.5, chatgpt-image-latest) omit response_format parameter
+  - Grok models (grok-2-image, grok-imagine-image) omit size parameter
+  - DALL-E and Imagen models use standard OpenAI format with all parameters
+- Image generation test script now achieves 100% success rate for SFW generation (15/15 models)
+  - All technical parameter issues resolved
+  - NSFW content only truly supported by 2 models: grok-2-image and grok-2-image-1212
+  - Imagen models silently filter NSFW prompts and return SFW alternatives (not true NSFW support)
+  - Updated test script to skip NSFW tests for models that filter content
 - Fixed AI story expansion choice merging to identify choices by their `next` property
   - Choices are now matched by target section ID instead of position
   - When AI adds text to a choice that existed without text, they merge into one choice

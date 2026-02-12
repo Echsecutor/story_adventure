@@ -55,6 +55,10 @@ export function SettingsModal({
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   
+  // Editable prompt state
+  const [editedPrompt, setEditedPrompt] = useState<string>('');
+  const [promptChanged, setPromptChanged] = useState(false);
+  
   // AI settings state
   const [llmUrl, setLlmUrl] = useState('');
   const [llmApiKey, setLlmApiKey] = useState('');
@@ -86,11 +90,23 @@ export function SettingsModal({
     }
   }, []);
 
+  // Initialize prompt when section changes
+  useEffect(() => {
+    if (section?.ai_gen?.prompt) {
+      setEditedPrompt(section.ai_gen.prompt);
+      setPromptChanged(false);
+    } else {
+      setEditedPrompt('');
+      setPromptChanged(false);
+    }
+  }, [section]);
+
   // Reset generated description when modal is closed
   const handleClose = () => {
     setGeneratedDescription(null);
     setIsGenerating(false);
     setIsSaved(false);
+    setPromptChanged(false);
     onHide();
   };
 
@@ -137,6 +153,16 @@ export function SettingsModal({
     }
     onSavePrompt(sectionId, generatedDescription);
     setIsSaved(true);
+  };
+
+  // Save edited prompt to section
+  const handleSaveEditedPrompt = () => {
+    if (!editedPrompt || !sectionId) {
+      return;
+    }
+    onSavePrompt(sectionId, editedPrompt);
+    setPromptChanged(false);
+    toast.toastOk('Prompt saved');
   };
 
   // Save LLM endpoint config to localStorage
@@ -245,13 +271,20 @@ export function SettingsModal({
 
   // Handle generating image from modal
   const handleGenerateImageFromModal = async () => {
-    if (!section?.ai_gen?.prompt || !sectionId || !onGenerateImage) {
+    if (!editedPrompt || !sectionId || !onGenerateImage) {
       return;
+    }
+
+    // If prompt was changed but not saved, save it first
+    if (promptChanged) {
+      onSavePrompt(sectionId, editedPrompt);
+      setPromptChanged(false);
+      toast.toastInfo('Saved updated prompt');
     }
 
     setIsGeneratingImage(true);
     try {
-      await onGenerateImage(sectionId, section.ai_gen.prompt);
+      await onGenerateImage(sectionId, editedPrompt);
     } finally {
       setIsGeneratingImage(false);
     }
@@ -317,10 +350,33 @@ export function SettingsModal({
                     <h5>Generation Metadata</h5>
                     
                     <div className="mb-3">
-                      <strong>Generation Prompt:</strong>
-                      <p className="mt-1 p-2 bg-light border rounded">
-                        {section.ai_gen!.prompt}
-                      </p>
+                      <div className="d-flex justify-content-between align-items-center mb-2">
+                        <strong>Generation Prompt:</strong>
+                        {promptChanged && (
+                          <Button
+                            variant="success"
+                            size="sm"
+                            onClick={handleSaveEditedPrompt}
+                          >
+                            Save Changes
+                          </Button>
+                        )}
+                      </div>
+                      <Form.Control
+                        as="textarea"
+                        rows={4}
+                        value={editedPrompt}
+                        onChange={(e) => {
+                          setEditedPrompt(e.target.value);
+                          setPromptChanged(e.target.value !== section.ai_gen?.prompt);
+                        }}
+                        className="font-monospace"
+                      />
+                      {promptChanged && (
+                        <Form.Text className="text-muted">
+                          Modified - click "Save Changes" to update the section
+                        </Form.Text>
+                      )}
                     </div>
 
                     {section.ai_gen!.negative_prompt && (
@@ -599,7 +655,7 @@ export function SettingsModal({
                 <Form.Label>Image Generation Endpoint URL</Form.Label>
                 <Form.Control
                   type="text"
-                  placeholder="https://api.eecc.ai/v1/images/generations"
+                  placeholder="https://API.ai/v1/images/generations"
                   value={imageGenUrl}
                   onChange={(e) => handleImageGenFieldChange('url', e.target.value)}
                 />

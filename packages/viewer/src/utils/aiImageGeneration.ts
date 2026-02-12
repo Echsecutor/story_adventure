@@ -44,15 +44,30 @@ export async function generateImage(
     // Model is required - use configured model or default
     const model = config.model && config.model.trim() !== '' 
       ? config.model.trim() 
-      : 'dall-e-3';
+      : 'grok-2-image';
 
+    // Build model-specific request body
     const requestBody: Record<string, unknown> = {
       model,
       prompt,
       n: 1,
-      size,
-      response_format: 'b64_json',
     };
+
+    // Add model-specific parameters based on model family
+    // NOTE: Order matters! More specific patterns must come first
+    if (model.startsWith('gpt-image-') || model.startsWith('chatgpt-image-')) {
+      // GPT-image models: include size, but NO response_format
+      requestBody.size = size;
+    } else if (model.startsWith('grok-')) {
+      // Grok models: NO size parameter (they handle it automatically)
+      // Only include response_format
+      requestBody.response_format = 'b64_json';
+    } else {
+      // DALL-E, Imagen, and other standard OpenAI-compatible models
+      // Include both size and response_format
+      requestBody.size = size;
+      requestBody.response_format = 'b64_json';
+    }
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',

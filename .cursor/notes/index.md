@@ -46,6 +46,12 @@ This is a pnpm monorepo with three packages:
   - `build-viewer-for-bundle.mjs` - Builds viewer and generates bundle manifest (includes launcher files)
   - `download-launcher-binaries.sh` - Downloads tVeb web server binaries for bundle launcher
 
+- **`model_test/`** - Image generation model testing infrastructure
+  - `test_image_generation.sh` - Parallel testing script for 17+ image models
+  - `.env` - API credentials configuration (git-ignored)
+  - `outputs/` - Generated test images
+  - Tests SFW/NSFW capabilities across DALL-E, GPT-Image, Grok, and Imagen models
+
 ### Story Format
 
 Stories are JSON files with the following structure:
@@ -82,6 +88,7 @@ Stories are JSON files with the following structure:
 - **`development.md`** - Development workflow, coding standards, testing strategies, and contribution guidelines
 - **`launcher-infrastructure.md`** - Self-contained launcher with tVeb web server, bundle structure, and implementation details
 - **`toast-bug-analysis.md`** - Analysis of the infinite toast loop bug, root cause, fix, and test coverage gaps
+- **`image-generation-models.md`** - Image generation model testing results, API parameters, SFW/NSFW capabilities, and model-specific configuration
 
 ## Key Features
 

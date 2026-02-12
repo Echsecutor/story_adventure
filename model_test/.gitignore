@@ -1,0 +1,18 @@
+# Test outputs
+outputs/
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+
+# Logs
+test_results.log
+test_console.log
+*.log
+.temp_logs/
+
+# API keys and configuration
+.env
+config.json
+api_key.txt

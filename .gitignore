@@ -2,6 +2,10 @@
 .pnpm-store/
 node_modules/
 
+# Environment variables and secrets
+.env
+.env.local
+
 # Build outputs
 packages/*/dist/
 packages/shared/dist/

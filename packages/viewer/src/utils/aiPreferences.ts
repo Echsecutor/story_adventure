@@ -13,7 +13,7 @@ const IMAGE_GEN_CONFIG_KEY = 'ai_image_generation_config';
  * Configuration for AI image generation endpoint.
  */
 export interface ImageGenConfig {
-  /** API endpoint URL (e.g., "https://api.eecc.ai/v1/images/generations") */
+  /** API endpoint URL */
   url: string;
   /** Optional API key for authentication */
   api_key?: string;
