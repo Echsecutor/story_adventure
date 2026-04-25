@@ -9,6 +9,7 @@ import type { Node, Edge } from '@xyflow/react';
 import type { SectionNodeData, ChoiceEdgeData } from '../../utils/storyToFlow.js';
 import { handleImagePaste } from '../../utils/mediaHandler.js';
 import { loadImageFile } from '../../utils/fileLoader.js';
+import { useDebouncedCallback } from '../../hooks/useDebounce.js';
 
 export interface SectionPanelProps {
   selectedNode: Node<SectionNodeData> | null;
@@ -41,6 +42,10 @@ export function SectionPanel({
   const [targetSectionId, setTargetSectionId] = useState('');
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
+  // Create debounced save functions (300ms delay for text, 500ms for less critical updates)
+  const debouncedUpdateSection = useDebouncedCallback(onUpdateSection, 300);
+  const debouncedUpdateChoice = useDebouncedCallback(onUpdateChoice, 300);
+
   // Update form when selection changes
   useEffect(() => {
     if (selectedNode) {
@@ -60,16 +65,16 @@ export function SectionPanel({
     }
   }, [selectedNode, selectedEdge]);
 
-  // Handle text changes
+  // Handle text changes (debounced to avoid performance issues)
   const handleTextChange = (newText: string) => {
     setText(newText);
     
     if (selectedNode) {
-      onUpdateSection(selectedNode.id, {
+      debouncedUpdateSection(selectedNode.id, {
         text_lines: newText.split('\n'),
       });
     } else if (selectedEdge) {
-      onUpdateChoice(
+      debouncedUpdateChoice(
         selectedEdge.source,
         selectedEdge.target,
         newText

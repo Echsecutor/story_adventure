@@ -76,10 +76,33 @@ function App() {
   // Auto-save every 30 seconds
   useAutoSave(story);
 
+  // Track graph structure (sections + choices) separately from content
+  // Only regenerate flow when structure changes, not on text/media edits
+  const graphStructure = useMemo(() => {
+    const sectionIds = Object.keys(story.sections).sort();
+    const choiceStructure = sectionIds.map((id) => {
+      const section = story.sections[id];
+      const choices = (section?.next || []).map((c) => String(c.next)).sort();
+      return `${id}:${choices.join(',')}`;
+    }).join('|');
+    return `${sectionIds.join(',')}|${choiceStructure}`;
+  }, [story.sections]);
+
   // Convert story to React Flow format
+  // Nodes/edges regenerate on any story change (to get fresh section data)
+  // But GraphEditor only re-layouts when graphStructure changes
   const { nodes: flowNodes, edges: flowEdges } = useMemo(() => {
     return storyToFlow(story);
   }, [story, needsRedraw]);
+
+  // Sync selectedNode with updated flowNodes when they change
+  useEffect(() => {
+    setSelectedNode((currentNode) => {
+      if (!currentNode) return currentNode;
+      const updatedNode = flowNodes.find((node) => node.id === currentNode.id);
+      return updatedNode || currentNode;
+    });
+  }, [flowNodes]);
 
   // Load story from IndexedDB on mount
   useEffect(() => {
@@ -521,6 +544,7 @@ function App() {
           onConnect={handleConnect}
           onNodesChange={() => {}}
           onEdgesChange={() => {}}
+          graphStructure={graphStructure}
         />
       </div>
       {hasSelection && (

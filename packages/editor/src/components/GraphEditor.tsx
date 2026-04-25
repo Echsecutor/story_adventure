@@ -2,7 +2,7 @@
  * React Flow graph editor component.
  */
 
-import { useCallback, useMemo, useEffect } from 'react';
+import { useCallback, useMemo, useEffect, useRef } from 'react';
 import {
   ReactFlow,
   Background,
@@ -37,6 +37,8 @@ export interface GraphEditorProps {
   onNodeClick?: (event: React.MouseEvent, node: Node<SectionNodeData>) => void;
   onEdgeClick?: (event: React.MouseEvent, edge: Edge<ChoiceEdgeData>) => void;
   onConnect?: (connection: Connection) => void;
+  /** Graph structure hash - only re-layout when this changes */
+  graphStructure?: string;
 }
 
 /**
@@ -50,8 +52,11 @@ export function GraphEditor({
   onNodeClick,
   onEdgeClick,
   onConnect,
+  graphStructure,
 }: GraphEditorProps) {
-  // Apply layout to initial nodes and update when props change
+  const prevGraphStructureRef = useRef<string>();
+  
+  // Apply layout to initial nodes on mount
   const layoutedNodes = useMemo(() => {
     return applyDagreLayout(initialNodes, initialEdges);
   }, [initialNodes, initialEdges]);
@@ -59,12 +64,27 @@ export function GraphEditor({
   const [nodes, setNodes, onNodesChangeInternal] = useNodesState(layoutedNodes);
   const [edges, setEdges, onEdgesChangeInternal] = useEdgesState(initialEdges);
 
-  // Update nodes/edges when props change
+  // Update nodes/edges - only re-layout when graph structure changes
   useEffect(() => {
-    const layouted = applyDagreLayout(initialNodes, initialEdges);
-    setNodes(layouted);
-    setEdges(initialEdges);
-  }, [initialNodes, initialEdges, setNodes, setEdges]);
+    const structureChanged = graphStructure !== prevGraphStructureRef.current;
+    prevGraphStructureRef.current = graphStructure;
+
+    if (structureChanged || graphStructure === undefined) {
+      // Structure changed: recalculate layout (expensive)
+      const layouted = applyDagreLayout(initialNodes, initialEdges);
+      setNodes(layouted);
+      setEdges(initialEdges);
+    } else {
+      // Content only changed: update node data without re-layout (cheap)
+      setNodes((currentNodes) =>
+        currentNodes.map((node) => {
+          const updatedNode = initialNodes.find((n) => n.id === node.id);
+          return updatedNode ? { ...node, data: updatedNode.data } : node;
+        })
+      );
+      setEdges(initialEdges);
+    }
+  }, [graphStructure, initialNodes, initialEdges, setNodes, setEdges]);
 
   // Handle node clicks
   const handleNodeClick = useCallback(

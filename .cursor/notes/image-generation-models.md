@@ -6,6 +6,27 @@ Comprehensive testing of image generation models. Testing conducted on 2026-02-1
 
 **Current Status**: ✅ All 15 working models successfully generate SFW images. Only 2 models (grok-2-image, grok-2-image-1212) support NSFW content generation. All other models block or filter NSFW content. 3 Gemini models (gemini-2.5-flash-image, gemini-3-pro-image-preview, nano-banana-pro-preview) listed in the API are not actually available.
 
+## AI Image Description (Prompt Derivation)
+
+The `packages/shared/src/aiImageDescription.ts` module uses vision-capable LLM models to reverse-engineer images into image generation prompts.
+
+### Prompt Style
+
+The system generates **tag-style prompts** following Stable Diffusion / NovelAI conventions:
+- Comma-separated descriptive tags
+- Structured tag order: scene → subject → character details → action/pose → composition → style → technical → lighting → mood
+- Detailed physical descriptions (hair color/style, clothing with colors, body proportions, facial expressions)
+- Quality tags: `score_9`, `score_8_up`, `masterpiece`, `best quality`, `amazing quality`, `very aesthetic`
+
+### Best Practices
+
+Based on 2026 prompt engineering research:
+- **Character descriptions** should include: hair (color, length, style), eyes (color, expression), face (expression, detail level), body (proportions, pose), clothing (every visible piece with colors and materials)
+- **Scene structure**: Start with environment/background, then character count (1girl, 1boy, solo, etc.)
+- **Technical quality**: Include tags like `8K`, `ultra high res`, `ultra detailed`, `high res image`
+- **Lighting/Effects**: `cinematic lighting`, `realistic light and shadows`, `rim lighting`, `volumetric fog`
+- **Style tags**: `hyper realistic`, `fantasy style`, `sci-fi`, `anime style`
+
 ## Test Infrastructure
 
 - **Location**: `model_test/` directory

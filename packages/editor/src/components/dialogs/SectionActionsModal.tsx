@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import { Modal, Button, Form, Accordion, Spinner } from 'react-bootstrap';
 import type { Section, Action } from '@story-adventure/shared';
 import { ActionEditor } from '../panels/ActionEditor.js';
+import { useDebouncedCallback } from '../../hooks/useDebounce.js';
 
 export interface SectionActionsModalProps {
   /** The section being edited */
@@ -49,7 +50,11 @@ export function SectionActionsModal({
   const [aiPrompt, setAiPrompt] = useState('');
   const [isDerivedPrompt, setIsDerivedPrompt] = useState(false);
 
-  // Initialize form from section
+  // Create debounced save function (300ms delay for responsive typing)
+  const debouncedUpdateSection = useDebouncedCallback(onUpdateSection, 300);
+
+  // Initialize form from section (only when modal opens or section ID changes)
+  // Don't reinitialize on every section update to avoid resetting during debounced saves
   useEffect(() => {
     if (section) {
       setAiExtendable(section.ai_extendable ?? false);
@@ -58,7 +63,7 @@ export function SectionActionsModal({
       setAiExtendable(false);
       setAiPrompt('');
     }
-  }, [section, show]);
+  }, [section?.id, show]);
 
   // Handle script (actions) changes
   const handleScriptChange = (script: Action[]) => {
@@ -79,14 +84,14 @@ export function SectionActionsModal({
     }
   };
 
-  // Handle AI prompt change
+  // Handle AI prompt change (debounced to avoid performance issues)
   const handleAiPromptChange = (newPrompt: string) => {
     setAiPrompt(newPrompt);
     if (section) {
-      onUpdateSection(section.id, {
+      debouncedUpdateSection(section.id, {
         ai_gen: newPrompt.trim()
           ? {
-              prompt: newPrompt.trim(),
+              prompt: newPrompt,
               ...section.ai_gen,
             }
           : undefined,

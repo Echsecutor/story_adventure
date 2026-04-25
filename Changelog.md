@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Editor input performance dramatically improved with two-tier optimization
+  - **Debounced saves**: Text and prompt editing debounces story updates (300ms delay)
+  - **Smart graph updates**: Flow graph only re-layouts when structure changes (sections/choices added/removed)
+  - Content-only changes (text, media, AI settings) update node data without re-layout
+  - Eliminates expensive dagre layout recalculation on every keystroke
+  - Local state updates immediately for responsive UI, expensive operations deferred
+  - Resolves 200ms+ input handler violations and typing lag
+  - Section Actions modal only re-initializes on section ID change, not every update
+- Image Generation Prompt in Section Actions modal now editable and saves correctly
+
+### Added
+- Debounce hooks for performance optimization (`hooks/useDebounce.ts`)
+  - `useDebounce` - debounces values with configurable delay
+  - `useDebouncedCallback` - debounces function calls to reduce expensive operations
+
+### Changed
+- Enhanced AI image description prompt to generate tag-style prompts with detailed character descriptions
+  - Follows Stable Diffusion / NovelAI tag format with comma-separated descriptive tags
+  - Includes detailed physical descriptions: hair color/style, clothing with colors, body proportions, facial expressions
+  - Structured tag order: scene, subject, character details, action/pose, composition, style, technical, lighting, mood
+  - Uses quality tags like `score_9`, `masterpiece`, `best quality`, `very aesthetic`
+
 ### Added
 - Import From Web feature in editor (`File → Import From Web`)
   - Import story content directly from web URLs

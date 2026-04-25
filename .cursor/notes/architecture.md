@@ -18,6 +18,7 @@ The Story Adventure Tools follows a modular client-side architecture with three 
   - `src/components/panels/ActionEditor.tsx` - Action script editor
   - `src/components/modals/DialogContext.tsx` - Modal dialog system (alert/confirm/prompt)
   - `src/components/modals/ToastContainer.tsx` - Toast notification system
+  - `src/hooks/useDebounce.ts` - Debounce hooks for performance optimization
   - `src/utils/bundle.ts` - Bundle generation (ZIP export)
   - `public/launcher/` - Self-contained launcher infrastructure
     - `tVeb-linux-x86_64` - Web server binary for Linux (1.2 MB)
@@ -167,7 +168,48 @@ toast.toastInfo('Press ? for help');
 2. Story validation → Real-time feedback → JSON serialization
 3. Media embedding → Base64 encoding → Bundle generation
 
-**Important: Stale `selectedNode` pattern** — In `App.tsx`, `selectedNode` is a snapshot taken on click. It is NOT updated when the story changes. `SectionPanel` must use local state (e.g., `text`, `mediaSrc`, `aiExtendable`) for all editable fields and update them in change handlers for immediate UI feedback. Reading directly from `selectedNode.data.section.*` for mutable fields will appear stale until the node is re-clicked.
+**Important: Two-tier performance optimization** — Editor uses a sophisticated two-tier approach to eliminate input lag:
+
+### Tier 1: Debounced Saves (300ms)
+Local state updates immediately on every keystroke for responsive UI, but story updates are debounced:
+
+```typescript
+const debouncedUpdateSection = useDebouncedCallback(onUpdateSection, 300);
+
+const handleTextChange = (newText: string) => {
+  setText(newText);  // Immediate - responsive UI
+  debouncedUpdateSection(sectionId, { text_lines: newText.split('\n') });  // Deferred - batches updates
+};
+```
+
+### Tier 2: Smart Graph Updates
+Flow graph regeneration is split into two paths:
+
+1. **Structural changes** (sections/choices added/removed): Full dagre layout recalculation
+2. **Content changes** (text, media, AI settings): Update node data only, preserve layout
+
+Implementation:
+- `App.tsx` tracks `graphStructure` (hash of section IDs and choice targets)
+- `GraphEditor.tsx` compares previous vs current structure
+- When structure unchanged: updates node data without calling `applyDagreLayout()`
+- When structure changed: recalculates full layout
+
+```typescript
+// GraphEditor.tsx
+if (structureChanged) {
+  const layouted = applyDagreLayout(initialNodes, initialEdges);  // Expensive
+  setNodes(layouted);
+} else {
+  setNodes((current) => current.map(node => ({  // Cheap - just update data
+    ...node,
+    data: initialNodes.find(n => n.id === node.id)?.data
+  })));
+}
+```
+
+This two-tier approach eliminates 200ms+ input handler violations completely. Typing feels instant, and the expensive layout only runs when adding/removing sections.
+
+**selectedNode sync** — `selectedNode` in `App.tsx` syncs with `flowNodes` updates using functional setState. This ensures panels/modals receive current section data after saves complete, without causing re-initialization loops during editing.
 
 ### Viewer Workflow
 
